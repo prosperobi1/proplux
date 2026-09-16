@@ -1,0 +1,99 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String    @id @default(cuid())
+  email     String    @unique
+  username  String    @unique
+  password  String
+  role      String    @default("BUYER")
+  balance   Float     @default(0)
+  banned    Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  products  Product[]
+  orders    Order[]
+  sessions  Session[]
+  tickets   Ticket[]    
+  ticketMessages TicketMessage[]
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  country     String
+  tld         String
+  hosting     String
+  checkStatus String   @default("Valid")
+  price       Float
+  createdAt   DateTime @default(now())
+  sellerId    String
+  seller      User     @relation(fields: [sellerId], references: [id])
+  orders      Order[]
+}
+
+model Order {
+  id          String   @id @default(cuid())
+  status      String   @default("Pending Confirmation")
+  totalPrice  Float
+  createdAt   DateTime @default(now())
+  buyerId     String
+  buyer       User     @relation(fields: [buyerId], references: [id])
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id])
+}
+
+
+model Ticket {
+  id        String   @id @default(cuid())
+  subject   String
+  status    String   @default("OPEN")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+
+  messages  TicketMessage[]
+}
+
+model TicketMessage {
+  id        String   @id @default(cuid())
+  content   String
+  isStaff   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  ticketId  String
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+}
+
+model Category {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  icon      String   @default("Package")
+  visible   Boolean  @default(true)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+model Setting {
+  id    String @id @default("global")
+  key   String @unique
+  value String
+}
