@@ -173,12 +173,12 @@ async function checkRdp(
     case "rdp":
       return NextResponse.json({
         ok: true,
-        message: `Online — the RDP server is responding on port ${port}.`,
+        message: `RDP server responding on port ${port}.`,
       });
     case "open-no-rdp":
       return NextResponse.json({
         ok: false,
-        message: `Port ${port} is open but didn't answer as RDP — it may be filtered or not an RDP service.`,
+        message: `Port ${port} is open but doesn't answer as RDP.`,
       });
     case "refused":
       return NextResponse.json({

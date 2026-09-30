@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo, Suspense } from "react";
 import { ProofModal } from "@/components/ProofModal";
 import { SampleModal } from "@/components/SampleModal";
+import { CheckResult } from "@/components/CheckResult";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ShoppingCart, Search, X, Loader2 } from "lucide-react";
@@ -221,11 +222,7 @@ function ProductsContent() {
               </button>
             </div>
             {loading && <p className="text-[11px] text-zinc-500">Sending test email…</p>}
-            {s?.message && (
-              <p className={`text-[11px] ${s.status === "ok" ? "text-green-500" : "text-red-400"}`}>
-                {s.message}
-              </p>
-            )}
+            <CheckResult status={s?.status} detail={s?.message} />
           </>
         )}
       </div>
@@ -276,11 +273,7 @@ function ProductsContent() {
           )}
         </button>
         {loading && <p className="text-[11px] text-zinc-500">Pinging RDP server…</p>}
-        {s?.message && (
-          <p className={`text-[11px] ${s.status === "ok" ? "text-green-500" : "text-red-400"}`}>
-            {s.message}
-          </p>
-        )}
+        <CheckResult status={s?.status} detail={s?.message} />
       </div>
     );
   };

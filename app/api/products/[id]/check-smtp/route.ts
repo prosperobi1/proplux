@@ -177,7 +177,7 @@ async function checkSmtp(
   if (result.ok) {
     return NextResponse.json({
       ok: true,
-      message: `Working — test email sent to ${to}. Give it a minute and check spam too.`,
+      message: `Test email sent to ${to} — give it a minute and check spam too.`,
     });
   }
   return NextResponse.json({ ok: false, message: friendly(result.error) });

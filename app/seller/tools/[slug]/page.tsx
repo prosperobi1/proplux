@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useParams } from "next/navigation";
 import { Plus, Trash2, KeyRound, FileText, Package, Check, Pencil, X, Search, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { UploadButton } from "../../../../src/utils/uploadthing";
+import { CheckResult } from "@/components/CheckResult";
 import { COUNTRIES } from "@/lib/countries";
 
 type FieldDef = { name: string; label: string; type?: string; required?: boolean; options?: string[]; placeholder?: string };
@@ -174,9 +175,7 @@ export default function SellerToolPage() {
   const testCell = (p: Product) => {
     const s = checks[p.id];
     const loading = s?.status === "loading";
-    const message = s?.message && (
-      <p className={`text-[11px] ${s.status === "ok" ? "text-green-500" : "text-red-400"}`}>{s.message}</p>
-    );
+    const message = <CheckResult status={s?.status} detail={s?.message} />;
 
     if (slug === "smtps") {
       const type = String(p.metadata?.type || "SMTP").toUpperCase();
