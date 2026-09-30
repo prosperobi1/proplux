@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Package } from "lucide-react";
+import { Package, Trash2 } from "lucide-react";
 
 type Product = {
   id: string;
@@ -39,6 +39,21 @@ export default function AdminToolsPage() {
       .catch(() => setLoading(false));
   }, []);
 
+  const deleteProduct = async (p: Product) => {
+    if (!confirm(`Delete listing …${p.id.slice(-6)} (seller: ${p.seller})? This cannot be undone.`)) return;
+    try {
+      const r = await fetch(`/api/seller/products/${p.id}`, { method: "DELETE" });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        alert(d.error || "Could not delete this listing.");
+        return;
+      }
+      setProducts((prev) => prev.filter((x) => x.id !== p.id));
+    } catch {
+      alert("Network error — could not delete this listing.");
+    }
+  };
+
   const q = search.trim().toLowerCase();
   const filtered = products.filter((p) => {
     if (categoryFilter !== "ALL" && p.categorySlug !== categoryFilter) return false;
@@ -65,8 +80,9 @@ export default function AdminToolsPage() {
       </div>
 
       <p className="text-sm text-zinc-400">
-        Read-only view of all products listed across every seller. Use category tabs to filter,
-        or search by the product ID shown on listings and in reports/tickets.
+        Every product listed across every seller. Use category tabs to filter, search by the
+        product ID shown on listings and in reports/tickets, or remove a bad listing with the
+        delete action — listings with order history can&apos;t be deleted.
       </p>
 
       <div className="flex flex-wrap gap-2">
@@ -103,7 +119,7 @@ export default function AdminToolsPage() {
       />
 
       <div className="overflow-x-auto rounded-lg border border-zinc-800">
-        <table className="w-full min-w-[800px] text-sm">
+        <table className="w-full min-w-[880px] text-sm">
           <thead className="bg-zinc-900 text-left text-xs font-semibold uppercase text-red-500">
             <tr>
               <th className="px-4 py-3">ID</th>
@@ -115,17 +131,18 @@ export default function AdminToolsPage() {
               <th className="px-4 py-3">Type</th>
               <th className="px-4 py-3">Check</th>
               <th className="px-4 py-3">Added</th>
+              <th className="px-4 py-3">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-800 bg-zinc-950">
             {loading ? (
-              <tr><td colSpan={9} className="px-4 py-6 text-center text-zinc-500">Loading...</td></tr>
+              <tr><td colSpan={10} className="px-4 py-6 text-center text-zinc-500">Loading...</td></tr>
             ) : filtered.length === 0 ? (
-              <tr><td colSpan={9} className="px-4 py-6 text-center text-zinc-500">No products in this category.</td></tr>
+              <tr><td colSpan={10} className="px-4 py-6 text-center text-zinc-500">No products in this category.</td></tr>
             ) : (
               filtered.map((p) => (
                 <tr key={p.id} className="hover:bg-zinc-900/50">
-                  <td className="px-4 py-3 font-mono text-xs text-zinc-500">{p.id.slice(-6)}</td>
+                  <td className="px-4 py-3 font-mono text-xs text-zinc-500" title={p.id}>{p.id.slice(-6)}</td>
                   <td className="px-4 py-3 text-zinc-300">{p.country}</td>
                   <td className="px-4 py-3 text-zinc-300">{p.tld || "—"}</td>
                   <td className="px-4 py-3 text-zinc-300">{p.hosting}</td>
@@ -145,6 +162,16 @@ export default function AdminToolsPage() {
                   <td className="px-4 py-3 text-xs text-zinc-400">{p.check}</td>
                   <td className="px-4 py-3 text-xs text-zinc-500">
                     {new Date(p.addedOn).toLocaleDateString()}
+                  </td>
+                  <td className="px-4 py-3">
+                    <button
+                      onClick={() => deleteProduct(p)}
+                      disabled={p.sold}
+                      title={p.sold ? "Can't delete — this listing has orders" : "Delete listing"}
+                      className="rounded bg-zinc-800 p-1.5 hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                    </button>
                   </td>
                 </tr>
               ))

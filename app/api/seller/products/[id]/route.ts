@@ -22,7 +22,22 @@ export async function DELETE(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  await prisma.product.delete({ where: { id } });
+  // Order history must survive — block deleting listings that were ever bought,
+  // regardless of how the database treats the foreign key.
+  const orderCount = await prisma.order.count({ where: { productId: id } });
+  if (orderCount > 0) {
+    return NextResponse.json(
+      { error: "This listing has order history and can't be deleted." },
+      { status: 409 }
+    );
+  }
+
+  try {
+    await prisma.product.delete({ where: { id } });
+  } catch (err) {
+    console.error("DELETE product error:", err);
+    return NextResponse.json({ error: "Could not delete this listing." }, { status: 500 });
+  }
   return NextResponse.json({ success: true });
 }
 

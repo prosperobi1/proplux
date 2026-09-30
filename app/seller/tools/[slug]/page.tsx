@@ -8,7 +8,7 @@ import { CheckResult } from "@/components/CheckResult";
 import { COUNTRIES } from "@/lib/countries";
 
 type FieldDef = { name: string; label: string; type?: string; required?: boolean; options?: string[]; placeholder?: string };
-type Product = { id: string; country: string; tld: string; hosting: string; price: number; createdAt: string; metadata?: Record<string, any>; deliveryType?: string; fileUrl?: string };
+type Product = { id: string; country: string; tld: string; hosting: string; price: number; createdAt: string; metadata?: Record<string, any>; deliveryType?: string; fileUrl?: string; sold?: boolean };
 
 export default function SellerToolPage() {
   const params = useParams();
@@ -123,7 +123,9 @@ export default function SellerToolPage() {
 
   const deleteProduct = async (id: string) => {
     if (!confirm("Delete this product?")) return;
-    await fetch("/api/seller/products/" + id, { method: "DELETE" });
+    const r = await fetch("/api/seller/products/" + id, { method: "DELETE" }).catch(() => null);
+    const d = await r?.json().catch(() => null);
+    if (!r || !r.ok) alert(d?.error || "Could not delete this listing.");
     load();
   };
 
@@ -554,7 +556,12 @@ export default function SellerToolPage() {
                           <button onClick={() => startEdit(p)} className="rounded bg-zinc-800 p-1.5 hover:bg-zinc-700" title="Edit">
                             <Pencil className="h-3.5 w-3.5 text-blue-400" />
                           </button>
-                          <button onClick={() => deleteProduct(p.id)} className="rounded bg-zinc-800 p-1.5 hover:bg-zinc-700" title="Delete">
+                          <button
+                            onClick={() => deleteProduct(p.id)}
+                            disabled={p.sold}
+                            title={p.sold ? "Can't delete — this listing has orders" : "Delete"}
+                            className="rounded bg-zinc-800 p-1.5 hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-40"
+                          >
                             <Trash2 className="h-3.5 w-3.5 text-red-500" />
                           </button>
                         </div>
