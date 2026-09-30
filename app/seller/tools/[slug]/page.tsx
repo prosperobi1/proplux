@@ -370,7 +370,7 @@ export default function SellerToolPage() {
     ? products.filter((p) => {
         const q = search.trim().toLowerCase();
         const metaStr = p.metadata ? JSON.stringify(p.metadata).toLowerCase() : "";
-        return (p.country || "").toLowerCase().includes(q) || (p.hosting || "").toLowerCase().includes(q) || String(p.price).includes(q) || metaStr.includes(q);
+        return (p.country || "").toLowerCase().includes(q) || (p.hosting || "").toLowerCase().includes(q) || p.id.toLowerCase().includes(q) || String(p.price).includes(q) || metaStr.includes(q);
       })
     : products;
   const totalPages = Math.max(1, Math.ceil(filteredProducts.length / PER_PAGE));
@@ -521,9 +521,10 @@ export default function SellerToolPage() {
           )}
 
           <div className="overflow-x-auto rounded-lg border border-zinc-800">
-            <table className={`w-full ${showTestCol ? "min-w-[950px]" : "min-w-[700px]"} text-sm`}>
+            <table className={`w-full ${showTestCol ? "min-w-[1030px]" : "min-w-[780px]"} text-sm`}>
               <thead className="bg-zinc-900 text-left text-xs font-semibold uppercase text-red-500">
                 <tr>
+                  <th className="px-3 py-2">ID</th>
                   {displayFields.slice(0, 4).map((f) => (<th key={f.name} className="px-3 py-2">{f.label}</th>))}
                   <th className="px-3 py-2">Type</th>
                   <th className="px-3 py-2">Price</th>
@@ -533,14 +534,15 @@ export default function SellerToolPage() {
               </thead>
               <tbody className="divide-y divide-zinc-800 bg-zinc-950">
                 {loading ? (
-                  <tr><td colSpan={displayFields.slice(0, 4).length + (showTestCol ? 4 : 3)} className="px-3 py-6 text-center text-zinc-500">Loading...</td></tr>
+                  <tr><td colSpan={displayFields.slice(0, 4).length + (showTestCol ? 5 : 4)} className="px-3 py-6 text-center text-zinc-500">Loading...</td></tr>
                 ) : pagedProducts.length === 0 ? (
-                  <tr><td colSpan={displayFields.slice(0, 4).length + (showTestCol ? 4 : 3)} className="px-3 py-6 text-center text-zinc-500">
+                  <tr><td colSpan={displayFields.slice(0, 4).length + (showTestCol ? 5 : 4)} className="px-3 py-6 text-center text-zinc-500">
                     {search ? "No products match." : "No products yet."}
                   </td></tr>
                 ) : (
                   pagedProducts.map((p) => (
                     <tr key={p.id} className="hover:bg-zinc-900/50">
+                      <td className="px-3 py-3 font-mono text-xs text-zinc-500" title={p.id}>{p.id.slice(-6)}</td>
                       {displayFields.slice(0, 4).map((f) => (<td key={f.name} className="px-3 py-3 text-zinc-300">{p.metadata?.[f.name] || "—"}</td>))}
                       <td className="px-3 py-3">
                         <span className="rounded-full bg-zinc-800 px-2 py-0.5 text-[10px] font-semibold uppercase text-zinc-400">{p.deliveryType || "credentials"}</span>
