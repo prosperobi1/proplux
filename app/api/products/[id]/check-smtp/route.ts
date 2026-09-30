@@ -36,6 +36,22 @@ function friendly(err: unknown): string {
 
 export async function POST(
   req: Request,
+  ctx: { params: Promise<{ id: string }> }
+) {
+  // Always answer with JSON — a thrown error would surface in the UI as a
+  // generic "Network error" instead of a useful message.
+  try {
+    return await checkSmtp(req, ctx);
+  } catch {
+    return NextResponse.json(
+      { ok: false, message: "Something went wrong running the check — try again." },
+      { status: 500 }
+    );
+  }
+}
+
+async function checkSmtp(
+  req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth();
@@ -90,7 +106,6 @@ export async function POST(
   // Relay-style SMTPs (Brevo etc.) log in with an account address but must send
   // From a verified mailbox — fall back to the login when no From is set.
   const from = String(meta.fromEmail || meta.from || user).trim();
-  const port = parseInt(String(meta.port || ""), 10) || 587;
   const security = String(meta.security || "STARTTLS").toUpperCase();
   const type = String(meta.type || "SMTP").toUpperCase();
 
@@ -106,6 +121,20 @@ export async function POST(
       message: "This listing is missing SMTP details.",
     });
   }
+
+  // Validate the port — a junk value (e.g. 99999) would throw inside nodemailer
+  // and surface as a generic client-side "Network error". Only echo the value
+  // when it's plain digits (never echo an undecrypted blob).
+  const rawPort = String(meta.port ?? "").trim();
+  const parsedPort = rawPort === "" ? 587 : parseInt(rawPort, 10);
+  if (!Number.isInteger(parsedPort) || parsedPort < 1 || parsedPort > 65535) {
+    const hint = /^\d{1,6}$/.test(rawPort) ? ` (${rawPort})` : "";
+    return NextResponse.json({
+      ok: false,
+      message: `This listing has an invalid port${hint} — use a number between 1 and 65535.`,
+    });
+  }
+  const port = parsedPort;
 
   const transport = nodemailer.createTransport({
     host,

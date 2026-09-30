@@ -51,7 +51,12 @@ function probeRdp(host: string, port: number): Promise<ProbeCode> {
       // TCP is up — ask the service whether it speaks RDP.
       for (const t of timers) clearTimeout(t);
       timers.length = 0;
-      socket.write(RDP_CR);
+      try {
+        socket.write(RDP_CR);
+      } catch {
+        finish("open-no-rdp");
+        return;
+      }
       timers.push(setTimeout(() => finish("open-no-rdp"), RDP_REPLY_MS));
     });
 
@@ -78,6 +83,22 @@ function probeRdp(host: string, port: number): Promise<ProbeCode> {
 }
 
 export async function POST(
+  req: Request,
+  ctx: { params: Promise<{ id: string }> }
+) {
+  // Always answer with JSON — a thrown error would surface in the UI as a
+  // generic "Network error" instead of a useful message.
+  try {
+    return await checkRdp(req, ctx);
+  } catch {
+    return NextResponse.json(
+      { ok: false, message: "Something went wrong running the check — try again." },
+      { status: 500 }
+    );
+  }
+}
+
+async function checkRdp(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -116,7 +137,6 @@ export async function POST(
   } catch {}
 
   const host = String(meta.ip || meta.host || "").trim();
-  const port = parseInt(String(meta.port || ""), 10) || 3389;
   if (!host) {
     return NextResponse.json({
       ok: false,
@@ -124,7 +144,30 @@ export async function POST(
     });
   }
 
-  const code = await probeRdp(host, port);
+  // Validate the port before probing — net.connect throws synchronously on a
+  // port outside 1–65535, which would otherwise surface as a generic client
+  // "Network error". Only echo the value when it's plain digits (never echo
+  // an undecrypted blob).
+  const rawPort = String(meta.port ?? "").trim();
+  const parsedPort = rawPort === "" ? 3389 : parseInt(rawPort, 10);
+  if (!Number.isInteger(parsedPort) || parsedPort < 1 || parsedPort > 65535) {
+    const hint = /^\d{1,6}$/.test(rawPort) ? ` (${rawPort})` : "";
+    return NextResponse.json({
+      ok: false,
+      message: `This listing has an invalid port${hint} — use a number between 1 and 65535.`,
+    });
+  }
+  const port = parsedPort;
+
+  let code: ProbeCode;
+  try {
+    code = await probeRdp(host, port);
+  } catch {
+    return NextResponse.json({
+      ok: false,
+      message: "Could not run the check — verify the IP/Host value.",
+    });
+  }
 
   switch (code) {
     case "rdp":
@@ -155,7 +198,7 @@ export async function POST(
     default:
       return NextResponse.json({
         ok: false,
-        message: "No response within 6 seconds — the server may be down or firewalled.",
+        message: "Connection timed out — the server may be down or firewalled.",
       });
   }
 }
