@@ -13,7 +13,7 @@ export async function GET() {
   return NextResponse.json(tickets);
 }
 
-export async function POST(req) {
+export async function POST(req: Request) {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { subject, message } = await req.json();

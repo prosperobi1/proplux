@@ -4,53 +4,60 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   const session = await auth();
-
   if (!session?.user || (session.user as any).role !== "ADMIN") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const now = new Date();
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-  // For now, "deposits" = total order value. Once we add real crypto
-  // deposits, this will pull from a Deposit table.
-  const [todayOrders, monthOrders, allOrders, totalUsers] = await Promise.all([
-    prisma.order.aggregate({
-      where: { createdAt: { gte: startOfToday } },
-      _sum: { totalPrice: true },
+  const [todaySum, monthSum, allTimeSum, cryptoSum, adminSum, refundSum, recent] = await Promise.all([
+    prisma.deposit.aggregate({
+      where: { createdAt: { gte: startOfDay } },
+      _sum: { amount: true },
     }),
-    prisma.order.aggregate({
+    prisma.deposit.aggregate({
       where: { createdAt: { gte: startOfMonth } },
-      _sum: { totalPrice: true },
+      _sum: { amount: true },
     }),
-    prisma.order.aggregate({
-      _sum: { totalPrice: true },
+    prisma.deposit.aggregate({
+      _sum: { amount: true },
     }),
-    prisma.user.count(),
+    prisma.deposit.aggregate({
+      where: { method: "nowpayments" },
+      _sum: { amount: true },
+    }),
+    prisma.deposit.aggregate({
+      where: { method: "admin" },
+      _sum: { amount: true },
+    }),
+    prisma.deposit.aggregate({
+      where: { method: "refund" },
+      _sum: { amount: true },
+    }),
+    prisma.deposit.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 15,
+      include: { user: { select: { username: true, email: true } } },
+    }),
   ]);
 
-  const recentOrders = await prisma.order.findMany({
-    take: 5,
-    orderBy: { createdAt: "desc" },
-    include: {
-      buyer: { select: { username: true } },
-      product: { select: { country: true, tld: true } },
-    },
-  });
-
   return NextResponse.json({
-    todayDeposit: todayOrders._sum.totalPrice || 0,
-    monthDeposit: monthOrders._sum.totalPrice || 0,
-    beginningDeposit: allOrders._sum.totalPrice || 0,
-    walletBalance: 0, // Placeholder — real balance comes from crypto provider
-    totalUsers,
-    recentOrders: recentOrders.map((o) => ({
-      id: o.id,
-      buyer: o.buyer.username,
-      amount: o.totalPrice,
-      product: `${o.product.country} ${o.product.tld}`,
-      createdAt: o.createdAt,
+    todayDeposit: todaySum._sum.amount ?? 0,
+    monthDeposit: monthSum._sum.amount ?? 0,
+    allTimeDeposit: allTimeSum._sum.amount ?? 0,
+    cryptoDeposit: cryptoSum._sum.amount ?? 0,
+    adminCredits: adminSum._sum.amount ?? 0,
+    refunds: refundSum._sum.amount ?? 0,
+    recentDeposits: recent.map((d) => ({
+      id: d.id,
+      username: d.user.username,
+      email: d.user.email,
+      amount: d.amount,
+      method: d.method,
+      providerId: d.providerId,
+      createdAt: d.createdAt,
     })),
   });
 }

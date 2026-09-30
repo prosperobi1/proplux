@@ -1,36 +1,132 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Proplux — Multi-Vendor Digital Marketplace
 
-## Getting Started
+A modern multi-vendor marketplace built with Next.js 16, TypeScript, Prisma, and NextAuth. Three roles: BUYER, SELLER, ADMIN.
 
-First, run the development server:
+## Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- Marketplace with categories, dynamic per-category fields, and bulk purchase
+- Multi-vendor — sellers list products, buyers purchase, admins moderate
+- Wallet system — buyers fund an account balance; purchases debit instantly
+- Seller earnings — 65% commission (configurable), lifetime revenue tracking
+- Withdrawals — sellers request payouts, admins approve/reject/mark paid
+- Reports — buyers can report bad orders within a configurable window
+- Support tickets — buyers and sellers open tickets, admins reply
+- Notifications bell — unread ticket replies in buyer, seller and admin panels; click to open the thread
+- Admin panel — users, orders, categories, settings, financials, news
+- Branding — uploadable logo, site name, primary color, all admin-configurable
+- UploadThing for logo storage
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Tech Stack
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Next.js 16 (App Router, Turbopack)
+- TypeScript
+- Prisma + SQLite (dev) / PostgreSQL (production)
+- NextAuth (credentials, JWT)
+- Tailwind CSS
+- lucide-react for icons
+- UploadThing for file uploads
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Quick Start
 
-## Learn More
+1. Install dependencies
 
-To learn more about Next.js, take a look at the following resources:
+    npm install
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2. Configure environment
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+    cp .env.example .env
 
-## Deploy on Vercel
+Then edit .env:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Set AUTH_SECRET to a random string: openssl rand -base64 32
+- Get an UPLOADTHING_TOKEN from https://uploadthing.com/dashboard
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+3. Set up the database
+
+    npx prisma db push
+    npx prisma generate
+
+4. Seed initial data
+
+    npx tsx prisma/seed.ts
+    npx tsx prisma/seed-categories.ts
+    npx tsx prisma/seed-settings.ts
+
+5. Create an admin account
+
+Register a normal account via the UI, then promote it:
+
+    sqlite3 prisma/dev.db "UPDATE User SET role='ADMIN' WHERE email='you@example.com';"
+
+Or use npx prisma studio to edit the row manually.
+
+6. Run the dev server
+
+    npm run dev
+
+Open http://localhost:3000
+
+## Testing Roles
+
+- Buyer: register normally
+- Seller: admin promotes via /admin/users
+- Admin: SQL command above, or promote via /admin/users
+
+## Project Structure
+
+app/
+  (main)/           Buyer-facing routes (dashboard, products, checkout, orders, tickets, deposit)
+  admin/            Admin panel (role-gated)
+  seller/           Seller panel (role-gated)
+  login/, register/ Auth pages
+  api/              All API routes
+  components/       Shared components (Branding, etc.)
+  lib/              Prisma client, auth config, countries list
+prisma/
+  schema.prisma     Data model
+  seed*.ts          Seed scripts
+
+## Deployment
+
+Vercel (recommended):
+
+1. Push to GitHub
+2. Import on Vercel
+3. Set env vars in Vercel dashboard: DATABASE_URL (Postgres), AUTH_SECRET, AUTH_TRUST_HOST=true, UPLOADTHING_TOKEN
+4. Switch Prisma datasource to postgresql in prisma/schema.prisma
+5. Run npx prisma db push against the production DB once
+
+cPanel (Node.js App):
+
+1. Upload the project
+2. In cPanel -> Setup Node.js App:
+   - Node version 20+
+   - Application root: your project folder
+   - Startup file: node_modules/.bin/next
+   - Environment variables: same as above
+3. Run npm install, npx prisma db push, npx prisma generate from the terminal
+4. Delete app/api/deposit/dev/ before going live
+
+## Configuration
+
+All admin-configurable from /admin/settings:
+
+- Site name, description, logo, primary color
+- Commission % (default 65)
+- Minimum withdrawal (default $50)
+- Report window in hours (default 16)
+- Crypto wallet addresses (placeholders until real payments)
+- Feature toggles (marketplace, tickets, maintenance mode)
+
+## Not Yet Implemented
+
+- Real crypto payments — deposit page is a placeholder. Integrate NOWPayments, Coinbase Commerce, or BTCPay Server.
+- Email — SMTP configurable in **Admin → Settings → Email (SMTP)** (host, port, encryption, credentials, from address) with a built-in "Send test email" button. Falls back to Resend (`RESEND_API_KEY`) when SMTP is off.
+- Forgot password — link exists, backend doesn't.
+- Product images — products are text/metadata only.
+
+## License
+
+See THIRD-PARTY-NOTICES.md for dependency attributions.
+
+This is a commercial template. You may use it to build and deploy your own marketplace. You may not redistribute the source code as a competing template.

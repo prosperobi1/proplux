@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { LogoMark } from "../components/Branding";
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
@@ -31,6 +33,10 @@ export default function RegisterPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-950 p-4">
       <div className="w-full max-w-md rounded-lg border border-zinc-800 bg-zinc-900 p-8">
+        <div className="mb-6 flex justify-center">
+          <LogoMark size={48} />
+        </div>
+
         <h1 className="mb-2 text-2xl font-bold text-white">Create account</h1>
         <p className="mb-6 text-sm text-zinc-500">Join Proplux marketplace</p>
 
@@ -68,13 +74,12 @@ export default function RegisterPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              minLength={6}
               className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-white focus:border-red-500 focus:outline-none"
             />
           </div>
           <button
             type="submit"
-            className="w-full rounded-md bg-red-600 py-3 text-sm font-semibold text-white hover:bg-red-500"
+            className="w-full rounded-md py-3 text-sm font-semibold text-white hover:opacity-90" style={{ backgroundColor: "var(--brand-color, #dc2626)" }}
           >
             Create Account
           </button>
@@ -82,7 +87,7 @@ export default function RegisterPage() {
 
         <p className="mt-6 text-center text-sm text-zinc-500">
           Already have an account?{" "}
-          <a href="/login" className="text-red-500 hover:text-red-400">Sign in</a>
+          <Link href="/login" className="text-red-500 hover:text-red-400">Sign in</Link>
         </p>
       </div>
     </div>

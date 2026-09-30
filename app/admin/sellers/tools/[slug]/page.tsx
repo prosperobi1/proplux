@@ -2,16 +2,28 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, KeyRound, FileText, Package, Check, Pencil, X, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { UploadButton } from "../../../../../src/utils/uploadthing";
+
+type FieldDef = {
+  name: string;
+  label: string;
+  type?: string;
+  required?: boolean;
+  options?: string[];
+  placeholder?: string;
+};
 
 type Product = {
   id: string;
   country: string;
   tld: string;
   hosting: string;
-  checkStatus: string;
   price: number;
   createdAt: string;
+  metadata?: Record<string, any>;
+  deliveryType?: string;
+  fileUrl?: string;
 };
 
 export default function SellerToolPage() {
@@ -20,33 +32,20 @@ export default function SellerToolPage() {
   const [tab, setTab] = useState<"static" | "all" | "deleted" | "add" | "mass">("add");
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [form, setForm] = useState({
-    country: "",
-    tld: "",
-    hosting: "",
-    checkStatus: "Valid",
-    price: "",
-  });
+  const [categoryName, setCategoryName] = useState(slug.charAt(0).toUpperCase() + slug.slice(1));
+  const [fields, setFields] = useState<FieldDef[]>([]);
+  const [values, setValues] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [response, setResponse] = useState("");
-
-  const [categoryDisplay, setCategoryDisplay] = useState(
-  slug === "rdp" ? "RDP" : slug.charAt(0).toUpperCase() + slug.slice(1)
-);
-
-useEffect(() => {
-  fetch("/api/categories")
-    .then((r) => r.json())
-    .then((cats) => {
-      if (Array.isArray(cats)) {
-        const match = cats.find((c: any) => c.slug === slug);
-        if (match) setCategoryDisplay(match.name);
-      }
-    });
-}, [slug]);
+  const [deliveryType, setDeliveryType] = useState<"credentials" | "text" | "file">("credentials");
+  const [fileUrl, setFileUrl] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const PER_PAGE = 20;
 
   const load = () => {
-    fetch("/api/seller/products")
+    fetch("/api/seller/products?category=" + slug)
       .then((r) => r.json())
       .then((d) => {
         setProducts(Array.isArray(d) ? d : []);
@@ -55,36 +54,169 @@ useEffect(() => {
   };
 
   useEffect(() => {
+    fetch("/api/categories")
+      .then((r) => r.json())
+      .then((cats) => {
+        if (Array.isArray(cats)) {
+          const match = cats.find((c: any) => c.slug === slug);
+          if (match) {
+            setCategoryName(match.name);
+            if (match.fields) {
+              try {
+                const parsed = typeof match.fields === "string" ? JSON.parse(match.fields) : match.fields;
+                setFields(parsed);
+                const initial: Record<string, string> = {};
+                parsed.forEach((f: FieldDef) => {
+                  initial[f.name] = f.type === "select" && f.options ? f.options[0] : "";
+                });
+                setValues(initial);
+              } catch {}
+            }
+          }
+        }
+      });
     load();
-  }, []);
+  }, [slug]);
+
+  const resetForm = () => {
+    const reset: Record<string, string> = {};
+    fields.forEach((f) => {
+      reset[f.name] = f.type === "select" && f.options ? f.options[0] : "";
+    });
+    setValues(reset);
+    setDeliveryType("credentials");
+    setFileUrl("");
+    setEditingId(null);
+  };
+
+  const handleChange = (name: string, value: string) => {
+    setValues((v) => ({ ...v, [name]: value }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     setResponse("");
-    const res = await fetch("/api/seller/products", {
-      method: "POST",
+
+    if (deliveryType === "file" && !fileUrl) {
+      setResponse("Please upload a file for File delivery");
+      setSaving(false);
+      return;
+    }
+
+    const price = values["price"] || "0";
+    const metadata = { ...values };
+    delete metadata.price;
+
+    const isEdit = !!editingId;
+    const url = isEdit ? "/api/seller/products/" + editingId : "/api/seller/products";
+
+    const res = await fetch(url, {
+      method: isEdit ? "PATCH" : "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, price: Number(form.price) }),
+      body: JSON.stringify({
+        categorySlug: slug,
+        price: Number(price),
+        metadata,
+        deliveryType,
+        fileUrl,
+        country: metadata["country"] || metadata["location"] || "Unknown",
+      }),
     });
     const data = await res.json();
     setSaving(false);
+
     if (res.ok) {
-      setResponse("✓ Product added successfully");
-      setForm({ country: "", tld: "", hosting: "", checkStatus: "Valid", price: "" });
+      setResponse(isEdit ? "Product updated successfully" : "Product added successfully");
+      resetForm();
       load();
       setTab("all");
     } else {
-      setResponse("✗ " + (data.error || "Failed"));
+      setResponse(data.error || "Failed");
     }
+  };
+
+  const startEdit = (p: Product) => {
+    setEditingId(p.id);
+    setDeliveryType((p.deliveryType as any) || "credentials");
+    setFileUrl(p.fileUrl || "");
+    const meta = p.metadata || {};
+    const next: Record<string, string> = {};
+    fields.forEach((f) => {
+      next[f.name] = meta[f.name] !== undefined ? String(meta[f.name]) : (f.type === "select" && f.options ? f.options[0] : "");
+    });
+    next["price"] = String(p.price);
+    setValues(next);
+    setTab("add");
+  };
+
+  const cancelEdit = () => {
+    resetForm();
+    setResponse("");
   };
 
   const deleteProduct = async (id: string) => {
     if (!confirm("Delete this product?")) return;
-    await fetch(`/api/seller/products/${id}`, { method: "DELETE" });
+    await fetch("/api/seller/products/" + id, { method: "DELETE" });
     load();
   };
 
+  const renderField = (field: FieldDef) => {
+    const common = "w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-white placeholder-zinc-600 focus:border-red-500 focus:outline-none";
+
+    if (field.type === "select") {
+      return (
+        <select value={values[field.name] || ""} onChange={(e) => handleChange(field.name, e.target.value)} required={field.required} className={common}>
+          {field.options?.map((opt) => (
+            <option key={opt} value={opt}>{opt}</option>
+          ))}
+        </select>
+      );
+    }
+
+    if (field.type === "textarea") {
+      return (
+        <textarea
+          value={values[field.name] || ""}
+          onChange={(e) => handleChange(field.name, e.target.value)}
+          placeholder={field.placeholder}
+          required={field.required}
+          rows={5}
+          className={common}
+        />
+      );
+    }
+
+    return (
+      <input
+        type={field.type === "number" ? "number" : "text"}
+        value={values[field.name] || ""}
+        onChange={(e) => handleChange(field.name, e.target.value)}
+        placeholder={field.placeholder}
+        required={field.required}
+        className={common}
+      />
+    );
+  };
+
+  const filteredProducts = search.trim()
+    ? products.filter((p) => {
+        const q = search.trim().toLowerCase();
+        const metaStr = p.metadata ? JSON.stringify(p.metadata).toLowerCase() : "";
+        return (
+          (p.country || "").toLowerCase().includes(q) ||
+          (p.hosting || "").toLowerCase().includes(q) ||
+          String(p.price).includes(q) ||
+          metaStr.includes(q)
+        );
+      })
+    : products;
+  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / PER_PAGE));
+  const currentPage = Math.min(page, totalPages);
+  const pageStart = (currentPage - 1) * PER_PAGE;
+  const pagedProducts = filteredProducts.slice(pageStart, pageStart + PER_PAGE);
+
+  const displayFields = fields.filter((f) => f.name !== "price");
   const tabs = [
     { id: "static", label: "Static" },
     { id: "all", label: "All" },
@@ -95,158 +227,228 @@ useEffect(() => {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-red-600">{categoryDisplay}</h1>
+      <h1 className="text-3xl font-bold text-red-600">{categoryName}</h1>
 
-      {/* Tabs */}
       <div className="flex overflow-x-auto border-b border-zinc-800 text-sm font-semibold">
         {tabs.map((t) => (
           <button
             key={t.id}
             onClick={() => setTab(t.id as any)}
-            className={`whitespace-nowrap px-4 py-2 ${
-              tab === t.id
-                ? "border-b-2 border-white text-white"
-                : "text-zinc-500 hover:text-white"
-            }`}
+            className={`whitespace-nowrap px-4 py-2 ${tab === t.id ? "border-b-2 border-white text-white" : "text-zinc-500 hover:text-white"}`}
           >
             {t.label}
           </button>
         ))}
       </div>
 
-      {/* Add Form */}
       {tab === "add" && (
-        <form onSubmit={handleSubmit} className="max-w-3xl space-y-4">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div>
-              <label className="mb-1 block text-sm font-semibold text-red-500">Country</label>
-              <input
-                type="text"
-                value={form.country}
-                onChange={(e) => setForm({ ...form, country: e.target.value })}
-                placeholder="USA"
-                required
-                className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-white placeholder-zinc-600 focus:border-red-500 focus:outline-none"
-              />
+        <form onSubmit={handleSubmit} className="max-w-3xl space-y-6">
+          {editingId && (
+            <div className="flex items-center justify-between rounded-lg border border-blue-900/50 bg-blue-950/20 p-4">
+              <div>
+                <p className="text-sm font-semibold text-blue-400">Editing product</p>
+                <p className="text-xs text-zinc-500">Changes overwrite the existing listing.</p>
+              </div>
+              <button type="button" onClick={cancelEdit} className="flex items-center gap-1 rounded bg-zinc-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-zinc-700">
+                <X className="h-3 w-3" /> Cancel Edit
+              </button>
             </div>
-            <div>
-              <label className="mb-1 block text-sm font-semibold text-red-500">TLD</label>
-              <input
-                type="text"
-                value={form.tld}
-                onChange={(e) => setForm({ ...form, tld: e.target.value })}
-                placeholder=".com"
-                required
-                className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-white placeholder-zinc-600 focus:border-red-500 focus:outline-none"
-              />
-            </div>
-          </div>
+          )}
 
-          <div>
-            <label className="mb-1 block text-sm font-semibold text-red-500">Hosting</label>
-            <input
-              type="text"
-              value={form.hosting}
-              onChange={(e) => setForm({ ...form, hosting: e.target.value })}
-              placeholder="AWS, Cloudflare, DigitalOcean..."
-              required
-              className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-white placeholder-zinc-600 focus:border-red-500 focus:outline-none"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <section className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-5 space-y-4">
             <div>
-              <label className="mb-1 block text-sm font-semibold text-red-500">Check Status</label>
-              <select
-                value={form.checkStatus}
-                onChange={(e) => setForm({ ...form, checkStatus: e.target.value })}
-                className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-white focus:border-red-500 focus:outline-none"
-              >
-                <option value="Valid">Valid</option>
-                <option value="Checking">Checking</option>
-                <option value="Invalid">Invalid</option>
-              </select>
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-red-500">Step 1 — How buyers receive this</h3>
+            </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <button type="button" onClick={() => setDeliveryType("credentials")} className={`rounded-lg border p-4 text-left transition ${deliveryType === "credentials" ? "border-red-500 bg-red-950/30" : "border-zinc-800 bg-zinc-950 hover:border-zinc-700"}`}>
+                <KeyRound className={`h-5 w-5 ${deliveryType === "credentials" ? "text-red-500" : "text-zinc-500"}`} />
+                <p className="mt-2 text-sm font-semibold text-white">Login Credentials</p>
+                <p className="mt-1 text-xs text-zinc-500">IP, login, password</p>
+              </button>
+              <button type="button" onClick={() => setDeliveryType("text")} className={`rounded-lg border p-4 text-left transition ${deliveryType === "text" ? "border-red-500 bg-red-950/30" : "border-zinc-800 bg-zinc-950 hover:border-zinc-700"}`}>
+                <FileText className={`h-5 w-5 ${deliveryType === "text" ? "text-red-500" : "text-zinc-500"}`} />
+                <p className="mt-2 text-sm font-semibold text-white">Text List</p>
+                <p className="mt-1 text-xs text-zinc-500">Email:pass lines</p>
+              </button>
+              <button type="button" onClick={() => setDeliveryType("file")} className={`rounded-lg border p-4 text-left transition ${deliveryType === "file" ? "border-red-500 bg-red-950/30" : "border-zinc-800 bg-zinc-950 hover:border-zinc-700"}`}>
+                <Package className={`h-5 w-5 ${deliveryType === "file" ? "text-red-500" : "text-zinc-500"}`} />
+                <p className="mt-2 text-sm font-semibold text-white">File Download</p>
+                <p className="mt-1 text-xs text-zinc-500">ZIP, PDF</p>
+              </button>
+            </div>
+            {deliveryType === "file" && (
+              <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-4">
+                <label className="mb-2 block text-xs font-semibold uppercase text-zinc-500">Upload File (max 64MB)</label>
+                <UploadButton
+                  endpoint="productFile"
+                  onClientUploadComplete={(res) => {
+                    const url = (res?.[0] as any)?.ufsUrl || (res?.[0] as any)?.url;
+                    if (url) setFileUrl(url);
+                  }}
+                  onUploadError={(err: Error) => alert("Upload failed: " + err.message)}
+                  appearance={{
+                    button: "rounded-md bg-red-600 px-4 py-2 text-xs font-semibold text-white hover:bg-red-500",
+                    allowedContent: "text-xs text-zinc-500 mt-2",
+                  }}
+                />
+                {fileUrl && <p className="mt-2 flex items-center gap-1 text-xs text-green-500"><Check className="h-3 w-3" /> File uploaded</p>}
+              </div>
+            )}
+          </section>
+
+          <section className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-5 space-y-4">
+            <div>
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-red-500">Step 2 — Product Details</h3>
+            </div>
+            {displayFields.map((field) => (
+              <div key={field.name}>
+                <label className="mb-1 block text-sm font-semibold text-zinc-300">
+                  {field.label} {field.required && <span className="text-red-500">*</span>}
+                </label>
+                {renderField(field)}
+              </div>
+            ))}
+          </section>
+
+          <section className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-5 space-y-4">
+            <div>
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-red-500">Step 3 — Pricing</h3>
+              <p className="mt-1 text-xs text-zinc-500">You earn 65% of every sale.</p>
             </div>
             <div>
-              <label className="mb-1 block text-sm font-semibold text-red-500">Price (USD)</label>
+              <label className="mb-1 block text-sm font-semibold text-zinc-300">Price (USD) *</label>
               <input
                 type="number"
                 step="0.01"
-                value={form.price}
-                onChange={(e) => setForm({ ...form, price: e.target.value })}
+                value={values["price"] || ""}
+                onChange={(e) => handleChange("price", e.target.value)}
                 placeholder="12.50"
                 required
                 className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-white placeholder-zinc-600 focus:border-red-500 focus:outline-none"
               />
             </div>
-          </div>
+          </section>
 
-          <button
-            type="submit"
-            disabled={saving}
-            className="flex items-center gap-2 rounded-md bg-red-600 px-6 py-2 text-sm font-semibold text-white hover:bg-red-500 disabled:opacity-50"
-          >
-            <Plus className="h-4 w-4" /> {saving ? "Adding..." : "Add Product"}
+          <button type="submit" disabled={saving} className="flex w-full items-center justify-center gap-2 rounded-md bg-red-600 px-6 py-3 text-sm font-semibold text-white hover:bg-red-500 disabled:opacity-50">
+            <Plus className="h-4 w-4" /> {saving ? "Saving..." : editingId ? "Save Changes" : "Add Product"}
           </button>
 
           {response && (
-            <div className={`rounded-lg border p-3 text-sm ${response.startsWith("✓") ? "border-green-900/50 bg-green-950/20 text-green-500" : "border-red-900/50 bg-red-950/20 text-red-500"}`}>
+            <div className={`rounded-lg border p-3 text-sm ${response.includes("successfully") ? "border-green-900/50 bg-green-950/20 text-green-500" : "border-red-900/50 bg-red-950/20 text-red-500"}`}>
               {response}
             </div>
           )}
         </form>
       )}
 
-      {/* Products List */}
+      {tab === "mass" && (
+        <div className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-8 text-center text-sm text-zinc-500">
+          Mass Add coming soon.
+        </div>
+      )}
+
       {(tab === "all" || tab === "static") && (
-        <div className="overflow-x-auto rounded-lg border border-zinc-800">
-          <table className="w-full min-w-[700px] text-sm">
-            <thead className="bg-zinc-900 text-left text-xs font-semibold uppercase text-red-500">
-              <tr>
-                <th className="px-3 py-2">Country</th>
-                <th className="px-3 py-2">TLD</th>
-                <th className="px-3 py-2">Hosting</th>
-                <th className="px-3 py-2">Status</th>
-                <th className="px-3 py-2">Price</th>
-                <th className="px-3 py-2">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-800 bg-zinc-950">
-              {loading ? (
-                <tr><td colSpan={6} className="px-3 py-6 text-center text-zinc-500">Loading...</td></tr>
-              ) : products.length === 0 ? (
-                <tr><td colSpan={6} className="px-3 py-6 text-center text-zinc-500">No products yet. Click the "Add" tab to create one.</td></tr>
-              ) : products.map((p) => (
-                <tr key={p.id} className="hover:bg-zinc-900/50">
-                  <td className="px-3 py-3 text-white">{p.country}</td>
-                  <td className="px-3 py-3 text-zinc-300">{p.tld}</td>
-                  <td className="px-3 py-3 text-zinc-300">{p.hosting}</td>
-                  <td className="px-3 py-3 text-zinc-300">{p.checkStatus}</td>
-                  <td className="px-3 py-3 font-semibold text-green-500">${p.price.toFixed(2)}</td>
-                  <td className="px-3 py-3">
-                    <button
-                      onClick={() => deleteProduct(p.id)}
-                      className="rounded bg-zinc-800 p-1.5 hover:bg-zinc-700"
-                    >
-                      <Trash2 className="h-3.5 w-3.5 text-red-500" />
-                    </button>
-                  </td>
+        <div className="space-y-4">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="relative md:max-w-md md:flex-1">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
+              <input
+                type="text"
+                placeholder="Search by country, IP, login..."
+                value={search}
+                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                className="w-full rounded-md border border-zinc-800 bg-zinc-950 pl-10 pr-3 py-2 text-sm text-white placeholder-zinc-500 focus:border-red-500 focus:outline-none"
+              />
+            </div>
+            <span className="text-xs text-zinc-500">
+              Showing {pagedProducts.length} of {filteredProducts.length}
+            </span>
+          </div>
+
+          <div className="overflow-x-auto rounded-lg border border-zinc-800">
+            <table className="w-full min-w-[700px] text-sm">
+              <thead className="bg-zinc-900 text-left text-xs font-semibold uppercase text-red-500">
+                <tr>
+                  {displayFields.slice(0, 4).map((f) => (
+                    <th key={f.name} className="px-3 py-2">{f.label}</th>
+                  ))}
+                  <th className="px-3 py-2">Type</th>
+                  <th className="px-3 py-2">Price</th>
+                  <th className="px-3 py-2">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-zinc-800 bg-zinc-950">
+                {loading ? (
+                  <tr><td colSpan={displayFields.slice(0, 4).length + 3} className="px-3 py-6 text-center text-zinc-500">Loading...</td></tr>
+                ) : pagedProducts.length === 0 ? (
+                  <tr><td colSpan={displayFields.slice(0, 4).length + 3} className="px-3 py-6 text-center text-zinc-500">
+                    {search ? "No products match." : "No products yet."}
+                  </td></tr>
+                ) : (
+                  pagedProducts.map((p) => (
+                    <tr key={p.id} className="hover:bg-zinc-900/50">
+                      {displayFields.slice(0, 4).map((f) => (
+                        <td key={f.name} className="px-3 py-3 text-zinc-300">{p.metadata?.[f.name] || "—"}</td>
+                      ))}
+                      <td className="px-3 py-3">
+                        <span className="rounded-full bg-zinc-800 px-2 py-0.5 text-[10px] font-semibold uppercase text-zinc-400">
+                          {p.deliveryType || "credentials"}
+                        </span>
+                      </td>
+                      <td className="px-3 py-3 font-semibold text-green-500">${p.price.toFixed(2)}</td>
+                      <td className="px-3 py-3">
+                        <div className="flex gap-1">
+                          <button onClick={() => startEdit(p)} className="rounded bg-zinc-800 p-1.5 hover:bg-zinc-700" title="Edit">
+                            <Pencil className="h-3.5 w-3.5 text-blue-400" />
+                          </button>
+                          <button onClick={() => deleteProduct(p.id)} className="rounded bg-zinc-800 p-1.5 hover:bg-zinc-700" title="Delete">
+                            <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between gap-3 pt-2">
+              <span className="text-xs text-zinc-500">Page {currentPage} of {totalPages}</span>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage <= 1}
+                  className="flex items-center gap-1 rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-zinc-800 disabled:opacity-30"
+                >
+                  <ChevronLeft className="h-3.5 w-3.5" /> Prev
+                </button>
+                {Array.from({ length: totalPages }).map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setPage(i + 1)}
+                    className={`min-w-[32px] rounded-md px-2 py-1.5 text-xs font-semibold ${i + 1 === currentPage ? "bg-red-600 text-white" : "bg-zinc-900 text-zinc-400 hover:bg-zinc-800"}`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage >= totalPages}
+                  className="flex items-center gap-1 rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-zinc-800 disabled:opacity-30"
+                >
+                  Next <ChevronRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
       {tab === "deleted" && (
         <div className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-8 text-center text-sm text-zinc-500">
           No deleted products.
-        </div>
-      )}
-
-      {tab === "mass" && (
-        <div className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-8 text-center text-sm text-zinc-500">
-          Mass add coming soon — paste multiple products in CSV format.
         </div>
       )}
     </div>

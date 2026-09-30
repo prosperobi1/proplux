@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Trash2, Pencil, Eye, EyeOff, Check, X, Package, GripVertical } from "lucide-react";
+import { Plus, Trash2, Pencil, Eye, EyeOff, Check, X, Package, GripVertical, Settings2 } from "lucide-react";
 
 type Category = {
   id: string;
@@ -10,7 +10,12 @@ type Category = {
   icon: string;
   visible: boolean;
   order: number;
+  sellOnce: boolean;
+  groupId?: string | null;
+  group?: { id: string; name: string; order: number } | null;
 };
+
+type Group = { id: string; name: string; order: number; categoryCount: number };
 
 const ICONS = [
   "Package", "Monitor", "Terminal", "Server", "Mail", "AtSign",
@@ -29,6 +34,9 @@ export default function AdminCategoriesPage() {
   const [editName, setEditName] = useState("");
   const [editIcon, setEditIcon] = useState("Package");
   const [editOrder, setEditOrder] = useState(0);
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [groupId, setGroupId] = useState("");
+  const [editGroupId, setEditGroupId] = useState("");
 
   const load = () => {
     fetch("/api/admin/categories")
@@ -37,6 +45,10 @@ export default function AdminCategoriesPage() {
         setCategories(Array.isArray(d) ? d : []);
         setLoading(false);
       });
+    fetch("/api/admin/category-groups")
+      .then((r) => r.json())
+      .then((d) => { if (Array.isArray(d)) setGroups(d); })
+      .catch(() => {});
   };
 
   useEffect(() => {
@@ -50,10 +62,11 @@ export default function AdminCategoriesPage() {
     await fetch("/api/admin/categories", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, icon }),
+      body: JSON.stringify({ name, icon, groupId }),
     });
     setName("");
     setIcon("Package");
+    setGroupId("");
     setSaving(false);
     load();
   };
@@ -63,6 +76,7 @@ export default function AdminCategoriesPage() {
     setEditName(cat.name);
     setEditIcon(cat.icon);
     setEditOrder(cat.order);
+    setEditGroupId(cat.groupId || "");
   };
 
   const cancelEdit = () => {
@@ -74,7 +88,7 @@ export default function AdminCategoriesPage() {
     await fetch(`/api/admin/categories/${editingId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: editName, icon: editIcon, order: editOrder }),
+      body: JSON.stringify({ name: editName, icon: editIcon, order: editOrder, groupId: editGroupId }),
     });
     setEditingId(null);
     load();
@@ -85,6 +99,15 @@ export default function AdminCategoriesPage() {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ visible: !cat.visible }),
+    });
+    load();
+  };
+
+  const toggleSellOnce = async (cat: Category) => {
+    await fetch(`/api/admin/categories/${cat.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sellOnce: !cat.sellOnce }),
     });
     load();
   };
@@ -116,15 +139,31 @@ export default function AdminCategoriesPage() {
           placeholder="Category name (e.g., VPNs)"
           className="flex-1 rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-white placeholder-zinc-500 focus:border-red-500 focus:outline-none"
         />
-        <select
-          value={icon}
-          onChange={(e) => setIcon(e.target.value)}
-          className="rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-white"
-        >
-          {ICONS.map((i) => (
-            <option key={i} value={i}>{i}</option>
-          ))}
-        </select>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold uppercase text-zinc-500">Icon:</span>
+          <select
+            value={icon}
+            onChange={(e) => setIcon(e.target.value)}
+            className="rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-white"
+          >
+            {ICONS.map((i) => (
+              <option key={i} value={i}>{i}</option>
+            ))}
+          </select>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold uppercase text-zinc-500">Group:</span>
+          <select
+            value={groupId}
+            onChange={(e) => setGroupId(e.target.value)}
+            className="rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-white"
+          >
+            <option value="">— None —</option>
+            {groups.map((g) => (
+              <option key={g.id} value={g.id}>{g.name}</option>
+            ))}
+          </select>
+        </div>
         <button
           type="submit"
           disabled={saving}
@@ -143,6 +182,8 @@ export default function AdminCategoriesPage() {
               <th className="px-3 py-2">Name</th>
               <th className="px-3 py-2">Slug</th>
               <th className="px-3 py-2">Icon</th>
+              <th className="px-3 py-2">Sell Once</th>
+              <th className="px-3 py-2">Group</th>
               <th className="px-3 py-2">Order</th>
               <th className="px-3 py-2">Visible</th>
               <th className="px-3 py-2">Actions</th>
@@ -151,13 +192,13 @@ export default function AdminCategoriesPage() {
           <tbody className="divide-y divide-zinc-800 bg-zinc-950">
             {loading ? (
               <tr>
-                <td colSpan={7} className="px-3 py-6 text-center text-zinc-500">
+                <td colSpan={9} className="px-3 py-6 text-center text-zinc-500">
                   Loading categories...
                 </td>
               </tr>
             ) : categories.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-3 py-6 text-center text-zinc-500">
+                <td colSpan={9} className="px-3 py-6 text-center text-zinc-500">
                   No categories yet.
                 </td>
               </tr>
@@ -197,6 +238,35 @@ export default function AdminCategoriesPage() {
                         </select>
                       ) : (
                         c.icon
+                      )}
+                    </td>
+                    <td className="px-3 py-3">
+                      <button
+                        onClick={() => toggleSellOnce(c)}
+                        className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${
+                          c.sellOnce ? "bg-red-950 text-red-400" : "bg-zinc-800 text-zinc-500"
+                        }`}
+                        title={c.sellOnce ? "Sold once — hidden after purchase" : "Unlimited — can be sold many times"}
+                      >
+                        {c.sellOnce ? "Yes" : "No"}
+                      </button>
+                    </td>
+                    <td className="px-3 py-3">
+                      {isEditing ? (
+                        <select
+                          value={editGroupId}
+                          onChange={(e) => setEditGroupId(e.target.value)}
+                          className="rounded border border-zinc-700 bg-zinc-900 px-2 py-1 text-white text-xs"
+                        >
+                          <option value="">— None —</option>
+                          {groups.map((g) => (
+                            <option key={g.id} value={g.id}>{g.name}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <span className={c.group ? "rounded-full bg-red-950 px-2 py-0.5 text-[10px] font-semibold uppercase text-red-400" : "text-[10px] uppercase text-zinc-600"}>
+                          {c.group?.name || "None"}
+                        </span>
                       )}
                     </td>
                     <td className="px-3 py-3 text-zinc-400">
@@ -245,6 +315,13 @@ export default function AdminCategoriesPage() {
                           </>
                         ) : (
                           <>
+                            <a
+                              href={`/admin/categories/${c.id}/fields`}
+                              className="rounded bg-zinc-800 p-1.5 hover:bg-zinc-700 inline-block"
+                              title="Edit fields"
+                            >
+                              <Settings2 className="h-3.5 w-3.5 text-purple-400" />
+                            </a>
                             <button
                               onClick={() => startEdit(c)}
                               className="rounded bg-zinc-800 p-1.5 hover:bg-zinc-700"

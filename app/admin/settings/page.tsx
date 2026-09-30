@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Save, Globe, DollarSign, Wallet, Mail, Wrench, Palette, FileText, Bell, ToggleLeft } from "lucide-react";
+import { Save, Globe, DollarSign, Mail, FileText, Bell, ToggleLeft, X, CheckCircle2, Eye, EyeOff } from "lucide-react";
+import { UploadButton } from "../../../src/utils/uploadthing";
 
 type Settings = Record<string, string>;
 
@@ -10,14 +11,27 @@ export default function AdminSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [testTo, setTestTo] = useState("");
+  const [testing, setTesting] = useState(false);
+  const [testResult, setTestResult] = useState<{ ok: boolean; msg: string } | null>(null);
 
-  useEffect(() => {
+  const load = () => {
     fetch("/api/admin/settings")
       .then((r) => r.json())
       .then((d) => {
         if (!d.error) setSettings(d);
+        else setError(d.error);
+        setLoading(false);
+      })
+      .catch((e) => {
+        setError(String(e));
         setLoading(false);
       });
+  };
+
+  useEffect(() => {
+    load();
   }, []);
 
   const update = (key: string, value: string) => {
@@ -36,20 +50,57 @@ export default function AdminSettingsPage() {
     e.preventDefault();
     if (!settings) return;
     setSaving(true);
-    const res = await fetch("/api/admin/settings", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(settings),
-    });
-    setSaving(false);
-    if (res.ok) {
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(settings),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data?.error || `Save failed (${res.status})`);
+        return;
+      }
       setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
+      load();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      setTimeout(() => setSaved(false), 6000);
+    } catch (err) {
+      setError(String(err));
+    } finally {
+      setSaving(false);
     }
   };
 
-  if (loading) return <p className="p-8 text-zinc-500">Loading settings...</p>;
-  if (!settings) return (
+  const sendTest = async () => {
+    if (!settings || !testTo.trim()) {
+      setTestResult({ ok: false, msg: "Enter the email address to test first." });
+      return;
+    }
+    setTesting(true);
+    setTestResult(null);
+    try {
+      const res = await fetch("/api/admin/email/test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ to: testTo.trim(), settings }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.ok) {
+        setTestResult({ ok: true, msg: `Test email sent to ${testTo.trim()} via ${(data.via || "smtp").toUpperCase()}.` });
+        load();
+      } else {
+        setTestResult({ ok: false, msg: data?.error || `Send failed (${res.status})` });
+      }
+    } catch (err) {
+      setTestResult({ ok: false, msg: String(err) });
+    } finally {
+      setTesting(false);
+    }
+  };
+
+  if (loading) return <p className="p-8 text-zinc-500">Loading settings...</p>;  if (!settings) return (
     <div className="rounded-lg border border-red-900/50 bg-red-950/20 p-6 text-red-500">
       Failed to load settings. Make sure you are logged in as ADMIN.
     </div>
@@ -62,25 +113,75 @@ export default function AdminSettingsPage() {
         <p className="mt-1 text-sm text-zinc-500">Configure global platform settings. Changes apply immediately.</p>
       </div>
 
+      {saved && (
+        <div className="flex items-center gap-2 rounded-lg border border-green-900/50 bg-green-950/30 px-4 py-3 text-sm text-green-400">
+          <CheckCircle2 className="h-4 w-4" /> Settings saved successfully.
+        </div>
+      )}
+
+      {error && (
+        <div className="flex items-center gap-2 rounded-lg border border-red-900/50 bg-red-950/30 px-4 py-3 text-sm text-red-400">
+          <X className="h-4 w-4" /> {error}
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Branding */}
-        <section className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-6">
+        <section className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-4 md:p-6">
           <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-white">
             <Globe className="h-5 w-5 text-red-500" /> Branding
           </h2>
           <div className="space-y-4">
             <Field label="Site Name" value={settings.siteName || ""} onChange={(v) => update("siteName", v)} />
             <Field label="Site Description" value={settings.siteDescription || ""} onChange={(v) => update("siteDescription", v)} />
-            <Field label="Logo URL" value={settings.logoUrl || ""} onChange={(v) => update("logoUrl", v)} placeholder="https://example.com/logo.png" hint="Paste a hosted image URL. File upload coming soon." />
-            {settings.logoUrl && (
-              <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-4">
-                <p className="mb-2 text-xs text-zinc-500">Preview:</p>
-                <img src={settings.logoUrl} alt="Logo preview" className="h-12 w-auto" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+
+            <div>
+              <label className="mb-1 block text-sm font-semibold text-red-500">Logo</label>
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+                <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-4">
+                  {settings.logoUrl ? (
+                    <img
+                      src={settings.logoUrl}
+                      alt="Logo preview"
+                      className="h-16 w-auto"
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                    />
+                  ) : (
+                    <div className="flex h-16 w-16 items-center justify-center text-xs text-zinc-600">
+                      No logo
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <UploadButton
+                    endpoint="logoUploader"
+                    onClientUploadComplete={(res) => {
+                      const file = res?.[0] as any;
+                      const url = file?.ufsUrl || file?.url;
+                      if (url) update("logoUrl", url);
+                      setSaved(false);
+                    }}
+                    onUploadError={(err: Error) => {
+                      setError(`Upload failed: ${err.message}`);
+                    }}
+                    appearance={{
+                      button: "rounded-md bg-red-600 px-4 py-2 text-xs font-semibold text-white hover:bg-red-500",
+                      allowedContent: "text-xs text-zinc-500 mt-2",
+                    }}
+                  />
+                  <p className="mt-2 text-xs text-zinc-500">
+                    PNG, JPG, or SVG up to 4MB. Click <strong>Save All Settings</strong> after uploading.
+                  </p>
+                  {settings.logoUrl && (
+                    <p className="mt-2 break-all font-mono text-xs text-zinc-600">{settings.logoUrl}</p>
+                  )}
+                </div>
               </div>
-            )}
+            </div>
+
             <div>
               <label className="mb-1 block text-sm font-semibold text-red-500">Primary Color</label>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                 <input
                   type="color"
                   value={settings.primaryColor || "#dc2626"}
@@ -99,7 +200,7 @@ export default function AdminSettingsPage() {
         </section>
 
         {/* Financial */}
-        <section className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-6">
+        <section className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-4 md:p-6">
           <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-white">
             <DollarSign className="h-5 w-5 text-red-500" /> Financial
           </h2>
@@ -117,23 +218,25 @@ export default function AdminSettingsPage() {
               value={settings.minWithdrawal || ""}
               onChange={(v) => update("minWithdrawal", v)}
             />
-          </div>
-        </section>
-
-        {/* Crypto */}
-        <section className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-6">
-          <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-white">
-            <Wallet className="h-5 w-5 text-red-500" /> Crypto Wallets
-          </h2>
-          <div className="space-y-4">
-            <Field label="Bitcoin (BTC) Address" value={settings.walletBTC || ""} onChange={(v) => update("walletBTC", v)} mono />
-            <Field label="Ethereum (ETH) Address" value={settings.walletETH || ""} onChange={(v) => update("walletETH", v)} mono />
-            <Field label="USDT Address (TRC20 / ERC20)" value={settings.walletUSDT || ""} onChange={(v) => update("walletUSDT", v)} mono />
+            <Field
+              label="Minimum Deposit (USD)"
+              type="number"
+              value={settings.minDeposit || "10"}
+              onChange={(v) => update("minDeposit", v)}
+              hint="Minimum amount buyers can deposit at once."
+            />
+            <Field
+              label="Report Window (hours)"
+              type="number"
+              value={settings.reportWindowHours || "16"}
+              onChange={(v) => update("reportWindowHours", v)}
+              hint="Buyers can report an order within this many hours of purchase."
+            />
           </div>
         </section>
 
         {/* Notifications */}
-        <section className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-6">
+        <section className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-4 md:p-6">
           <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-white">
             <Bell className="h-5 w-5 text-red-500" /> Notifications & Support
           </h2>
@@ -149,8 +252,129 @@ export default function AdminSettingsPage() {
           </div>
         </section>
 
+        {/* Email (SMTP) */}
+        <section className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-4 md:p-6">
+          <div className="mb-4 flex items-start justify-between gap-4">
+            <div>
+              <h2 className="flex items-center gap-2 text-lg font-semibold text-white">
+                <Mail className="h-5 w-5 text-red-500" /> Email (SMTP)
+              </h2>
+              <p className="mt-1 text-sm text-zinc-500">
+                Site emails — password resets, order alerts, ticket replies — are sent through this SMTP server.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => toggle("smtpEnabled")}
+              aria-label="Toggle SMTP"
+              className={`relative h-6 w-11 flex-shrink-0 rounded-full transition ${
+                settings.smtpEnabled === "true" ? "bg-green-600" : "bg-zinc-700"
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
+                  settings.smtpEnabled === "true" ? "translate-x-5" : "translate-x-0.5"
+                }`}
+              />
+            </button>
+          </div>
+
+          <div className={settings.smtpEnabled === "true" ? "" : "pointer-events-none opacity-40"}>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <Field
+                label="SMTP Host"
+                value={settings.smtpHost || ""}
+                onChange={(v) => update("smtpHost", v)}
+                placeholder="smtp.yourprovider.com"
+                mono
+                hint="From your mail provider (e.g. smtp.hostinger.com, smtp.gmail.com)."
+              />
+              <Field
+                label="SMTP Port"
+                type="number"
+                value={settings.smtpPort || "587"}
+                onChange={(v) => update("smtpPort", v)}
+                hint="587 for STARTTLS (recommended), 465 for SSL."
+              />
+              <div>
+                <label className="mb-1 block text-sm font-semibold text-red-500">Encryption</label>
+                <select
+                  value={settings.smtpSecurity || "starttls"}
+                  onChange={(e) => update("smtpSecurity", e.target.value)}
+                  className="w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-white focus:border-red-500 focus:outline-none"
+                >
+                  <option value="starttls">STARTTLS (port 587)</option>
+                  <option value="ssl">SSL/TLS (port 465)</option>
+                  <option value="none">None (port 25)</option>
+                </select>
+              </div>
+              <Field
+                label="SMTP Username"
+                value={settings.smtpUser || ""}
+                onChange={(v) => update("smtpUser", v)}
+                placeholder="usually your full email address"
+                mono
+              />
+              <Field
+                label="SMTP Password"
+                type="password"
+                value={settings.smtpPass || ""}
+                onChange={(v) => update("smtpPass", v)}
+                placeholder="SMTP password or app password"
+                mono
+                secret
+                hint="Use an app password if your provider requires 2FA."
+              />
+              <Field
+                label="From Email"
+                type="email"
+                value={settings.smtpFrom || ""}
+                onChange={(v) => update("smtpFrom", v)}
+                placeholder="no-reply@yourdomain.com"
+                mono
+                hint="Must be an address on the domain your SMTP account can send from."
+              />
+              <Field
+                label="From Name"
+                value={settings.smtpFromName || ""}
+                onChange={(v) => update("smtpFromName", v)}
+                placeholder="Proplux"
+              />
+            </div>
+
+            <div className="mt-4 rounded-lg border border-zinc-800 bg-zinc-950 p-4">
+              <p className="text-sm font-semibold text-white">Send a test email</p>
+              <p className="mt-0.5 text-xs text-zinc-500">
+                Saves your settings, then sends a test message so you can confirm delivery before users rely on it.
+              </p>
+              <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                <input
+                  type="email"
+                  value={testTo}
+                  onChange={(e) => setTestTo(e.target.value)}
+                  placeholder="you@example.com"
+                  className="flex-1 rounded-md border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm text-white placeholder-zinc-600 focus:border-red-500 focus:outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={sendTest}
+                  disabled={testing}
+                  className="flex items-center justify-center gap-2 rounded-md border border-red-600 px-4 py-2 text-sm font-semibold text-red-400 hover:bg-red-600/10 disabled:opacity-50"
+                >
+                  <Mail className="h-4 w-4" /> {testing ? "Sending..." : "Send test email"}
+                </button>
+              </div>
+              {testResult && (
+                <p className={`mt-2 text-sm ${testResult.ok ? "text-green-400" : "text-red-400"}`}>
+                  {testResult.msg}
+                </p>
+              )}
+            </div>
+          </div>
+        </section>
+
         {/* Legal */}
-        <section className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-6">
+        <section className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-4 md:p-6">
           <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-white">
             <FileText className="h-5 w-5 text-red-500" /> Legal
           </h2>
@@ -161,7 +385,7 @@ export default function AdminSettingsPage() {
         </section>
 
         {/* Feature Toggles */}
-        <section className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-6">
+        <section className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-4 md:p-6">
           <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-white">
             <ToggleLeft className="h-5 w-5 text-red-500" /> Feature Toggles
           </h2>
@@ -189,15 +413,15 @@ export default function AdminSettingsPage() {
         </section>
 
         {/* Save */}
-        <div className="sticky bottom-4 flex items-center gap-4 rounded-lg border border-zinc-800 bg-zinc-900 p-4">
+        <div className="sticky bottom-4 flex flex-col gap-3 rounded-lg border border-zinc-800 bg-zinc-900 p-4 sm:flex-row sm:items-center sm:gap-4">
           <button
             type="submit"
             disabled={saving}
-            className="flex items-center gap-2 rounded-md bg-red-600 px-6 py-3 text-sm font-semibold text-white hover:bg-red-500 disabled:opacity-50"
+            className="flex items-center justify-center gap-2 rounded-md bg-red-600 px-6 py-3 text-sm font-semibold text-white hover:bg-red-500 disabled:opacity-50"
           >
             <Save className="h-4 w-4" /> {saving ? "Saving..." : "Save All Settings"}
           </button>
-          {saved && <span className="text-sm text-green-500">✓ Settings saved</span>}
+          {saved && <span className="text-sm text-green-500">Settings saved</span>}
         </div>
       </form>
     </div>
@@ -205,7 +429,7 @@ export default function AdminSettingsPage() {
 }
 
 function Field({
-  label, value, onChange, type = "text", placeholder, hint, mono,
+  label, value, onChange, type = "text", placeholder, hint, mono, secret = false,
 }: {
   label: string;
   value: string;
@@ -214,17 +438,34 @@ function Field({
   placeholder?: string;
   hint?: string;
   mono?: boolean;
+  secret?: boolean;
 }) {
+  const [visible, setVisible] = useState(false);
+  const inputType = secret ? (visible ? "text" : "password") : type;
+
   return (
     <div>
       <label className="mb-1 block text-sm font-semibold text-red-500">{label}</label>
-      <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className={`w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-white placeholder-zinc-600 focus:border-red-500 focus:outline-none ${mono ? "font-mono" : ""}`}
-      />
+      <div className="relative">
+        <input
+          type={inputType}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          className={`w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-white placeholder-zinc-600 focus:border-red-500 focus:outline-none ${secret ? "pr-10" : ""} ${mono ? "font-mono" : ""}`}
+        />
+        {secret && (
+          <button
+            type="button"
+            onClick={() => setVisible((v) => !v)}
+            aria-label={visible ? "Hide password" : "Show password"}
+            title={visible ? "Hide password" : "Show password"}
+            className="absolute inset-y-0 right-0 flex w-10 items-center justify-center rounded-r-md text-zinc-500 hover:text-zinc-300 focus:outline-none focus-visible:text-zinc-200"
+          >
+            {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
+        )}
+      </div>
       {hint && <p className="mt-1 text-xs text-zinc-500">{hint}</p>}
     </div>
   );

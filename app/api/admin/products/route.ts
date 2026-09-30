@@ -1,64 +1,53 @@
-import { prisma } from "../../../lib/prisma";
-import { auth } from "../../../lib/auth";
 import { NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { decryptAllFields } from "@/lib/encrypt";
 
-export async function GET() {
-  try {
-    const session = await auth();
-    if (!session?.user || (session.user as any).role !== "ADMIN") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const products = await prisma.product.findMany({
-      include: { seller: { select: { username: true } } },
-      orderBy: { createdAt: "desc" },
-    });
-
-    return NextResponse.json(products);
-  } catch (error) {
-    return NextResponse.json({ error: String(error) }, { status: 500 });
+export async function GET(req: Request) {
+  const session = await auth();
+  if (!session?.user || (session.user as any).role !== "ADMIN") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-}
 
-export async function PATCH(req: Request) {
-  try {
-    const session = await auth();
-    if (!session?.user || (session.user as any).role !== "ADMIN") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const { searchParams } = new URL(req.url);
+  const category = searchParams.get("category");
 
-    const { id, price, checkStatus } = await req.json();
-    if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
+  const where: any = {};
+  if (category) where.categorySlug = category;
 
-    const updated = await prisma.product.update({
-      where: { id },
-      data: {
-        ...(price !== undefined && { price: Number(price) }),
-        ...(checkStatus !== undefined && { checkStatus }),
+  // Fetch sellOnce map separately (Product has categorySlug, not a relation)
+  const categories = await prisma.category.findMany({
+    select: { slug: true, sellOnce: true },
+  });
+  const sellOnceMap = new Map(categories.map((c) => [c.slug, c.sellOnce]));
+
+  const products = await prisma.product.findMany({
+    where,
+    orderBy: { createdAt: "desc" },
+    include: {
+      seller: { select: { username: true } },
+      orders: {
+        where: { status: { in: ["Pending Confirmation", "Completed"] } },
+        select: { id: true, buyerId: true, createdAt: true },
+        take: 1,
       },
-    });
+    },
+  });
 
-    return NextResponse.json(updated);
-  } catch (error) {
-    return NextResponse.json({ error: String(error) }, { status: 500 });
-  }
-}
-
-export async function DELETE(req: Request) {
-  try {
-    const session = await auth();
-    if (!session?.user || (session.user as any).role !== "ADMIN") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const { id } = await req.json();
-    if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
-
-    await prisma.order.deleteMany({ where: { productId: id } });
-    await prisma.product.delete({ where: { id } });
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    return NextResponse.json({ error: String(error) }, { status: 500 });
-  }
+  return NextResponse.json(products.map(p => ({
+    id: p.id,
+    country: p.country,
+    tld: p.tld,
+    hosting: p.hosting,
+    price: p.price,
+    check: p.checkStatus,
+    addedOn: p.createdAt,
+    seller: p.seller.username,
+    categorySlug: p.categorySlug,
+    deliveryType: p.deliveryType,
+    sellOnce: sellOnceMap.get(p.categorySlug || "") ?? false,
+    sold: p.orders.length > 0,
+    soldAt: p.orders[0]?.createdAt || null,
+    metadata: p.metadata ? decryptAllFields(JSON.parse(p.metadata)) : {},
+  })));
 }

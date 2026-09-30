@@ -9,7 +9,9 @@ export async function GET(
     const { id } = await context.params;
     const product = await prisma.product.findUnique({
       where: { id },
-      include: { seller: true },
+      // Never select the seller's full User row — it carries password, email,
+      // balance and reset token. Only the public display name is exposed.
+      include: { seller: { select: { username: true } } },
     });
 
     if (!product) {
@@ -19,7 +21,21 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(product);
+    // Pre-purchase views only render these fields. `metadata` is deliberately
+    // omitted: it holds the seller's secrets and is only served to the buyer
+    // from /api/orders after the order completes.
+    return NextResponse.json({
+      id: product.id,
+      country: product.country,
+      tld: product.tld,
+      hosting: product.hosting,
+      checkStatus: product.checkStatus,
+      price: product.price,
+      categorySlug: product.categorySlug,
+      deliveryType: product.deliveryType,
+      fileUrl: product.fileUrl,
+      seller: product.seller,
+    });
   } catch (error) {
     return NextResponse.json(
       { error: "Server error", details: String(error) },

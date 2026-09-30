@@ -7,7 +7,16 @@ import { ArrowLeft, Send } from "lucide-react";
 export default function TicketViewPage() {
   const params = useParams();
   const id = params.id;
-  const [ticket, setTicket] = useState(null);
+  type TicketMessage = { id: string; content: string; isStaff: boolean; createdAt: string };
+  type Ticket = {
+    id: string;
+    subject: string;
+    status: string;
+    createdAt: string;
+    user: { username: string };
+    messages: TicketMessage[];
+  };
+  const [ticket, setTicket] = useState<Ticket | null>(null);
   const [loading, setLoading] = useState(true);
   const [reply, setReply] = useState("");
   const [sending, setSending] = useState(false);
@@ -16,9 +25,19 @@ export default function TicketViewPage() {
     fetch(`/api/tickets/${id}`).then(r => r.json()).then(d => { setTicket(d.error ? null : d); setLoading(false); });
   };
 
-  useEffect(() => { if (id) load(); }, [id]);
+  useEffect(() => {
+    if (!id) return;
+    load();
+    // Opening the thread marks its messages as read for the bell
+    fetch("/api/notifications", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ticketId: id }),
+    }).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
-  const handleReply = async (e) => {
+  const handleReply = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!reply.trim()) return;
     setSending(true);

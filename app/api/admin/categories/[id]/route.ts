@@ -18,6 +18,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (body.icon !== undefined) data.icon = body.icon;
   if (body.order !== undefined) data.order = body.order;
   if (body.visible !== undefined) data.visible = body.visible;
+  if (body.groupId !== undefined) data.groupId = body.groupId || null;
+  if (body.sellOnce !== undefined) data.sellOnce = Boolean(body.sellOnce);
 
   const category = await prisma.category.update({ where: { id }, data });
   return NextResponse.json(category);

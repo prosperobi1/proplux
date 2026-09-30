@@ -3,7 +3,15 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 
 export default function AdminTicketsPage() {
-  const [tickets, setTickets] = useState([]);
+  type Ticket = {
+    id: string;
+    user: string;
+    subject: string;
+    messages: number;
+    status: string;
+    createdAt: string;
+  };
+  const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -20,7 +28,7 @@ export default function AdminTicketsPage() {
         <table className="w-full min-w-[700px] text-sm">
           <thead className="bg-zinc-900 text-left text-xs font-semibold uppercase text-red-500">
             <tr>
-              <th className="px-3 py-2">#</th>
+              <th className="px-3 py-2">ID</th>
               <th className="px-3 py-2">User</th>
               <th className="px-3 py-2">Subject</th>
               <th className="px-3 py-2">Messages</th>
@@ -36,7 +44,7 @@ export default function AdminTicketsPage() {
               <tr><td colSpan={7} className="px-3 py-6 text-center text-zinc-500">No open tickets. All caught up!</td></tr>
             ) : tickets.map((t, i) => (
               <tr key={t.id} className="hover:bg-zinc-900/50">
-                <td className="px-3 py-3 text-red-500">{i + 1}</td>
+                <td className="px-3 py-3 font-mono text-xs text-zinc-500">{t.id.slice(-6)}</td>
                 <td className="px-3 py-3 text-white">{t.user}</td>
                 <td className="px-3 py-3 text-zinc-300">{t.subject}</td>
                 <td className="px-3 py-3 text-zinc-400">{t.messages}</td>

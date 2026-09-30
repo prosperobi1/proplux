@@ -1,29 +1,101 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { encryptHiddenFields, decryptAllFields } from "@/lib/encrypt";
 
-export async function GET() {
-  const session = await auth();
-  if (!session?.user || (session.user as any).role !== "SELLER") return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const products = await prisma.product.findMany({
-    where: { sellerId: (session.user as any).id },
-    orderBy: { createdAt: "desc" },
-  });
-  return NextResponse.json(products);
+export async function GET(req: Request) {
+  try {
+    const session = await auth();
+    const role = (session?.user as any)?.role;
+    if (!session?.user || (role !== "SELLER" && role !== "ADMIN")) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const { searchParams } = new URL(req.url);
+    const category = searchParams.get("category");
+    const where: any = { sellerId: (session.user as any).id };
+    if (category) where.categorySlug = category;
+
+    const products = await prisma.product.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      include: {
+        orders: {
+          where: { status: { in: ["Pending Confirmation", "Completed"] } },
+          select: { id: true, buyerId: true, createdAt: true },
+          take: 1,
+        },
+      },
+    });
+
+    return NextResponse.json(products.map((p) => ({
+      id: p.id,
+      country: p.country,
+      tld: p.tld,
+      hosting: p.hosting,
+      checkStatus: p.checkStatus,
+      price: p.price,
+      createdAt: p.createdAt,
+      categorySlug: p.categorySlug,
+      deliveryType: p.deliveryType,
+      fileUrl: p.fileUrl,
+      metadata: p.metadata ? decryptAllFields(JSON.parse(p.metadata)) : {},
+      sold: p.orders.length > 0,
+      soldOrderId: p.orders[0]?.id || null,
+    })));
+  } catch (err: any) {
+    console.error("GET /api/seller/products error:", err);
+    return NextResponse.json({ error: err.message || "Server error" }, { status: 500 });
+  }
 }
 
-export async function POST(req) {
-  const session = await auth();
-  if (!session?.user || (session.user as any).role !== "SELLER") return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const { country, tld, hosting, price, checkStatus } = await req.json();
-  if (!country || !tld || !hosting || !price) return NextResponse.json({ error: "Missing fields" }, { status: 400 });
-  const product = await prisma.product.create({
-    data: {
-      country, tld, hosting,
-      price: Number(price),
-      checkStatus: checkStatus || "Valid",
-      sellerId: (session.user as any).id,
-    },
-  });
-  return NextResponse.json(product);
+export async function POST(req: Request) {
+  try {
+    const session = await auth();
+    const role = (session?.user as any)?.role;
+    if (!session?.user || (role !== "SELLER" && role !== "ADMIN")) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const body = await req.json();
+
+    const { categorySlug, price, metadata, deliveryType, fileUrl } = body;
+
+    if (!categorySlug) return NextResponse.json({ error: "Missing categorySlug" }, { status: 400 });
+    if (price === undefined || price === null || price === "") return NextResponse.json({ error: "Missing price" }, { status: 400 });
+
+    const meta = metadata || {};
+    const country = meta.country || meta.location || "Unknown";
+
+    // Look up the category's field definitions to know which fields to encrypt
+    const category = await prisma.category.findUnique({
+      where: { slug: categorySlug },
+      select: { fields: true },
+    });
+    let fieldDefs: Array<{ name: string; visible?: boolean }> = [];
+    if (category?.fields) {
+      try {
+        fieldDefs = JSON.parse(category.fields);
+      } catch {}
+    }
+
+    const encryptedMeta = encryptHiddenFields(meta, fieldDefs);
+
+    const product = await prisma.product.create({
+      data: {
+        country,
+        tld: "",
+        hosting: categorySlug,
+        price: Number(price),
+        checkStatus: "Valid",
+        categorySlug,
+        metadata: JSON.stringify(encryptedMeta),
+        deliveryType: deliveryType === "file" || deliveryType === "text" ? deliveryType : "credentials",
+        fileUrl: typeof fileUrl === "string" ? fileUrl : null,
+        sellerId: (session.user as any).id,
+      },
+    });
+    return NextResponse.json(product);
+  } catch (err: any) {
+    console.error("POST /api/seller/products error:", err);
+    return NextResponse.json({ error: err.message || "Server error" }, { status: 500 });
+  }
 }

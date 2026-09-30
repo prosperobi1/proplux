@@ -14,13 +14,24 @@ model User {
   password  String
   role      String    @default("BUYER")
   balance   Float     @default(0)
+  totalRevenue Float  @default(0)
   banned    Boolean   @default(false)
+  resetToken        String?
+  resetTokenExpiry  DateTime?
   createdAt DateTime  @default(now())
   products  Product[]
   orders    Order[]
   sessions  Session[]
   tickets   Ticket[]    
   ticketMessages TicketMessage[]
+  withdrawals  Withdrawal[]
+  ratingsGiven     Rating[] @relation("RatingsGiven")
+  ratingsReceived  Rating[] @relation("RatingsReceived")
+  sellerRequests          SellerRequest[]
+  sellerRequestMessages   SellerRequestMessage[]
+  deposits                Deposit[]
+  reportsMade      Report[] @relation("ReportsMade")
+  reportsAgainst   Report[] @relation("ReportsAgainst")
 }
 
 model Session {
@@ -37,6 +48,12 @@ model Product {
   tld         String
   hosting     String
   checkStatus String   @default("Valid")
+  categorySlug String?
+  metadata     String?
+  deliveryType String   @default("credentials")
+  fileUrl      String?
+  soldAt       DateTime?
+  soldToId     String?
   price       Float
   createdAt   DateTime @default(now())
   sellerId    String
@@ -48,11 +65,14 @@ model Order {
   id          String   @id @default(cuid())
   status      String   @default("Pending Confirmation")
   totalPrice  Float
+  quantity    Int      @default(1)
   createdAt   DateTime @default(now())
   buyerId     String
   buyer       User     @relation(fields: [buyerId], references: [id])
   productId   String
   product     Product  @relation(fields: [productId], references: [id])
+  reports   Report[]
+  rating    Rating?
 }
 
 
@@ -70,10 +90,13 @@ model Ticket {
 }
 
 model TicketMessage {
-  id        String   @id @default(cuid())
-  content   String
-  isStaff   Boolean  @default(false)
-  createdAt DateTime @default(now())
+  id            String    @id @default(cuid())
+  content       String
+  isStaff       Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  // Per-audience read tracking for the notifications bell
+  readByOwnerAt DateTime?
+  readByStaffAt DateTime?
 
   ticketId  String
   ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
@@ -87,13 +110,106 @@ model Category {
   name      String   @unique
   slug      String   @unique
   icon      String   @default("Package")
+  fields    String?
   visible   Boolean  @default(true)
   order     Int      @default(0)
+  groupId   String?
+  group     CategoryGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  sellOnce  Boolean  @default(true)
   createdAt DateTime @default(now())
 }
 
 model Setting {
-  id    String @id @default("global")
+  id    String @id @default(cuid())
   key   String @unique
   value String
+}
+
+model Withdrawal {
+  id        String   @id @default(cuid())
+  amount    Float
+  wallet    String
+  network   String
+  status    String   @default("PENDING")
+  reason    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sellerId  String
+  seller    User     @relation(fields: [sellerId], references: [id])
+}
+
+model News {
+  id        String   @id @default(cuid())
+  title     String
+  message   String
+  createdAt DateTime @default(now())
+}
+
+model Report {
+  id         String   @id @default(cuid())
+  reason     String
+  details    String?
+  status     String   @default("PENDING")
+  createdAt  DateTime @default(now())
+  reporterId String
+  reporter   User     @relation("ReportsMade", fields: [reporterId], references: [id])
+  sellerId   String
+  seller     User     @relation("ReportsAgainst", fields: [sellerId], references: [id])
+  orderId    String?
+  order      Order?   @relation(fields: [orderId], references: [id])
+}
+
+model Rating {
+  id        String   @id @default(cuid())
+  stars     Int
+  comment   String?
+  createdAt DateTime @default(now())
+  raterId   String
+  rater     User     @relation("RatingsGiven", fields: [raterId], references: [id])
+  sellerId  String
+  seller    User     @relation("RatingsReceived", fields: [sellerId], references: [id])
+  orderId   String   @unique
+  order     Order    @relation(fields: [orderId], references: [id])
+}
+
+model SellerRequest {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status     String   @default("PENDING")
+  message    String
+  reviewNote String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  messages   SellerRequestMessage[]
+}
+
+model SellerRequestMessage {
+  id         String   @id @default(cuid())
+  requestId  String
+  request    SellerRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  authorId   String
+  author     User     @relation(fields: [authorId], references: [id])
+  content    String
+  isAdmin    Boolean  @default(false)
+  createdAt  DateTime @default(now())
+}
+
+model Deposit {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount     Float
+  method     String
+  providerId String?
+  createdAt  DateTime @default(now())
+}
+
+model CategoryGroup {
+  id         String     @id @default(cuid())
+  name       String     @unique
+  order      Int        @default(0)
+  createdAt  DateTime   @default(now())
+  categories Category[]
 }

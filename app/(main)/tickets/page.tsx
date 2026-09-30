@@ -4,7 +4,13 @@ import Link from "next/link";
 import { Plus, MessageSquare } from "lucide-react";
 
 export default function TicketsPage() {
-  const [tickets, setTickets] = useState([]);
+  type Ticket = {
+    id: string;
+    subject: string;
+    status: string;
+    _count: { messages: number };
+  };
+  const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [subject, setSubject] = useState("");
@@ -16,7 +22,7 @@ export default function TicketsPage() {
 
   useEffect(() => { load(); }, []);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     await fetch("/api/tickets", {
       method: "POST",
@@ -48,13 +54,14 @@ export default function TicketsPage() {
         {loading ? (
           <p className="text-center text-sm text-zinc-500">Loading...</p>
         ) : tickets.length === 0 ? (
-          <div className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-8 text-center text-sm text-zinc-500">No tickets yet. Click "New Ticket" to open one.</div>
+          <div className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-8 text-center text-sm text-zinc-500">No tickets yet. Click &quot;New Ticket&quot; to open one.</div>
         ) : tickets.map(t => (
           <Link key={t.id} href={`/tickets/${t.id}`} className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900/30 p-4 hover:border-red-900/50">
             <div className="flex items-center gap-3">
               <MessageSquare className="h-5 w-5 text-red-500" />
               <div>
                 <p className="font-semibold text-white">{t.subject}</p>
+                <p className="font-mono text-xs text-zinc-500">#{t.id.slice(-6)}</p>
                 <p className="text-xs text-zinc-500">{t._count.messages} message{t._count.messages !== 1 ? "s" : ""}</p>
               </div>
             </div>

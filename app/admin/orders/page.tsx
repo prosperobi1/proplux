@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { Search, Check, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Search, Check, X, ChevronLeft, ChevronRight, Eye } from "lucide-react";
 
 type Order = {
   id: string;
@@ -15,13 +17,21 @@ type Order = {
   hosting: string;
 };
 
+const TERMINAL_STATUSES = ["Completed", "Cancelled", "Refunded"];
+const isTerminal = (status: string) => TERMINAL_STATUSES.includes(status);
+
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const PER_PAGE = 20;
+  const router = useRouter();
 
-  useEffect(() => {
+  const loadOrders = () => {
+    setLoading(true);
     fetch("/api/admin/orders")
       .then((res) => res.json())
       .then((data) => {
@@ -29,7 +39,40 @@ export default function AdminOrdersPage() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadOrders();
   }, []);
+
+  const handleStatusChange = async (id: string, newStatus: string) => {
+    if (newStatus === "Cancelled") {
+      const ok = window.confirm(
+        "Cancel this order? The seller's balance will be reduced by the credited amount."
+      );
+      if (!ok) return;
+    }
+
+    setBusyId(id);
+    try {
+      const res = await fetch(`/api/admin/orders/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        alert(data?.error || "Failed to update order");
+        return;
+      }
+      loadOrders();
+      router.refresh();
+    } catch (err) {
+      alert("Something went wrong: " + String(err));
+    } finally {
+      setBusyId(null);
+    }
+  };
 
   const filtered = useMemo(() => {
     return orders.filter((o) => {
@@ -44,14 +87,18 @@ export default function AdminOrdersPage() {
     });
   }, [orders, search, statusFilter]);
 
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
+  const currentPage = Math.min(page, totalPages);
+  const pageStart = (currentPage - 1) * PER_PAGE;
+  const paged = filtered.slice(pageStart, pageStart + PER_PAGE);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, statusFilter]);
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
-        <h1 className="text-2xl font-bold text-red-500">Orders</h1>
-        <span className="rounded-full bg-zinc-900 px-3 py-1 text-xs text-zinc-400">
-          Total: {filtered.length}
-        </span>
-      </div>
+
 
       {/* Filters */}
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
@@ -107,62 +154,124 @@ export default function AdminOrdersPage() {
                 </td>
               </tr>
             ) : (
-              filtered.map((order) => (
-                <tr key={order.id} className="hover:bg-zinc-900/50">
-                  <td className="px-3 py-3 font-mono text-xs text-zinc-500">
-                    {order.id.slice(-8).toUpperCase()}
-                  </td>
-                  <td className="px-3 py-3">
-                    <div className="text-white">{order.buyer}</div>
-                    <div className="text-xs text-zinc-500">
-                      {order.buyerEmail}
-                    </div>
-                  </td>
-                  <td className="px-3 py-3 text-zinc-300">{order.product}</td>
-                  <td className="px-3 py-3 text-zinc-400">{order.seller}</td>
-                  <td className="px-3 py-3 font-semibold text-green-500">
-                    ${order.totalPrice.toFixed(2)}
-                  </td>
-                  <td className="px-3 py-3">
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
-                        order.status === "Completed"
-                          ? "bg-green-950 text-green-500"
-                          : order.status === "Refunded"
-                          ? "bg-blue-950 text-blue-400"
-                          : order.status === "Cancelled"
-                          ? "bg-zinc-800 text-zinc-400"
-                          : "bg-yellow-950 text-yellow-500"
-                      }`}
-                    >
-                      {order.status}
-                    </span>
-                  </td>
-                  <td className="px-3 py-3 text-xs text-zinc-500">
-                    {new Date(order.createdAt).toLocaleDateString()}
-                  </td>
-                  <td className="px-3 py-3">
-                    <div className="flex gap-2">
-                      <button
-                        className="rounded bg-zinc-800 p-1.5 hover:bg-zinc-700"
-                        title="Mark as complete"
+              paged.map((order) => {
+                const terminal = isTerminal(order.status);
+                const busy = busyId === order.id;
+                return (
+                  <tr key={order.id} className="hover:bg-zinc-900/50">
+                    <td className="px-3 py-3 font-mono text-xs text-zinc-500">
+                      {order.id.slice(-6)}
+                    </td>
+                    <td className="px-3 py-3">
+                      <div className="text-white">{order.buyer}</div>
+                      <div className="text-xs text-zinc-500">
+                        {order.buyerEmail}
+                      </div>
+                    </td>
+                    <td className="px-3 py-3 text-zinc-300">{order.product}</td>
+                    <td className="px-3 py-3 text-zinc-400">{order.seller}</td>
+                    <td className="px-3 py-3 font-semibold text-green-500">
+                      ${order.totalPrice.toFixed(2)}
+                    </td>
+                    <td className="px-3 py-3">
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+                          order.status === "Completed"
+                            ? "bg-green-950 text-green-500"
+                            : order.status === "Refunded"
+                            ? "bg-blue-950 text-blue-400"
+                            : order.status === "Cancelled"
+                            ? "bg-zinc-800 text-zinc-400"
+                            : "bg-yellow-950 text-yellow-500"
+                        }`}
                       >
-                        <Check className="h-3.5 w-3.5 text-green-400" />
-                      </button>
-                      <button
-                        className="rounded bg-zinc-800 p-1.5 hover:bg-zinc-700"
-                        title="Cancel order"
-                      >
-                        <X className="h-3.5 w-3.5 text-red-500" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
+                        {order.status}
+                      </span>
+                    </td>
+                    <td className="px-3 py-3 text-xs text-zinc-500">
+                      {new Date(order.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="px-3 py-3">
+                      <div className="flex gap-2">
+                        <Link
+                          href={"/admin/orders/" + order.id}
+                          className="rounded bg-zinc-800 p-1.5 hover:bg-zinc-700"
+                          title="View delivered content"
+                        >
+                          <Eye className="h-3.5 w-3.5 text-blue-400" />
+                        </Link>
+                        <button
+                          onClick={() =>
+                            handleStatusChange(order.id, "Completed")
+                          }
+                          disabled={terminal || busy}
+                          className="rounded bg-zinc-800 p-1.5 hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-30"
+                          title={
+                            terminal
+                              ? `Already ${order.status}`
+                              : "Mark as complete"
+                          }
+                        >
+                          <Check className="h-3.5 w-3.5 text-green-400" />
+                        </button>
+                        <button
+                          onClick={() =>
+                            handleStatusChange(order.id, "Cancelled")
+                          }
+                          disabled={terminal || busy}
+                          className="rounded bg-zinc-800 p-1.5 hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-30"
+                          title={
+                            terminal
+                              ? `Already ${order.status}`
+                              : "Cancel order (reverses seller credit)"
+                          }
+                        >
+                          <X className="h-3.5 w-3.5 text-red-500" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>
       </div>
+
+      {totalPages > 1 && (
+        <div className="flex flex-col items-center justify-between gap-3 pt-2 md:flex-row">
+          <span className="text-xs text-zinc-500">
+            Page {currentPage} of {totalPages} · Showing {paged.length} of {filtered.length}
+          </span>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage <= 1}
+              className="flex items-center gap-1 rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-zinc-800 disabled:opacity-30"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" /> Prev
+            </button>
+            {Array.from({ length: totalPages }).map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setPage(i + 1)}
+                className={`min-w-[32px] rounded-md px-2 py-1.5 text-xs font-semibold ${
+                  i + 1 === currentPage ? "bg-red-600 text-white" : "bg-zinc-900 text-zinc-400 hover:bg-zinc-800"
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage >= totalPages}
+              className="flex items-center gap-1 rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-zinc-800 disabled:opacity-30"
+            >
+              Next <ChevronRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
