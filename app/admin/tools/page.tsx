@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Package, Trash2 } from "lucide-react";
+import { Package, Trash2, Eye, X } from "lucide-react";
 
 type Product = {
   id: string;
@@ -15,9 +15,11 @@ type Product = {
   seller: string;
   sold: boolean;
   deliveryType: string;
+  fileUrl?: string | null;
+  metadata?: Record<string, unknown>;
 };
 
-type Category = { id: string; slug: string; name: string };
+type Category = { id: string; slug: string; name: string; fields?: string };
 
 export default function AdminToolsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -25,6 +27,7 @@ export default function AdminToolsPage() {
   const [loading, setLoading] = useState(true);
   const [categoryFilter, setCategoryFilter] = useState("ALL");
   const [search, setSearch] = useState("");
+  const [viewing, setViewing] = useState<Product | null>(null);
 
   useEffect(() => {
     Promise.all([
@@ -55,6 +58,17 @@ export default function AdminToolsPage() {
   };
 
   const q = search.trim().toLowerCase();
+
+  const labelFor = (categorySlug: string | null, key: string) => {
+    const cat = categories.find((c) => c.slug === categorySlug);
+    if (!cat?.fields) return key;
+    try {
+      const defs = JSON.parse(cat.fields) as Array<{ name: string; label?: string }>;
+      return defs.find((f) => f.name === key)?.label || key;
+    } catch {
+      return key;
+    }
+  };
   const filtered = products.filter((p) => {
     if (categoryFilter !== "ALL" && p.categorySlug !== categoryFilter) return false;
     if (!q) return true;
@@ -164,14 +178,23 @@ export default function AdminToolsPage() {
                     {new Date(p.addedOn).toLocaleDateString()}
                   </td>
                   <td className="px-4 py-3">
-                    <button
-                      onClick={() => deleteProduct(p)}
-                      disabled={p.sold}
-                      title={p.sold ? "Can't delete — this listing has orders" : "Delete listing"}
-                      className="rounded bg-zinc-800 p-1.5 hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-40"
-                    >
-                      <Trash2 className="h-3.5 w-3.5 text-red-500" />
-                    </button>
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => setViewing(p)}
+                        title="View full listing (credentials & file)"
+                        className="rounded bg-zinc-800 p-1.5 hover:bg-zinc-700"
+                      >
+                        <Eye className="h-3.5 w-3.5 text-blue-400" />
+                      </button>
+                      <button
+                        onClick={() => deleteProduct(p)}
+                        disabled={p.sold}
+                        title={p.sold ? "Can't delete — this listing has orders" : "Delete listing"}
+                        className="rounded bg-zinc-800 p-1.5 hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))
@@ -179,6 +202,71 @@ export default function AdminToolsPage() {
           </tbody>
         </table>
       </div>
+
+      {viewing && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+          onClick={() => setViewing(null)}
+        >
+          <div
+            className="max-h-[80vh] w-full max-w-lg overflow-y-auto rounded-lg border border-zinc-700 bg-zinc-900 p-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="font-semibold text-white">
+                  Listing <span className="font-mono">…{viewing.id.slice(-6)}</span>
+                </h2>
+                <p className="mt-0.5 text-xs text-zinc-500">
+                  {viewing.categorySlug || "—"} · seller {viewing.seller} · added{" "}
+                  {new Date(viewing.addedOn).toLocaleDateString()}
+                </p>
+                <p className="mt-0.5 break-all font-mono text-[10px] text-zinc-600" title="Full product ID">
+                  {viewing.id}
+                </p>
+              </div>
+              <button onClick={() => setViewing(null)} title="Close" className="rounded p-1 hover:bg-zinc-800">
+                <X className="h-4 w-4 text-zinc-400" />
+              </button>
+            </div>
+
+            <div className="mt-4 flex flex-wrap gap-2 text-xs">
+              <span className="rounded bg-zinc-800 px-2 py-1 text-zinc-300">${viewing.price.toFixed(2)}</span>
+              <span className="rounded bg-zinc-800 px-2 py-1 text-zinc-300">{viewing.deliveryType || "credentials"}</span>
+              <span className="rounded bg-zinc-800 px-2 py-1 text-zinc-300">Check: {viewing.check}</span>
+            </div>
+
+            {viewing.deliveryType === "file" && viewing.fileUrl && (
+              <a
+                href={viewing.fileUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-3 inline-block rounded bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-500"
+              >
+                Open listing file ↗
+              </a>
+            )}
+
+            <h3 className="mt-5 text-xs font-semibold uppercase tracking-wider text-red-500">
+              Listing details (decrypted)
+            </h3>
+            {Object.keys(viewing.metadata || {}).length === 0 ? (
+              <p className="mt-2 text-sm text-zinc-500">No metadata on this product.</p>
+            ) : (
+              <dl className="mt-2 space-y-2.5">
+                {Object.entries(viewing.metadata || {}).map(([key, value]) => (
+                  <div key={key}>
+                    <dt className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
+                      {labelFor(viewing.categorySlug, key)}
+                    </dt>
+                    <dd className="break-words font-mono text-xs text-zinc-200">{String(value)}</dd>
+                  </div>
+                ))}
+              </dl>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
