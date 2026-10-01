@@ -1,4 +1,5 @@
 import { prisma } from "../../../lib/prisma";
+import { auth } from "../../../lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
@@ -21,9 +22,27 @@ export async function GET(
       );
     }
 
-    // Pre-purchase views only render these fields. `metadata` is deliberately
-    // omitted: it holds the seller's secrets and is only served to the buyer
-    // from /api/orders after the order completes.
+    // The file is the paid deliverable: only the listing's seller, an admin,
+    // or a buyer who already purchased this product may see its URL. `metadata`
+    // is omitted entirely for the same reason — it holds the seller's secrets
+    // and is only served to the buyer from /api/orders after the order completes.
+    let fileUrl: string | null = null;
+    if (product.fileUrl) {
+      const session = await auth();
+      const me = session?.user as { id?: string; role?: string } | undefined;
+      if (me?.id) {
+        const canSee =
+          me.role === "ADMIN" ||
+          product.sellerId === me.id ||
+          (await prisma.order.findFirst({
+            where: { productId: product.id, buyerId: me.id },
+            select: { id: true },
+          })) !== null;
+        if (canSee) fileUrl = product.fileUrl;
+      }
+    }
+
+    // Pre-purchase views only render these fields.
     return NextResponse.json({
       id: product.id,
       country: product.country,
@@ -33,7 +52,7 @@ export async function GET(
       price: product.price,
       categorySlug: product.categorySlug,
       deliveryType: product.deliveryType,
-      fileUrl: product.fileUrl,
+      fileUrl,
       seller: product.seller,
     });
   } catch (error) {

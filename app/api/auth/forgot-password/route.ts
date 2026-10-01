@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { randomBytes } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { sendEmail, emailLayout } from "@/lib/email";
+import { rateLimit, clientIp } from "@/lib/rate-limit";
 
 const TOKEN_TTL_MS = 60 * 60 * 1000;
 
@@ -12,6 +13,18 @@ export async function POST(req: Request) {
 
     if (!email) {
       return NextResponse.json({ error: "Email is required" }, { status: 400 });
+    }
+
+    // Every request here sends a real email — cap per IP and per address
+    // before touching the database (5/min each).
+    const wait =
+      rateLimit("forgot:ip:" + clientIp(req), 5, 60 * 1000) ??
+      rateLimit("forgot:email:" + email, 5, 60 * 1000);
+    if (wait !== null) {
+      return NextResponse.json(
+        { error: "Too many requests — wait a minute and try again." },
+        { status: 429, headers: { "Retry-After": String(wait) } }
+      );
     }
 
     const user = await prisma.user.findUnique({ where: { email } });

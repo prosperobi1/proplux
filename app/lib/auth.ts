@@ -2,6 +2,10 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
+import { attemptsExceeded, recordAttempt, resetAttempts } from "./rate-limit";
+
+const LOGIN_WINDOW_MS = 60 * 1000;
+const LOGIN_MAX_FAILS = 5;
 
 /**
  * Look a user up by email OR username (any letter case).
@@ -34,7 +38,7 @@ async function findUserByIdentifier(identifier: string) {
   );
 }
 
-export const { handlers, signIn, signOut, auth } = NextAuth({
+const nextAuth = NextAuth({
   session: { strategy: "jwt" },
   pages: {
     signIn: "/login",
@@ -50,13 +54,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const password = String(credentials?.password ?? "");
         if (!identifier || !password) return null;
 
+        // Brute-force brake: after LOGIN_MAX_FAILS failed attempts the
+        // identifier can't be tried again for a minute. The response stays a
+        // generic failure either way, so nothing leaks about the account.
+        const key = "login:" + identifier.toLowerCase();
+        if (attemptsExceeded(key, LOGIN_MAX_FAILS, LOGIN_WINDOW_MS)) return null;
+
         const user = await findUserByIdentifier(identifier);
-        if (!user) return null;
+        const valid = user ? await bcrypt.compare(password, user.password) : false;
 
-        const valid = await bcrypt.compare(password, user.password);
-
-        if (!valid) return null;
-        if (user.banned) return null;
+        if (!user || !valid || user.banned) {
+          recordAttempt(key, LOGIN_WINDOW_MS);
+          return null;
+        }
+        resetAttempts(key);
 
         return {
           id: user.id,
@@ -73,14 +84,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       token.id = (user as any).id;
     }
 
-    // Always re-fetch role from DB so role changes take effect immediately
+    // Always re-fetch role + banned from DB so admin actions (role change,
+    // ban) take effect on the very next session read — not only at next login.
     if (token.id) {
       const dbUser = await prisma.user.findUnique({
         where: { id: token.id as string },
-        select: { role: true },
+        select: { role: true, banned: true },
       });
       if (dbUser) {
         token.role = dbUser.role;
+        (token as { banned?: boolean }).banned = dbUser.banned;
       }
     }
 
@@ -90,8 +103,26 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     if (session.user) {
       (session.user as any).id = token.id;
       (session.user as any).role = token.role;
+      (session.user as { banned?: boolean }).banned = (token as { banned?: boolean }).banned;
     }
     return session;
   },
 },
 });
+
+export const handlers = nextAuth.handlers;
+export const signIn = nextAuth.signIn;
+export const signOut = nextAuth.signOut;
+
+/**
+ * The current request's session — or null when signed out AND when the
+ * account is banned. authorize() only checks the ban flag at login time, so
+ * this wrapper is what makes a ban stick for sessions opened before it:
+ * every route handler and layout that calls auth() stops seeing the user on
+ * their very next request.
+ */
+export async function auth() {
+  const session = await nextAuth.auth();
+  if (session?.user && (session.user as { banned?: boolean }).banned) return null;
+  return session;
+}

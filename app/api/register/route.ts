@@ -2,9 +2,19 @@ import { prisma } from "../../lib/prisma";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { sendEmail, emailLayout } from "../../lib/email";
+import { rateLimit, clientIp } from "../../lib/rate-limit";
 
 export async function POST(req: Request) {
   try {
+    // Signups cost a DB write plus a welcome email — cap per IP (5/min).
+    const wait = rateLimit("register:ip:" + clientIp(req), 5, 60 * 1000);
+    if (wait !== null) {
+      return NextResponse.json(
+        { error: "Too many requests — wait a minute and try again." },
+        { status: 429, headers: { "Retry-After": String(wait) } }
+      );
+    }
+
     const { email, username, password } = await req.json();
 
     if (!email || !username || !password) {
