@@ -61,7 +61,7 @@ body {
     text-shadow: 2px 0 #ef4444, -2px 0 #22d3ee;
   }
   97% {
-    text-shadow: -1px 0 #22c55e;
+    text-shadow: -1px 0 #f87171;
   }
 }
 .glitch-text {
@@ -76,14 +76,14 @@ body {
   );
 }
 
-.glow-green {
+.glow-brand {
   box-shadow:
-    0 0 28px rgba(34, 197, 94, 0.12),
-    inset 0 0 16px rgba(34, 197, 94, 0.04);
+    0 0 28px color-mix(in srgb, var(--brand-color, #dc2626) 30%, transparent),
+    inset 0 0 16px color-mix(in srgb, var(--brand-color, #dc2626) 8%, transparent);
 }
 
 .text-glow {
-  text-shadow: 0 0 10px rgba(34, 197, 94, 0.55);
+  text-shadow: 0 0 12px color-mix(in srgb, var(--brand-color, #dc2626) 55%, transparent);
 }
 
 @media (prefers-reduced-motion: reduce) {

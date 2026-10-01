@@ -5,9 +5,38 @@ import { useEffect, useRef } from "react";
 const GLYPHS = "ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎ0123456789ABCDEFZ$#*/\\{}[]<>=+";
 const SIZE = 14;
 
+/** Parse the admin-configurable --brand-color (hex) with a red fallback. */
+function brandRgb(): [number, number, number] {
+  try {
+    const raw = getComputedStyle(document.documentElement)
+      .getPropertyValue("--brand-color")
+      .trim();
+    const m = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(raw);
+    if (m) {
+      const h = m[1];
+      if (h.length === 3) {
+        return [
+          parseInt(h[0] + h[0], 16),
+          parseInt(h[1] + h[1], 16),
+          parseInt(h[2] + h[2], 16),
+        ];
+      }
+      return [
+        parseInt(h.slice(0, 2), 16),
+        parseInt(h.slice(2, 4), 16),
+        parseInt(h.slice(4, 6), 16),
+      ];
+    }
+  } catch {
+    /* fall through */
+  }
+  return [220, 38, 38];
+}
+
 /**
- * Lightweight matrix-rain canvas for the landing hero.
- * Renders one static frame when the user prefers reduced motion.
+ * Lightweight matrix-rain canvas for the landing hero, painted in the
+ * site's brand color. Renders one static frame when the user prefers
+ * reduced motion.
  */
 export function MatrixRain({ className = "" }: { className?: string }) {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -17,6 +46,13 @@ export function MatrixRain({ className = "" }: { className?: string }) {
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+
+    const [br, bg, bb] = brandRgb();
+    const dim = `rgba(${br},${bg},${bb},0.5)`;
+    const bright = `rgba(${Math.min(br + 90, 255)},${Math.min(bg + 90, 255)},${Math.min(
+      bb + 90,
+      255
+    )},0.9)`;
 
     let columns = 0;
     let drops: number[] = [];
@@ -42,7 +78,7 @@ export function MatrixRain({ className = "" }: { className?: string }) {
       for (let i = 0; i < columns; i++) {
         for (let row = 0; row < Math.ceil(canvas.height / SIZE); row += 3) {
           if (Math.random() > 0.75) {
-            ctx.fillStyle = "rgba(34,197,94,0.35)";
+            ctx.fillStyle = dim;
             ctx.fillText(GLYPHS[(Math.random() * GLYPHS.length) | 0], i * SIZE, row * SIZE);
           }
         }
@@ -58,8 +94,7 @@ export function MatrixRain({ className = "" }: { className?: string }) {
       ctx.font = SIZE + "px monospace";
       for (let i = 0; i < columns; i++) {
         const glyph = GLYPHS[(Math.random() * GLYPHS.length) | 0];
-        ctx.fillStyle =
-          Math.random() > 0.975 ? "rgba(134,239,172,0.85)" : "rgba(34,197,94,0.5)";
+        ctx.fillStyle = Math.random() > 0.975 ? bright : dim;
         ctx.fillText(glyph, i * SIZE, drops[i] * SIZE);
         if (drops[i] * SIZE > canvas.height && Math.random() > 0.975) drops[i] = 0;
         drops[i]++;
