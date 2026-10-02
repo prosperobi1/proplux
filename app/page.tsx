@@ -100,7 +100,7 @@ export default async function Home() {
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 md:px-8">
           <Link href="/" className="flex items-center gap-2.5">
             <LogoMark size={30} />
-            <span className="font-mono text-sm font-bold tracking-tight text-white">
+            <span className="hidden font-mono text-sm font-bold tracking-tight text-white sm:inline">
               {siteName.toLowerCase()}
               <span style={{ color: BRAND }}>.</span>
               <span className="text-red-400">market</span>
@@ -148,7 +148,7 @@ export default async function Home() {
                 </span>
               </p>
 
-              <h1 className="glitch-text mt-5 text-4xl font-black uppercase leading-[0.95] tracking-tight text-white md:text-6xl">
+              <h1 className="glitch-text mt-5 text-3xl font-black uppercase leading-[0.95] tracking-tight text-white sm:text-4xl md:text-5xl">
                 The underground
                 <br />
                 <span style={{ color: BRAND }}>tool market</span>
@@ -200,7 +200,7 @@ export default async function Home() {
                   proplux@market: ~
                 </span>
               </div>
-              <div className="space-y-2 p-5 leading-relaxed">
+              <div className="space-y-2 p-4 leading-relaxed sm:p-5">
                 <p>
                   <span className="text-zinc-500">root@market:~$</span>{" "}
                   <span className="text-white">./status --all</span>
@@ -261,7 +261,7 @@ export default async function Home() {
                   >
                     {pad(s.v)}
                   </div>
-                  <div className="mt-1 text-[10px] uppercase tracking-widest text-zinc-500 md:text-[11px]">
+                  <div className="mt-1 whitespace-nowrap text-[9px] uppercase tracking-normal text-zinc-500 sm:text-[10px] sm:tracking-widest md:text-[11px]">
                     {s.k}
                   </div>
                 </div>
@@ -297,7 +297,7 @@ export default async function Home() {
                   <span className="text-red-500">{i + 1}.</span> {s}
                 </span>
                 {i < steps.length - 1 && (
-                  <span className="font-mono text-red-500">→</span>
+                  <span className="rotate-90 font-mono text-red-500 md:rotate-0">→</span>
                 )}
               </span>
             ))}
@@ -315,11 +315,17 @@ export default async function Home() {
             <span>
               &copy; {new Date().getFullYear()} {siteName}
             </span>
-            <Link href="/terms" className="transition hover:text-red-400">
+            <Link
+              href="/terms"
+              className="inline-flex py-1.5 transition hover:text-red-400 sm:py-0"
+            >
               terms
             </Link>
             <span className="text-zinc-700">|</span>
-            <Link href="/privacy" className="transition hover:text-red-400">
+            <Link
+              href="/privacy"
+              className="inline-flex py-1.5 transition hover:text-red-400 sm:py-0"
+            >
               privacy
             </Link>
           </div>

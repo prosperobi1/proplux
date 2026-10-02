@@ -31,20 +31,26 @@ export function LegalShell({
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 md:px-8">
           <Link href="/" className="flex items-center gap-2.5">
             <LogoMark size={30} />
-            <span className="font-mono text-sm font-bold tracking-tight text-white">
+            <span className="hidden font-mono text-sm font-bold tracking-tight text-white sm:inline">
               {siteName.toLowerCase()}
               <span style={{ color: BRAND }}>.</span>
               <span className="text-red-400">market</span>
             </span>
           </Link>
           <nav className="flex items-center gap-4 font-mono text-xs text-zinc-400">
-            <Link href="/products" className="transition hover:text-red-400">
+            <Link
+              href="/products"
+              className="hidden transition hover:text-red-400 sm:inline"
+            >
               /market
             </Link>
-            <Link href="/terms" className="transition hover:text-red-400">
+            <Link href="/terms" className="hidden transition hover:text-red-400 sm:inline">
               terms
             </Link>
-            <Link href="/privacy" className="transition hover:text-red-400">
+            <Link
+              href="/privacy"
+              className="hidden transition hover:text-red-400 sm:inline"
+            >
               privacy
             </Link>
             <Link
@@ -75,15 +81,24 @@ export function LegalShell({
             <span>
               &copy; {new Date().getFullYear()} {siteName}
             </span>
-            <Link href="/" className="transition hover:text-red-400">
+            <Link
+              href="/"
+              className="inline-flex py-1.5 transition hover:text-red-400 sm:py-0"
+            >
               home
             </Link>
             <span className="text-zinc-700">|</span>
-            <Link href="/terms" className="transition hover:text-red-400">
+            <Link
+              href="/terms"
+              className="inline-flex py-1.5 transition hover:text-red-400 sm:py-0"
+            >
               terms
             </Link>
             <span className="text-zinc-700">|</span>
-            <Link href="/privacy" className="transition hover:text-red-400">
+            <Link
+              href="/privacy"
+              className="inline-flex py-1.5 transition hover:text-red-400 sm:py-0"
+            >
               privacy
             </Link>
           </div>
@@ -108,7 +123,7 @@ export function Clause({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-5">
+    <section className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-4 sm:p-5">
       <h2 className="font-mono text-sm font-bold text-white">
         <span style={{ color: BRAND }}>[{n}]</span> {title}
       </h2>
