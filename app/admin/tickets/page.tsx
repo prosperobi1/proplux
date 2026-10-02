@@ -20,7 +20,7 @@ export default function AdminTicketsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-2xl font-bold text-red-500">Pending Tickets</h1>
         <span className="rounded-full bg-zinc-900 px-3 py-1 text-xs text-zinc-400">Open: {tickets.length}</span>
       </div>
@@ -50,7 +50,7 @@ export default function AdminTicketsPage() {
                 <td className="px-3 py-3 text-zinc-400">{t.messages}</td>
                 <td className="px-3 py-3"><span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${t.status === "OPEN" ? "bg-yellow-950 text-yellow-500" : "bg-green-950 text-green-500"}`}>{t.status}</span></td>
                 <td className="px-3 py-3 text-xs text-zinc-500">{new Date(t.createdAt).toLocaleDateString()}</td>
-                <td className="px-3 py-3"><Link href={`/admin/tickets/${t.id}`} className="rounded bg-zinc-800 px-3 py-1 text-xs text-white hover:bg-zinc-700">View</Link></td>
+                <td className="px-3 py-3"><Link href={`/admin/tickets/${t.id}`} className="inline-flex min-h-9 items-center rounded bg-zinc-800 px-3 py-1 text-xs text-white hover:bg-zinc-700">View</Link></td>
               </tr>
             ))}
           </tbody>

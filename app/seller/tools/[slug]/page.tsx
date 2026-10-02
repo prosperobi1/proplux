@@ -195,7 +195,7 @@ export default function SellerToolPage() {
             <button
               onClick={() => runSmtpCheck(p)}
               disabled={loading}
-              className="flex shrink-0 items-center gap-1 rounded bg-red-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-red-500 disabled:opacity-70"
+              className="flex min-h-9 shrink-0 items-center gap-1 rounded bg-red-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-red-500 disabled:opacity-70"
             >
               {loading ? (
                 <>
@@ -219,7 +219,7 @@ export default function SellerToolPage() {
         <button
           onClick={() => runRdpCheck(p)}
           disabled={loading}
-          className="flex w-fit items-center gap-1 rounded bg-red-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-red-500 disabled:opacity-70"
+          className="flex min-h-9 w-fit items-center gap-1 rounded bg-red-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-red-500 disabled:opacity-70"
         >
           {loading ? (
             <>
@@ -402,7 +402,7 @@ export default function SellerToolPage() {
       {tab === "add" && (
         <form onSubmit={handleSubmit} className="max-w-3xl space-y-6">
           {editingId && (
-            <div className="flex items-center justify-between rounded-lg border border-blue-900/50 bg-blue-950/20 p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-blue-900/50 bg-blue-950/20 p-4">
               <div>
                 <p className="text-sm font-semibold text-blue-400">Editing product</p>
                 <p className="text-xs text-zinc-500">Changes overwrite the existing listing.</p>
@@ -553,14 +553,14 @@ export default function SellerToolPage() {
                       {showTestCol && <td className="px-3 py-3 align-top">{testCell(p)}</td>}
                       <td className="px-3 py-3">
                         <div className="flex gap-1">
-                          <button onClick={() => startEdit(p)} className="rounded bg-zinc-800 p-1.5 hover:bg-zinc-700" title="Edit">
+                          <button onClick={() => startEdit(p)} className="min-h-9 rounded bg-zinc-800 p-1.5 hover:bg-zinc-700" title="Edit">
                             <Pencil className="h-3.5 w-3.5 text-blue-400" />
                           </button>
                           <button
                             onClick={() => deleteProduct(p.id)}
                             disabled={p.sold}
                             title={p.sold ? "Can't delete — this listing has orders" : "Delete"}
-                            className="rounded bg-zinc-800 p-1.5 hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-40"
+                            className="min-h-9 rounded bg-zinc-800 p-1.5 hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-40"
                           >
                             <Trash2 className="h-3.5 w-3.5 text-red-500" />
                           </button>
@@ -574,16 +574,23 @@ export default function SellerToolPage() {
           </div>
 
           {totalPages > 1 && (
-            <div className="flex items-center justify-between gap-3 pt-2">
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
               <span className="text-xs text-zinc-500">Page {currentPage} of {totalPages}</span>
-              <div className="flex items-center gap-1">
-                <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={currentPage <= 1} className="flex items-center gap-1 rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-zinc-800 disabled:opacity-30">
+              <div className="flex flex-wrap items-center justify-center gap-1">
+                <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={currentPage <= 1} className="flex min-h-9 items-center gap-1 rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-zinc-800 disabled:opacity-30">
                   <ChevronLeft className="h-3.5 w-3.5" /> Prev
                 </button>
-                {Array.from({ length: totalPages }).map((_, i) => (
-                  <button key={i} onClick={() => setPage(i + 1)} className={`min-w-[32px] rounded-md px-2 py-1.5 text-xs font-semibold ${i + 1 === currentPage ? "bg-red-600 text-white" : "bg-zinc-900 text-zinc-400 hover:bg-zinc-800"}`}>{i + 1}</button>
-                ))}
-                <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage >= totalPages} className="flex items-center gap-1 rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-zinc-800 disabled:opacity-30">
+                {Array.from({ length: totalPages }).map((_, i) => {
+                  const p = i + 1;
+                  if (totalPages > 7 && Math.abs(p - currentPage) > 2 && p !== 1 && p !== totalPages) {
+                    if (p === 2 || p === totalPages - 1) return <span key={p} className="px-2 text-zinc-600">…</span>;
+                    return null;
+                  }
+                  return (
+                    <button key={p} onClick={() => setPage(p)} className={`min-w-9 min-h-9 rounded-md px-2 py-1.5 text-xs font-semibold ${p === currentPage ? "bg-red-600 text-white" : "bg-zinc-900 text-zinc-400 hover:bg-zinc-800"}`}>{p}</button>
+                  );
+                })}
+                <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage >= totalPages} className="flex min-h-9 items-center gap-1 rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-zinc-800 disabled:opacity-30">
                   Next <ChevronRight className="h-3.5 w-3.5" />
                 </button>
               </div>
@@ -745,7 +752,7 @@ function MassAddTab({
       </section>
 
       <section className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-5 space-y-4">
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-wrap items-start justify-between gap-2">
           <div>
             <h3 className="text-sm font-semibold uppercase tracking-wider text-red-500">Paste CSV or Upload File</h3>
             <p className="mt-1 text-xs text-zinc-500">Columns: <code className="text-zinc-400">{displayFields.map((f) => f.name).join(", ")}, price</code></p>

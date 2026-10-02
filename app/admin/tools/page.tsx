@@ -84,7 +84,7 @@ export default function AdminToolsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="flex items-center gap-2 text-2xl font-bold text-red-500">
           <Package className="h-6 w-6" /> Visualize Tools
         </h1>
@@ -182,7 +182,7 @@ export default function AdminToolsPage() {
                       <button
                         onClick={() => setViewing(p)}
                         title="View full listing (credentials & file)"
-                        className="rounded bg-zinc-800 p-1.5 hover:bg-zinc-700"
+                        className="flex min-h-9 min-w-9 items-center justify-center rounded bg-zinc-800 p-1.5 hover:bg-zinc-700"
                       >
                         <Eye className="h-3.5 w-3.5 text-blue-400" />
                       </button>
@@ -190,7 +190,7 @@ export default function AdminToolsPage() {
                         onClick={() => deleteProduct(p)}
                         disabled={p.sold}
                         title={p.sold ? "Can't delete — this listing has orders" : "Delete listing"}
-                        className="rounded bg-zinc-800 p-1.5 hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-40"
+                        className="flex min-h-9 min-w-9 items-center justify-center rounded bg-zinc-800 p-1.5 hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-40"
                       >
                         <Trash2 className="h-3.5 w-3.5 text-red-500" />
                       </button>

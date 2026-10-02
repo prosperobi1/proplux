@@ -106,7 +106,7 @@ export default function DashboardPage() {
           <p className="mt-2 text-3xl font-bold text-green-500">
             ${balance.toFixed(2)}
           </p>
-          <Link href="/deposit" className="mt-4 inline-block rounded-md bg-red-600 px-4 py-2 text-xs font-semibold text-white hover:bg-red-500">
+          <Link href="/deposit" className="mt-4 inline-flex min-h-9 items-center rounded-md bg-red-600 px-4 py-2 text-xs font-semibold text-white hover:bg-red-500">
             Add Funds
           </Link>
         </div>

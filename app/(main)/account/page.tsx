@@ -156,7 +156,7 @@ export default function AccountPage() {
           {!editing && (
             <button
               onClick={openEdit}
-              className="flex items-center gap-1 rounded-md bg-zinc-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-zinc-700"
+              className="flex min-h-9 items-center gap-1 rounded-md bg-zinc-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-zinc-700"
             >
               <Pencil className="h-3 w-3" /> Edit
             </button>
@@ -235,13 +235,13 @@ export default function AccountPage() {
               <span className="flex items-center gap-2 text-sm text-zinc-400">
                 <User className="h-4 w-4" /> Username
               </span>
-              <span className="text-sm text-white">{me.username}</span>
+              <span className="min-w-0 truncate text-sm text-white">{me.username}</span>
             </div>
             <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
               <span className="flex items-center gap-2 text-sm text-zinc-400">
                 <Mail className="h-4 w-4" /> Email
               </span>
-              <span className="text-sm text-white">{me.email}</span>
+              <span className="min-w-0 truncate text-sm text-white">{me.email}</span>
             </div>
             <div className="flex items-center justify-between border-b border-zinc-800 pb-3">
               <span className="flex items-center gap-2 text-sm text-zinc-400">

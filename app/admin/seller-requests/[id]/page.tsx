@@ -96,7 +96,7 @@ export default function AdminSellerRequestDetail() {
               {new Date(req.createdAt).toLocaleString()}
             </p>
           </div>
-          <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
+          <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${
             req.status === "APPROVED" ? "bg-green-950 text-green-500" :
             req.status === "REJECTED" ? "bg-zinc-800 text-zinc-400" :
             "bg-yellow-950 text-yellow-500"
@@ -149,18 +149,18 @@ export default function AdminSellerRequestDetail() {
           <div className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-4 space-y-3">
             <p className="text-xs font-semibold uppercase text-zinc-500">Decision</p>
             {!showReject ? (
-              <div className="flex gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row">
                 <button
                   onClick={() => act("APPROVED")}
                   disabled={busy}
-                  className="flex items-center gap-2 rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-500 disabled:opacity-50"
+                  className="flex items-center gap-2 rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-500 disabled:opacity-50 w-full sm:w-auto"
                 >
                   <CheckCircle2 className="h-4 w-4" /> Approve (make seller)
                 </button>
                 <button
                   onClick={() => setShowReject(true)}
                   disabled={busy}
-                  className="flex items-center gap-2 rounded-md border border-red-700 bg-red-950/30 px-4 py-2 text-sm font-semibold text-red-400 hover:bg-red-950/50 disabled:opacity-50"
+                  className="flex items-center gap-2 rounded-md border border-red-700 bg-red-950/30 px-4 py-2 text-sm font-semibold text-red-400 hover:bg-red-950/50 disabled:opacity-50 w-full sm:w-auto"
                 >
                   <XCircle className="h-4 w-4" /> Reject
                 </button>

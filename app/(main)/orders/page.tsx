@@ -412,7 +412,7 @@ export default function MyOrdersPage() {
                           <td className="px-3 py-3">
                             <button
                               onClick={() => setOpenOrder(o)}
-                              className="flex items-center gap-1 rounded bg-zinc-800 px-2 py-1 text-xs font-semibold text-white hover:bg-zinc-700"
+                              className="flex min-h-9 items-center gap-1 rounded bg-zinc-800 px-2 py-1 text-xs font-semibold text-white hover:bg-zinc-700"
                             >
                               <Eye className="h-3 w-3" /> Open
                             </button>
@@ -429,7 +429,7 @@ export default function MyOrdersPage() {
                             ) : reportable ? (
                               <button
                                 onClick={() => (isOpen ? closeReport() : openReport(o.id))}
-                                className="flex items-center gap-1 rounded bg-zinc-800 px-2 py-1 text-xs font-semibold text-red-400 hover:bg-zinc-700"
+                                className="flex min-h-9 items-center gap-1 rounded bg-zinc-800 px-2 py-1 text-xs font-semibold text-red-400 hover:bg-zinc-700"
                               >
                                 <Flag className="h-3 w-3" /> Report #{o.id.slice(-6)}
                               </button>
@@ -478,7 +478,7 @@ export default function MyOrdersPage() {
                         {isOpen && (
                           <tr key={`${o.id}-form`} className="bg-zinc-900/50">
                             <td colSpan={10} className="px-4 py-4">
-                              <div className="space-y-3">
+                              <div className="sticky left-0 max-w-[calc(100vw-2rem)] space-y-3">
                                 <div className="flex items-center justify-between">
                                   <p className="text-sm font-semibold text-white">
                                     Report order #{o.id.slice(-6)}
@@ -512,7 +512,7 @@ export default function MyOrdersPage() {
                                   <button
                                     onClick={() => submitReport(o.id)}
                                     disabled={submitting}
-                                    className="rounded-md bg-red-600 px-4 py-2 text-xs font-semibold text-white hover:bg-red-500 disabled:opacity-50"
+                                    className="min-h-9 rounded-md bg-red-600 px-4 py-2 text-xs font-semibold text-white hover:bg-red-500 disabled:opacity-50"
                                   >
                                     {submitting ? "Submitting..." : "Submit Report"}
                                   </button>
@@ -531,7 +531,7 @@ export default function MyOrdersPage() {
                         {isRating && (
                           <tr key={`${o.id}-rate`} className="bg-zinc-900/50">
                             <td colSpan={10} className="px-4 py-4">
-                              <div className="space-y-3">
+                              <div className="sticky left-0 max-w-[calc(100vw-2rem)] space-y-3">
                                 <div className="flex items-center justify-between">
                                   <p className="text-sm font-semibold text-white">
                                     Rate seller for order #{o.id.slice(-6)}
@@ -559,7 +559,7 @@ export default function MyOrdersPage() {
                                   <button
                                     onClick={() => submitRating(o.id)}
                                     disabled={ratingBusy}
-                                    className="rounded-md bg-yellow-500 px-4 py-2 text-xs font-semibold text-black hover:bg-yellow-400 disabled:opacity-50"
+                                    className="min-h-9 rounded-md bg-yellow-500 px-4 py-2 text-xs font-semibold text-black hover:bg-yellow-400 disabled:opacity-50"
                                   >
                                     {ratingBusy ? "Submitting..." : "Submit Rating"}
                                   </button>

@@ -161,14 +161,14 @@ export default function AdminCategoryGroupsPage() {
                       <button
                         onClick={() => move(g, "up")}
                         disabled={i === 0 || busy === g.id}
-                        className="text-zinc-500 hover:text-white disabled:opacity-20"
+                        className="flex min-h-9 min-w-9 items-center justify-center text-zinc-500 hover:text-white disabled:opacity-20"
                       >
                         <ChevronUp className="h-3.5 w-3.5" />
                       </button>
                       <button
                         onClick={() => move(g, "down")}
                         disabled={i === groups.length - 1 || busy === g.id}
-                        className="text-zinc-500 hover:text-white disabled:opacity-20"
+                        className="flex min-h-9 min-w-9 items-center justify-center text-zinc-500 hover:text-white disabled:opacity-20"
                       >
                         <ChevronDown className="h-3.5 w-3.5" />
                       </button>
@@ -189,13 +189,13 @@ export default function AdminCategoryGroupsPage() {
                   </td>
                   <td className="px-4 py-3 text-zinc-400">{g.categoryCount}</td>
                   <td className="px-4 py-3">
-                    <div className="flex justify-end gap-1">
+                    <div className="flex flex-wrap justify-end gap-1">
                       {editingId === g.id ? (
                         <>
-                          <button onClick={() => saveEdit(g.id)} disabled={busy === g.id} className="rounded bg-green-600 p-1.5 text-white hover:bg-green-500 disabled:opacity-50">
+                          <button onClick={() => saveEdit(g.id)} disabled={busy === g.id} className="flex min-h-9 min-w-9 items-center justify-center rounded bg-green-600 p-1.5 text-white hover:bg-green-500 disabled:opacity-50">
                             <Check className="h-3.5 w-3.5" />
                           </button>
-                          <button onClick={() => setEditingId(null)} className="rounded bg-zinc-800 p-1.5 text-white hover:bg-zinc-700">
+                          <button onClick={() => setEditingId(null)} className="flex min-h-9 min-w-9 items-center justify-center rounded bg-zinc-800 p-1.5 text-white hover:bg-zinc-700">
                             <X className="h-3.5 w-3.5" />
                           </button>
                         </>
@@ -203,7 +203,7 @@ export default function AdminCategoryGroupsPage() {
                         <>
                           <button
                             onClick={() => { setEditingId(g.id); setEditName(g.name); }}
-                            className="rounded bg-zinc-800 p-1.5 hover:bg-zinc-700"
+                            className="flex min-h-9 min-w-9 items-center justify-center rounded bg-zinc-800 p-1.5 hover:bg-zinc-700"
                             title="Rename"
                           >
                             <Pencil className="h-3.5 w-3.5 text-blue-400" />
@@ -211,7 +211,7 @@ export default function AdminCategoryGroupsPage() {
                           <button
                             onClick={() => del(g.id, g.name, g.categoryCount)}
                             disabled={busy === g.id || g.categoryCount > 0}
-                            className="rounded bg-zinc-800 p-1.5 hover:bg-zinc-700 disabled:opacity-30"
+                            className="flex min-h-9 min-w-9 items-center justify-center rounded bg-zinc-800 p-1.5 hover:bg-zinc-700 disabled:opacity-30"
                             title={g.categoryCount > 0 ? "Move categories out first" : "Delete"}
                           >
                             <Trash2 className="h-3.5 w-3.5 text-red-500" />

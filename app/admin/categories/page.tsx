@@ -139,7 +139,7 @@ export default function AdminCategoriesPage() {
           placeholder="Category name (e.g., VPNs)"
           className="flex-1 rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-white placeholder-zinc-500 focus:border-red-500 focus:outline-none"
         />
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-center">
           <span className="text-xs font-semibold uppercase text-zinc-500">Icon:</span>
           <select
             value={icon}
@@ -151,7 +151,7 @@ export default function AdminCategoriesPage() {
             ))}
           </select>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-center">
           <span className="text-xs font-semibold uppercase text-zinc-500">Group:</span>
           <select
             value={groupId}
@@ -295,19 +295,19 @@ export default function AdminCategoriesPage() {
                       </button>
                     </td>
                     <td className="px-3 py-3">
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-2">
                         {isEditing ? (
                           <>
                             <button
                               onClick={saveEdit}
-                              className="rounded bg-green-900/50 p-1.5 hover:bg-green-900"
+                              className="flex min-h-9 min-w-9 items-center justify-center rounded bg-green-900/50 p-1.5 hover:bg-green-900"
                               title="Save"
                             >
                               <Check className="h-3.5 w-3.5 text-green-400" />
                             </button>
                             <button
                               onClick={cancelEdit}
-                              className="rounded bg-zinc-800 p-1.5 hover:bg-zinc-700"
+                              className="flex min-h-9 min-w-9 items-center justify-center rounded bg-zinc-800 p-1.5 hover:bg-zinc-700"
                               title="Cancel"
                             >
                               <X className="h-3.5 w-3.5 text-zinc-400" />
@@ -317,21 +317,21 @@ export default function AdminCategoriesPage() {
                           <>
                             <a
                               href={`/admin/categories/${c.id}/fields`}
-                              className="rounded bg-zinc-800 p-1.5 hover:bg-zinc-700 inline-block"
+                              className="inline-flex min-h-9 min-w-9 items-center justify-center rounded bg-zinc-800 p-1.5 hover:bg-zinc-700"
                               title="Edit fields"
                             >
                               <Settings2 className="h-3.5 w-3.5 text-purple-400" />
                             </a>
                             <button
                               onClick={() => startEdit(c)}
-                              className="rounded bg-zinc-800 p-1.5 hover:bg-zinc-700"
+                              className="flex min-h-9 min-w-9 items-center justify-center rounded bg-zinc-800 p-1.5 hover:bg-zinc-700"
                               title="Edit"
                             >
                               <Pencil className="h-3.5 w-3.5 text-blue-400" />
                             </button>
                             <button
                               onClick={() => deleteCategory(c.id, c.name)}
-                              className="rounded bg-zinc-800 p-1.5 hover:bg-zinc-700"
+                              className="flex min-h-9 min-w-9 items-center justify-center rounded bg-zinc-800 p-1.5 hover:bg-zinc-700"
                               title="Delete"
                             >
                               <Trash2 className="h-3.5 w-3.5 text-red-500" />

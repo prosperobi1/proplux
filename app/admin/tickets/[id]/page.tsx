@@ -70,13 +70,13 @@ export default function AdminTicketView() {
       </Link>
 
       <div className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-xl font-bold text-white">{ticket.subject}</h1>
             <p className="mt-1 text-xs text-zinc-500">From {ticket.user.username} ({ticket.user.email}) on {new Date(ticket.createdAt).toLocaleString()}</p>
           </div>
-          <div className="flex items-center gap-3">
-            <span className={`rounded-full px-3 py-1 text-xs font-semibold ${ticket.status === "OPEN" ? "bg-yellow-950 text-yellow-500" : "bg-green-950 text-green-500"}`}>{ticket.status}</span>
+          <div className="flex flex-wrap items-center gap-3">
+            <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${ticket.status === "OPEN" ? "bg-yellow-950 text-yellow-500" : "bg-green-950 text-green-500"}`}>{ticket.status}</span>
             {ticket.status === "OPEN" && (
               <button onClick={closeTicket} className="flex items-center gap-2 rounded-md border border-zinc-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-zinc-800">
                 <Lock className="h-3.5 w-3.5" /> Close Ticket

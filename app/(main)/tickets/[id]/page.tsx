@@ -62,7 +62,7 @@ export default function TicketViewPage() {
 
       <div className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold text-white">{ticket.subject}</h1>
+          <h1 className="min-w-0 truncate text-xl font-bold text-white">{ticket.subject}</h1>
           <span className={`rounded-full px-3 py-1 text-xs font-semibold ${ticket.status === "OPEN" ? "bg-yellow-950 text-yellow-500" : "bg-green-950 text-green-500"}`}>{ticket.status}</span>
         </div>
         <p className="mt-1 text-xs text-zinc-500">Created {new Date(ticket.createdAt).toLocaleString()}</p>
@@ -70,9 +70,9 @@ export default function TicketViewPage() {
 
       <div className="space-y-3">
         {ticket.messages.map(m => (
-          <div key={m.id} className={`rounded-lg border p-4 ${m.isStaff ? "border-red-900/50 bg-red-950/10 ml-8" : "border-zinc-800 bg-zinc-900/30 mr-8"}`}>
-            <div className="flex items-center justify-between text-xs">
-              <span className={m.isStaff ? "font-semibold text-red-500" : "font-semibold text-zinc-300"}>{m.isStaff ? "Support Staff" : ticket.user.username}</span>
+          <div key={m.id} className={`rounded-lg border p-4 ${m.isStaff ? "border-red-900/50 bg-red-950/10 ml-4 md:ml-8" : "border-zinc-800 bg-zinc-900/30 mr-4 md:mr-8"}`}>
+            <div className="flex flex-wrap items-center justify-between text-xs">
+              <span className={`min-w-0 truncate font-semibold ${m.isStaff ? "text-red-500" : "text-zinc-300"}`}>{m.isStaff ? "Support Staff" : ticket.user.username}</span>
               <span className="text-zinc-500">{new Date(m.createdAt).toLocaleString()}</span>
             </div>
             <p className="mt-2 whitespace-pre-wrap text-sm text-zinc-200">{m.content}</p>

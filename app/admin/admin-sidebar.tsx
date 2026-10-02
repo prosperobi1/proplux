@@ -56,8 +56,8 @@ export function AdminSidebar({ children }: { children: React.ReactNode }) {  con
             <span className="text-lg font-bold">Admin Panel</span>
           </div>
           <div className="flex items-center gap-1">
-            <NotificationsBell />
-            <button onClick={close} className="text-zinc-500 md:hidden">
+            <NotificationsBell anchor="left" />
+            <button onClick={close} className="flex min-h-10 min-w-10 items-center justify-center p-2.5 text-zinc-500 md:hidden">
               <X className="h-5 w-5" />
             </button>
           </div>
@@ -137,7 +137,7 @@ export function AdminSidebar({ children }: { children: React.ReactNode }) {  con
 
       <main className="flex flex-1 flex-col overflow-hidden">
         <header className="flex h-16 items-center border-b border-zinc-800 px-4 md:hidden">
-          <button onClick={() => setSidebarOpen(true)} className="text-zinc-400 hover:text-white">
+          <button onClick={() => setSidebarOpen(true)} className="flex min-h-10 min-w-10 items-center justify-center p-2.5 text-zinc-400 hover:text-white">
             <Menu className="h-6 w-6" />
           </button>
           <span className="ml-4 font-bold">Admin Panel</span>

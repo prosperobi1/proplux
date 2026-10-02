@@ -39,12 +39,12 @@ export default function AdminSellerRequestsPage() {
         <span className="rounded-full bg-zinc-900 px-3 py-1 text-xs text-zinc-400">Total: {filtered.length}</span>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         {["ALL", ...STATUSES].map((s) => (
           <button
             key={s}
             onClick={() => setFilter(s)}
-            className={`rounded-md px-3 py-1.5 text-xs font-semibold ${filter === s ? "bg-red-600 text-white" : "bg-zinc-900 text-zinc-400 hover:bg-zinc-800"}`}
+            className={`rounded-md px-3 py-1.5 min-h-9 text-xs font-semibold ${filter === s ? "bg-red-600 text-white" : "bg-zinc-900 text-zinc-400 hover:bg-zinc-800"}`}
           >
             {s}
           </button>

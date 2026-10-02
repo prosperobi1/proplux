@@ -143,7 +143,7 @@ export default function BecomeSellerPage() {
 
           <div className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-4">
             <p className="mb-2 text-xs font-semibold uppercase text-zinc-500">Your request</p>
-            <p className="whitespace-pre-wrap text-sm text-zinc-300">{request.message}</p>
+            <p className="whitespace-pre-wrap break-words text-sm text-zinc-300">{request.message}</p>
           </div>
 
           {request.messages.length > 0 && (
@@ -154,7 +154,7 @@ export default function BecomeSellerPage() {
                   <p className="text-xs font-semibold text-zinc-500">
                     {m.author.username} {m.isAdmin && <span className="text-red-500">· Admin</span>}
                   </p>
-                  <p className="mt-1 whitespace-pre-wrap text-sm text-zinc-300">{m.content}</p>
+                  <p className="mt-1 whitespace-pre-wrap break-words text-sm text-zinc-300">{m.content}</p>
                 </div>
               ))}
             </div>
@@ -172,7 +172,7 @@ export default function BecomeSellerPage() {
               <button
                 onClick={sendReply}
                 disabled={replying || !reply.trim()}
-                className="rounded-md bg-red-600 px-4 py-2 text-xs font-semibold text-white hover:bg-red-500 disabled:opacity-50"
+                className="min-h-9 rounded-md bg-red-600 px-4 py-2 text-xs font-semibold text-white hover:bg-red-500 disabled:opacity-50"
               >
                 {replying ? "Sending..." : "Send Reply"}
               </button>

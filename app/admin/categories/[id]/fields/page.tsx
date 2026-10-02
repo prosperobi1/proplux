@@ -267,14 +267,14 @@ export default function CategoryFieldsPage() {
                       )}
                     </td>
                     <td className="px-3 py-3">
-                      <div className="flex gap-1">
-                        <button onClick={() => move(i, "up")} disabled={i === 0} className="rounded bg-zinc-800 p-1 hover:bg-zinc-700 disabled:opacity-20">
+                      <div className="flex flex-wrap gap-1">
+                        <button onClick={() => move(i, "up")} disabled={i === 0} className="flex min-h-9 min-w-9 items-center justify-center rounded bg-zinc-800 p-1 hover:bg-zinc-700 disabled:opacity-20">
                           <ChevronUp className="h-3.5 w-3.5 text-zinc-400" />
                         </button>
-                        <button onClick={() => move(i, "down")} disabled={i === fields.length - 1} className="rounded bg-zinc-800 p-1 hover:bg-zinc-700 disabled:opacity-20">
+                        <button onClick={() => move(i, "down")} disabled={i === fields.length - 1} className="flex min-h-9 min-w-9 items-center justify-center rounded bg-zinc-800 p-1 hover:bg-zinc-700 disabled:opacity-20">
                           <ChevronDown className="h-3.5 w-3.5 text-zinc-400" />
                         </button>
-                        <button onClick={() => removeField(i)} className="rounded bg-zinc-800 p-1 hover:bg-zinc-700">
+                        <button onClick={() => removeField(i)} className="flex min-h-9 min-w-9 items-center justify-center rounded bg-zinc-800 p-1 hover:bg-zinc-700">
                           <Trash2 className="h-3.5 w-3.5 text-red-500" />
                         </button>
                       </div>

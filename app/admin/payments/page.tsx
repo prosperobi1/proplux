@@ -152,7 +152,7 @@ export default function AdminPaymentsPage() {
               </p>
             </div>
 
-            <div className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-950 p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-zinc-800 bg-zinc-950 p-4">
               <div className="flex items-start gap-3">
                 <AlertTriangle className={`mt-0.5 h-4 w-4 flex-shrink-0 ${sandbox ? "text-yellow-500" : "text-zinc-600"}`} />
                 <div>
@@ -190,11 +190,11 @@ export default function AdminPaymentsPage() {
           </div>
         </section>
 
-        <div className="sticky bottom-4 flex items-center gap-4 rounded-lg border border-zinc-800 bg-zinc-900 p-4">
+        <div className="sticky bottom-4 flex flex-col gap-2 rounded-lg border border-zinc-800 bg-zinc-900 p-4 sm:flex-row sm:items-center sm:gap-4">
           <button
             type="submit"
             disabled={saving}
-            className={`flex items-center gap-2 rounded-md px-6 py-3 text-sm font-semibold text-white disabled:opacity-50 ${
+            className={`flex items-center gap-2 rounded-md px-6 py-3 text-sm font-semibold text-white disabled:opacity-50 w-full sm:w-auto ${
               saved ? "bg-green-600" : "bg-red-600 hover:bg-red-500"
             }`}
           >

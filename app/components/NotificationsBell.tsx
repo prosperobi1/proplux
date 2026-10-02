@@ -33,7 +33,7 @@ function timeAgo(value: string): string {
   return new Date(value).toLocaleDateString();
 }
 
-export function NotificationsBell() {
+export function NotificationsBell({ anchor = "right" }: { anchor?: "right" | "left" }) {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<Notification[]>([]);
   const [total, setTotal] = useState(0);
@@ -150,7 +150,13 @@ export function NotificationsBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-[22rem] overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900 shadow-xl">
+        <div
+          className={
+            anchor === "left"
+              ? "fixed inset-x-4 top-16 z-50 mt-2 overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900 shadow-xl sm:absolute sm:inset-x-auto sm:left-0 sm:right-auto sm:top-full sm:w-[22rem] sm:max-w-[calc(100vw-2rem)]"
+              : "absolute right-0 top-full z-50 mt-2 w-[22rem] max-w-[calc(100vw-2rem)] overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900 shadow-xl"
+          }
+        >
           <div className="flex items-center justify-between border-b border-zinc-800 px-4 py-3">
             <p className="text-sm font-semibold text-white">
               Messages {total > 0 && <span className="text-zinc-500">({total})</span>}

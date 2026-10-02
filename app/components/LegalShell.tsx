@@ -55,7 +55,7 @@ export function LegalShell({
             </Link>
             <Link
               href="/login"
-              className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 font-sans text-xs font-semibold text-white transition hover:bg-zinc-800"
+              className="inline-flex min-h-9 items-center rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 font-sans text-xs font-semibold text-white transition hover:bg-zinc-800"
             >
               Sign In
             </Link>

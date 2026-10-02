@@ -209,7 +209,7 @@ function ProductsContent() {
               <button
                 onClick={() => runSmtpCheck(p)}
                 disabled={loading}
-                className="flex shrink-0 items-center gap-1 rounded bg-red-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-red-500 disabled:opacity-70"
+                className="flex min-h-9 shrink-0 items-center gap-1 rounded bg-red-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-red-500 disabled:opacity-70"
               >
                 {loading ? (
                   <>
@@ -261,7 +261,7 @@ function ProductsContent() {
         <button
           onClick={() => runRdpCheck(p)}
           disabled={loading}
-          className="flex w-fit items-center gap-1 rounded bg-red-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-red-500 disabled:opacity-70"
+          className="flex min-h-9 w-fit items-center gap-1 rounded bg-red-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-red-500 disabled:opacity-70"
         >
           {loading ? (
             <>
@@ -476,7 +476,7 @@ function ProductsContent() {
                         <td className="px-4 py-3 text-zinc-400">{p.seller}</td>
                         <td className="px-4 py-3 font-semibold text-green-500">${p.price.toFixed(2)}</td>
                         <td className="px-4 py-3">
-                          <Link href={"/checkout/" + p.id} className="rounded-md bg-red-600 px-3 py-1 text-xs font-semibold text-white hover:bg-red-500">
+                          <Link href={"/checkout/" + p.id} className="inline-flex min-h-9 items-center rounded-md bg-red-600 px-3 py-1 text-xs font-semibold text-white hover:bg-red-500">
                             Buy
                           </Link>
                         </td>
@@ -511,7 +511,7 @@ function ProductsContent() {
                         <td className="px-4 py-3 font-semibold text-green-500">${p.price.toFixed(2)}</td>
                         <td className="px-4 py-3 text-zinc-500">{p.addedOn ? new Date(p.addedOn).toLocaleDateString() : "—"}</td>
                         <td className="px-4 py-3">
-                          <Link href={"/checkout/" + p.id} className="rounded-md bg-red-600 px-3 py-1 text-xs font-semibold text-white hover:bg-red-500">
+                          <Link href={"/checkout/" + p.id} className="inline-flex min-h-9 items-center rounded-md bg-red-600 px-3 py-1 text-xs font-semibold text-white hover:bg-red-500">
                             Buy
                           </Link>
                         </td>
@@ -541,8 +541,8 @@ function ProductsContent() {
 
       {selectedIds.length > 0 && (
         <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-zinc-800 bg-black/95 backdrop-blur md:left-64">
-          <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 md:px-8">
-            <div className="flex items-center gap-3 text-sm">
+          <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-3 md:px-8">
+            <div className="flex min-w-0 flex-wrap items-center gap-3 text-sm">
               <ShoppingCart className="h-4 w-4 text-red-500" />
               <span className="text-white">
                 <span className="font-semibold">{selectedIds.length}</span>{" "}
@@ -558,7 +558,7 @@ function ProductsContent() {
                 </span>
               )}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <button
                 onClick={() => setSelectedIds([])}
                 className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs font-semibold text-white hover:bg-zinc-800"
@@ -568,14 +568,14 @@ function ProductsContent() {
               {canAfford ? (
                 <Link
                   href={bulkHref}
-                  className="rounded-md bg-red-600 px-4 py-2 text-xs font-semibold text-white hover:bg-red-500"
+                  className="rounded-md bg-red-600 px-4 py-2 text-xs font-semibold text-white hover:bg-red-500 w-full sm:w-auto"
                 >
                   Buy {selectedIds.length} {selectedIds.length === 1 ? "item" : "items"} (${selectedTotal.toFixed(2)})
                 </Link>
               ) : (
                 <Link
                   href="/deposit"
-                  className="rounded-md bg-red-600 px-4 py-2 text-xs font-semibold text-white hover:bg-red-500"
+                  className="rounded-md bg-red-600 px-4 py-2 text-xs font-semibold text-white hover:bg-red-500 w-full sm:w-auto"
                 >
                   Deposit Funds
                 </Link>

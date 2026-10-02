@@ -196,14 +196,14 @@ export default function AdminNewsPage() {
                         <button
                           onClick={saveEdit}
                           disabled={editBusy}
-                          className="rounded-md bg-green-600 px-4 py-2 text-xs font-semibold text-white hover:bg-green-500 disabled:opacity-50"
+                          className="min-h-9 rounded-md bg-green-600 px-4 py-2 text-xs font-semibold text-white hover:bg-green-500 disabled:opacity-50"
                         >
                           {editBusy ? "Saving..." : "Save Changes"}
                         </button>
                         <button
                           onClick={closeEdit}
                           disabled={editBusy}
-                          className="flex items-center gap-1 rounded-md border border-zinc-700 bg-zinc-900 px-4 py-2 text-xs font-semibold text-white hover:bg-zinc-800"
+                          className="flex min-h-9 items-center gap-1 rounded-md border border-zinc-700 bg-zinc-900 px-4 py-2 text-xs font-semibold text-white hover:bg-zinc-800"
                         >
                           <X className="h-3 w-3" /> Cancel
                         </button>
@@ -221,7 +221,7 @@ export default function AdminNewsPage() {
                       <div className="flex flex-col gap-2">
                         <button
                           onClick={() => openEdit(n)}
-                          className="rounded bg-zinc-800 p-1.5 hover:bg-zinc-700"
+                          className="flex min-h-9 min-w-9 items-center justify-center rounded bg-zinc-800 p-1.5 hover:bg-zinc-700"
                           title="Edit news"
                         >
                           <Pencil className="h-3.5 w-3.5 text-blue-400" />
@@ -229,7 +229,7 @@ export default function AdminNewsPage() {
                         <button
                           onClick={() => handleDelete(n.id)}
                           disabled={busy === n.id}
-                          className="rounded bg-zinc-800 p-1.5 hover:bg-zinc-700 disabled:opacity-50"
+                          className="flex min-h-9 min-w-9 items-center justify-center rounded bg-zinc-800 p-1.5 hover:bg-zinc-700 disabled:opacity-50"
                           title="Delete news"
                         >
                           <Trash2 className="h-3.5 w-3.5 text-red-500" />

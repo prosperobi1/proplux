@@ -192,10 +192,10 @@ export default function AdminOrdersPage() {
                       {new Date(order.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-3 py-3">
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-2">
                         <Link
                           href={"/admin/orders/" + order.id}
-                          className="rounded bg-zinc-800 p-1.5 hover:bg-zinc-700"
+                          className="flex min-h-9 min-w-9 items-center justify-center rounded bg-zinc-800 p-1.5 hover:bg-zinc-700"
                           title="View delivered content"
                         >
                           <Eye className="h-3.5 w-3.5 text-blue-400" />
@@ -205,7 +205,7 @@ export default function AdminOrdersPage() {
                             handleStatusChange(order.id, "Completed")
                           }
                           disabled={terminal || busy}
-                          className="rounded bg-zinc-800 p-1.5 hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-30"
+                          className="flex min-h-9 min-w-9 items-center justify-center rounded bg-zinc-800 p-1.5 hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-30"
                           title={
                             terminal
                               ? `Already ${order.status}`
@@ -219,7 +219,7 @@ export default function AdminOrdersPage() {
                             handleStatusChange(order.id, "Cancelled")
                           }
                           disabled={terminal || busy}
-                          className="rounded bg-zinc-800 p-1.5 hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-30"
+                          className="flex min-h-9 min-w-9 items-center justify-center rounded bg-zinc-800 p-1.5 hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-30"
                           title={
                             terminal
                               ? `Already ${order.status}`
@@ -239,11 +239,11 @@ export default function AdminOrdersPage() {
       </div>
 
       {totalPages > 1 && (
-        <div className="flex flex-col items-center justify-between gap-3 pt-2 md:flex-row">
+        <div className="flex flex-wrap flex-col items-center justify-between gap-3 pt-2 md:flex-row">
           <span className="text-xs text-zinc-500">
             Page {currentPage} of {totalPages} · Showing {paged.length} of {filtered.length}
           </span>
-          <div className="flex items-center gap-1">
+          <div className="flex flex-wrap items-center justify-center gap-1">
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={currentPage <= 1}
@@ -251,17 +251,24 @@ export default function AdminOrdersPage() {
             >
               <ChevronLeft className="h-3.5 w-3.5" /> Prev
             </button>
-            {Array.from({ length: totalPages }).map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setPage(i + 1)}
-                className={`min-w-[32px] rounded-md px-2 py-1.5 text-xs font-semibold ${
-                  i + 1 === currentPage ? "bg-red-600 text-white" : "bg-zinc-900 text-zinc-400 hover:bg-zinc-800"
-                }`}
-              >
-                {i + 1}
-              </button>
-            ))}
+            {Array.from({ length: totalPages }).map((_, i) => {
+              const p = i + 1;
+              if (totalPages > 7 && Math.abs(p - currentPage) > 2 && p !== 1 && p !== totalPages) {
+                if (p === 2 || p === totalPages - 1) return <span key={p} className="px-2 text-zinc-600">…</span>;
+                return null;
+              }
+              return (
+                <button
+                  key={p}
+                  onClick={() => setPage(p)}
+                  className={`min-w-[32px] rounded-md px-2 py-1.5 text-xs font-semibold ${
+                    p === currentPage ? "bg-red-600 text-white" : "bg-zinc-900 text-zinc-400 hover:bg-zinc-800"
+                  }`}
+                >
+                  {p}
+                </button>
+              );
+            })}
             <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage >= totalPages}

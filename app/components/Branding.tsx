@@ -37,7 +37,7 @@ export function LogoMark({ size = 32 }: { size?: number }) {
       <img
         src={logoUrl}
         alt={siteName}
-        style={{ height: size, width: "auto" }}
+        style={{ height: size, width: "auto", maxWidth: "min(100%, 220px)" }}
         className="object-contain"
       />
     );

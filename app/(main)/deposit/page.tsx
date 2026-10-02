@@ -142,16 +142,16 @@ export default function DepositPage() {
           <p className="mt-1 text-xs text-zinc-500">
             New balance: <strong className="text-green-500">${balance.toFixed(2)}</strong>
           </p>
-          <div className="mt-6 flex justify-center gap-3">
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
             <Link
               href="/dashboard"
-              className="rounded-md border border-zinc-700 bg-zinc-900 px-5 py-2 text-sm font-semibold text-white hover:bg-zinc-800"
+              className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-5 py-2 text-sm font-semibold text-white hover:bg-zinc-800 sm:w-auto"
             >
               Back to Dashboard
             </Link>
             <button
               onClick={() => setPaid(null)}
-              className="rounded-md px-5 py-2 text-sm font-semibold text-white hover:opacity-90"
+              className="w-full rounded-md px-5 py-2 text-sm font-semibold text-white hover:opacity-90 sm:w-auto"
               style={{ backgroundColor: "var(--brand-color, #dc2626)" }}
             >
               Make Another Deposit

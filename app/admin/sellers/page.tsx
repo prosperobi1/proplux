@@ -185,7 +185,7 @@ export default function AdminSellersPage() {
                       )}
                     </td>
                     <td className="px-4 py-3">
-                      <Link href="/admin/users" className="rounded bg-zinc-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-zinc-700">Manage</Link>
+                      <Link href="/admin/users" className="inline-flex min-h-9 items-center rounded bg-zinc-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-zinc-700">Manage</Link>
                     </td>
                   </tr>
                 );
@@ -196,16 +196,31 @@ export default function AdminSellersPage() {
       </div>
 
       {totalPages > 1 && (
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <span className="text-xs text-zinc-500">Page {currentPage} of {totalPages}</span>
-          <div className="flex items-center gap-1">
-            <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={currentPage <= 1} className="flex items-center gap-1 rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-zinc-800 disabled:opacity-30">
+          <div className="flex flex-wrap items-center justify-center gap-1">
+            <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={currentPage <= 1} className="flex min-h-9 items-center gap-1 rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-zinc-800 disabled:opacity-30">
               <ChevronLeft className="h-3.5 w-3.5" /> Prev
             </button>
-            {Array.from({ length: totalPages }).map((_, i) => (
-              <button key={i} onClick={() => setPage(i + 1)} className={`min-w-[32px] rounded-md px-2 py-1.5 text-xs font-semibold ${i + 1 === currentPage ? "bg-red-600 text-white" : "bg-zinc-900 text-zinc-400 hover:bg-zinc-800"}`}>{i + 1}</button>
-            ))}
-            <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage >= totalPages} className="flex items-center gap-1 rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-zinc-800 disabled:opacity-30">
+            {Array.from({ length: totalPages }).map((_, i) => {
+              const p = i + 1;
+              if (totalPages > 7 && Math.abs(p - currentPage) > 2 && p !== 1 && p !== totalPages) {
+                if (p === 2 || p === totalPages - 1) return <span key={p} className="px-2 text-zinc-600">…</span>;
+                return null;
+              }
+              return (
+                <button
+                  key={p}
+                  onClick={() => setPage(p)}
+                  className={`min-w-9 min-h-9 rounded-md px-2 py-1.5 text-xs font-semibold ${
+                    p === currentPage ? "bg-red-600 text-white" : "bg-zinc-900 text-zinc-400 hover:bg-zinc-800"
+                  }`}
+                >
+                  {p}
+                </button>
+              );
+            })}
+            <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage >= totalPages} className="flex min-h-9 items-center gap-1 rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-zinc-800 disabled:opacity-30">
               Next <ChevronRight className="h-3.5 w-3.5" />
             </button>
           </div>

@@ -65,12 +65,12 @@ export default function AdminOrderDetailPage() {
         <ArrowLeft className="h-3.5 w-3.5" /> Back to Orders
       </Link>
 
-      <div className="flex items-start justify-between">
+      <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <h1 className="text-2xl font-bold text-white">Order #{order.id.slice(-6)}</h1>
           <p className="mt-1 text-xs text-zinc-500">{new Date(order.createdAt).toLocaleString()}</p>
         </div>
-        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
+        <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${
           order.status === "Completed" ? "bg-green-950 text-green-500" :
           order.status === "Cancelled" || order.status === "Refunded" ? "bg-zinc-800 text-zinc-400" :
           "bg-yellow-950 text-yellow-500"
@@ -95,23 +95,23 @@ export default function AdminOrderDetailPage() {
       <div className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-4">
         <h3 className="mb-3 text-sm font-semibold uppercase text-red-500">Order Details</h3>
         <div className="space-y-2 text-sm">
-          <div className="flex justify-between border-b border-zinc-800 pb-2">
+          <div className="flex flex-wrap justify-between gap-2 border-b border-zinc-800 pb-2">
             <span className="text-zinc-400">Product</span>
             <span className="text-white">
               {order.product.country} {order.product.tld || order.product.hosting}
             </span>
           </div>
-          <div className="flex justify-between border-b border-zinc-800 pb-2">
+          <div className="flex flex-wrap justify-between gap-2 border-b border-zinc-800 pb-2">
             <span className="text-zinc-400">Category</span>
             <span className="text-white">{order.product.categorySlug || "—"}</span>
           </div>
-          <div className="flex justify-between border-b border-zinc-800 pb-2">
+          <div className="flex flex-wrap justify-between gap-2 border-b border-zinc-800 pb-2">
             <span className="text-zinc-400">Delivery Type</span>
             <span className="rounded-full bg-zinc-800 px-2 py-0.5 text-[10px] font-semibold uppercase text-zinc-400">
               {order.product.deliveryType}
             </span>
           </div>
-          <div className="flex justify-between border-b border-zinc-800 pb-2">
+          <div className="flex flex-wrap justify-between gap-2 border-b border-zinc-800 pb-2">
             <span className="text-zinc-400">Quantity</span>
             <span className="text-white">{order.quantity}</span>
           </div>

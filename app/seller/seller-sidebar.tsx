@@ -163,11 +163,11 @@ export function SellerSidebar({ children }: { children: React.ReactNode }) {
         <header className="flex h-16 items-center justify-between border-b border-zinc-800 px-4 md:px-8">
           <button onClick={() => setOpen(true)} className="text-zinc-400 hover:text-white md:hidden"><Menu className="h-6 w-6" /></button>
           <div className="hidden md:block" />
-          <div className="flex items-center gap-2 md:gap-4">
+          <div className="flex min-w-0 items-center gap-2 md:gap-4">
             <NotificationsBell />
-            <div className="flex items-center gap-4 text-sm">
-              <span className="text-zinc-500">Signed in as</span>
-              <span className="font-semibold text-white">{username}</span>
+            <div className="flex min-w-0 truncate items-center gap-4 text-sm">
+              <span className="hidden text-zinc-500 sm:inline">Signed in as</span>
+              <span className="min-w-0 truncate font-semibold text-white">{username}</span>
             </div>
           </div>
         </header>

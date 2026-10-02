@@ -32,7 +32,7 @@ export default function RegisterPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-950 p-4">
-      <div className="w-full max-w-md rounded-lg border border-zinc-800 bg-zinc-900 p-8">
+      <div className="w-full max-w-md rounded-lg border border-zinc-800 bg-zinc-900 p-5 sm:p-8">
         <div className="mb-6 flex justify-center">
           <LogoMark size={48} />
         </div>
