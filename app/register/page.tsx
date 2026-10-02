@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { LogoMark } from "../components/Branding";
+import { AuthBackdrop } from "../components/AuthBackdrop";
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
@@ -31,8 +32,9 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-950 p-4">
-      <div className="w-full max-w-md rounded-lg border border-zinc-800 bg-zinc-900 p-5 sm:p-8">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-zinc-950 p-4">
+      <AuthBackdrop />
+      <div className="relative z-10 w-full max-w-md rounded-lg border border-zinc-800 bg-zinc-900/85 p-5 shadow-2xl backdrop-blur-sm sm:p-8">
         <div className="mb-6 flex justify-center">
           <LogoMark size={48} />
         </div>

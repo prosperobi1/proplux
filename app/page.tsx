@@ -23,27 +23,25 @@ const BRAND = "var(--brand-color, #dc2626)";
 
 async function getHomeData() {
   try {
-    const [site, tools, vendors, orders] = await Promise.all([
+    const [site, vendors, orders] = await Promise.all([
       prisma.setting.findUnique({ where: { key: "siteName" } }),
-      prisma.product.count(),
       prisma.user.count({ where: { role: "SELLER" } }),
       prisma.order.count(),
     ]);
     return {
       siteName: site?.value || "Proplux",
-      tools,
       vendors,
       orders,
     };
   } catch {
-    return { siteName: "Proplux", tools: 0, vendors: 0, orders: 0 };
+    return { siteName: "Proplux", vendors: 0, orders: 0 };
   }
 }
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
 export default async function Home() {
-  const { siteName, tools, vendors, orders } = await getHomeData();
+  const { siteName, vendors, orders } = await getHomeData();
 
   const ticker = [
     "systems online",
@@ -135,10 +133,17 @@ export default async function Home() {
         <section className="relative overflow-hidden border-b border-zinc-800 bg-black">
           <MatrixRain className="absolute inset-0 h-full w-full opacity-70" />
           <div className="scanlines pointer-events-none absolute inset-0 opacity-30" />
+          <div
+            className="pointer-events-none absolute inset-0"
+            style={{
+              background:
+                "radial-gradient(ellipse at center, transparent 42%, rgba(0,0,0,0.6) 100%)",
+            }}
+          />
 
           <div className="relative z-10 mx-auto grid max-w-6xl gap-10 px-4 py-16 md:px-8 md:py-24 lg:grid-cols-2 lg:items-center">
             <div>
-              <p className="font-mono text-xs">
+              <p className="reveal reveal-1 font-mono text-xs">
                 <span className="text-zinc-500">root@{siteName.toLowerCase()}:~#</span>{" "}
                 <span className="text-glow" style={{ color: BRAND }}>
                   open_market
@@ -148,21 +153,25 @@ export default async function Home() {
                 </span>
               </p>
 
-              <h1 className="glitch-text mt-5 text-3xl font-black uppercase leading-[0.95] tracking-tight text-white sm:text-4xl md:text-5xl">
-                The underground
-                <br />
-                <span style={{ color: BRAND }}>tool market</span>
-              </h1>
+              <div className="reveal reveal-2">
+                <h1 className="glitch-text mt-5 text-3xl font-black uppercase leading-[0.95] tracking-tight text-white sm:text-4xl md:text-5xl">
+                  The underground
+                  <br />
+                  <span className="text-glow" style={{ color: BRAND }}>
+                    tool market
+                  </span>
+                </h1>
+              </div>
 
-              <p className="mt-5 max-w-xl font-mono text-sm leading-relaxed text-zinc-400">
+              <p className="reveal reveal-3 mt-5 max-w-xl font-mono text-sm leading-relaxed text-zinc-400">
                 <span style={{ color: BRAND }}>&gt;</span> Buy and sell digital tools with
                 escrow, instant delivery and full buyer protection.
               </p>
 
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <div className="reveal reveal-4 mt-8 flex flex-col gap-3 sm:flex-row">
                 <Link
                   href="/register"
-                  className="flex items-center justify-center gap-2 rounded-md px-6 py-3 text-sm font-semibold text-white hover:opacity-90"
+                  className="btn-pulse flex items-center justify-center gap-2 rounded-md px-6 py-3 text-sm font-semibold text-white hover:opacity-90"
                   style={{ backgroundColor: BRAND }}
                 >
                   Create Account <ArrowRight className="h-4 w-4" />
@@ -182,11 +191,27 @@ export default async function Home() {
 
             {/* terminal */}
             <div
-              className="glow-brand rounded-lg border bg-black/85 font-mono text-[13px] shadow-2xl"
+              className="glow-brand reveal reveal-5 relative rounded-lg border bg-black/85 font-mono text-[13px] shadow-2xl"
               style={{
                 borderColor: "color-mix(in srgb, var(--brand-color, #dc2626) 35%, transparent)",
               }}
             >
+              <span
+                className="pointer-events-none absolute -left-1 -top-1 h-3.5 w-3.5 border-l border-t"
+                style={{ borderColor: BRAND }}
+              />
+              <span
+                className="pointer-events-none absolute -right-1 -top-1 h-3.5 w-3.5 border-r border-t"
+                style={{ borderColor: BRAND }}
+              />
+              <span
+                className="pointer-events-none absolute -bottom-1 -left-1 h-3.5 w-3.5 border-b border-l"
+                style={{ borderColor: BRAND }}
+              />
+              <span
+                className="pointer-events-none absolute -bottom-1 -right-1 h-3.5 w-3.5 border-b border-r"
+                style={{ borderColor: BRAND }}
+              />
               <div
                 className="flex items-center gap-2 border-b px-4 py-2.5"
                 style={{
@@ -239,43 +264,14 @@ export default async function Home() {
             </div>
           </div>
 
-          {/* live stats */}
-          <div className="relative z-10 border-t bg-black/70" style={{ borderTopColor: "color-mix(in srgb, var(--brand-color, #dc2626) 18%, transparent)" }}>
-            <div className="mx-auto grid max-w-6xl grid-cols-3 divide-x px-4 font-mono md:px-8">
-              {[
-                { k: "tools_listed", v: tools },
-                { k: "active_vendors", v: vendors },
-                { k: "orders_settled", v: orders },
-              ].map((s) => (
-                <div
-                  key={s.k}
-                  className="px-2 py-4 text-center md:py-5"
-                  style={{
-                    borderLeftColor:
-                      "color-mix(in srgb, var(--brand-color, #dc2626) 12%, transparent)",
-                  }}
-                >
-                  <div
-                    className="text-glow text-2xl font-bold md:text-3xl"
-                    style={{ color: BRAND }}
-                  >
-                    {pad(s.v)}
-                  </div>
-                  <div className="mt-1 whitespace-nowrap text-[9px] uppercase tracking-normal text-zinc-500 sm:text-[10px] sm:tracking-widest md:text-[11px]">
-                    {s.k}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
         </section>
 
         {/* features */}
         <section className="border-y border-zinc-800 bg-black/40">
           <div className="mx-auto grid max-w-6xl grid-cols-1 divide-y divide-zinc-800 px-4 md:grid-cols-3 md:divide-x md:divide-y-0 md:px-8">
             {features.map((f) => (
-              <div key={f.tag} className="p-6 md:p-8">
-                <f.icon className="mb-4 h-5 w-5 text-red-500" />
+              <div key={f.tag} className="group p-6 transition-colors hover:bg-zinc-900/50 md:p-8">
+                <f.icon className="mb-4 h-5 w-5 text-red-500 transition-transform group-hover:scale-125" />
                 <h3 className="font-mono text-sm font-bold text-white">
                   <span className="text-zinc-600">[{f.tag}]</span> {f.title}
                 </h3>
@@ -293,7 +289,7 @@ export default async function Home() {
             </span>
             {steps.map((s, i) => (
               <span key={s} className="flex items-center gap-3">
-                <span className="rounded border border-zinc-800 bg-zinc-900/60 px-3 py-1.5 font-mono text-xs text-zinc-300">
+                <span className="rounded border border-zinc-800 bg-zinc-900/60 px-3 py-1.5 font-mono text-xs text-zinc-300 transition hover:border-red-500/40 hover:text-white">
                   <span className="text-red-500">{i + 1}.</span> {s}
                 </span>
                 {i < steps.length - 1 && (

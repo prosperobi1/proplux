@@ -86,10 +86,56 @@ body {
   text-shadow: 0 0 12px color-mix(in srgb, var(--brand-color, #dc2626) 55%, transparent);
 }
 
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.reveal {
+  animation: reveal-up 0.6s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+.reveal-1 {
+  animation-delay: 0.08s;
+}
+.reveal-2 {
+  animation-delay: 0.18s;
+}
+.reveal-3 {
+  animation-delay: 0.3s;
+}
+.reveal-4 {
+  animation-delay: 0.44s;
+}
+.reveal-5 {
+  animation-delay: 0.58s;
+}
+
+@keyframes brand-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--brand-color, #dc2626) 40%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 24px 3px color-mix(in srgb, var(--brand-color, #dc2626) 30%, transparent);
+  }
+}
+
+.btn-pulse {
+  animation: brand-pulse 2.8s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .marquee-track,
   .glitch-text,
-  .blink-cursor {
+  .blink-cursor,
+  .reveal,
+  .btn-pulse {
     animation: none;
   }
 }
