@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams } from "next/navigation";
 import { Plus, Trash2, KeyRound, FileText, Package, Check, Pencil, X, Search, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
-import { UploadButton } from "../../../../src/utils/uploadthing";
+import { LocalUpload } from "../../../components/LocalUpload";
 import { CheckResult } from "@/components/CheckResult";
 import { COUNTRIES } from "@/lib/countries";
 
@@ -437,17 +437,11 @@ export default function SellerToolPage() {
             {deliveryType === "file" && (
               <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-4">
                 <label className="mb-2 block text-xs font-semibold uppercase text-zinc-500">Upload File (max 64MB)</label>
-                <UploadButton
-                  endpoint="productFile"
-                  onClientUploadComplete={(res) => {
-                    const url = (res?.[0] as any)?.ufsUrl || (res?.[0] as any)?.url;
-                    if (url) setFileUrl(url);
-                  }}
-                  onUploadError={(err: Error) => alert("Upload failed: " + err.message)}
-                  appearance={{
-                    button: "rounded-md bg-red-600 px-4 py-2 text-xs font-semibold text-white hover:bg-red-500",
-                    allowedContent: "text-xs text-zinc-500 mt-2",
-                  }}
+                <LocalUpload
+                  kind="product"
+                  label="Choose file"
+                  hint="Any file up to 64MB"
+                  onUploaded={setFileUrl}
                 />
                 {fileUrl && <p className="mt-2 flex items-center gap-1 text-xs text-green-500"><Check className="h-3 w-3" /> File uploaded</p>}
               </div>
@@ -734,17 +728,11 @@ function MassAddTab({
         {massDeliveryType === "file" && (
           <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-4">
             <label className="mb-2 block text-xs font-semibold uppercase text-zinc-500">Upload File (shared by all rows)</label>
-            <UploadButton
-              endpoint="productFile"
-              onClientUploadComplete={(res) => {
-                const url = (res?.[0] as any)?.ufsUrl || (res?.[0] as any)?.url;
-                if (url) setMassFileUrl(url);
-              }}
-              onUploadError={(err: Error) => alert("Upload failed: " + err.message)}
-              appearance={{
-                button: "rounded-md bg-red-600 px-4 py-2 text-xs font-semibold text-white hover:bg-red-500",
-                allowedContent: "text-xs text-zinc-500 mt-2",
-              }}
+            <LocalUpload
+              kind="product"
+              label="Choose file"
+              hint="Any file up to 64MB"
+              onUploaded={setMassFileUrl}
             />
             {massFileUrl && <p className="mt-2 flex items-center gap-1 text-xs text-green-500"><Check className="h-3 w-3" /> File uploaded</p>}
           </div>

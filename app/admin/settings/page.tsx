@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Save, Globe, DollarSign, Mail, FileText, Bell, ToggleLeft, X, CheckCircle2, Eye, EyeOff } from "lucide-react";
-import { UploadButton } from "../../../src/utils/uploadthing";
+import { LocalUpload } from "../../components/LocalUpload";
 
 type Settings = Record<string, string>;
 
@@ -153,21 +153,16 @@ export default function AdminSettingsPage() {
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <UploadButton
-                    endpoint="logoUploader"
-                    onClientUploadComplete={(res) => {
-                      const file = res?.[0] as any;
-                      const url = file?.ufsUrl || file?.url;
-                      if (url) update("logoUrl", url);
+                  <LocalUpload
+                    kind="logo"
+                    accept="image/*"
+                    label="Upload logo"
+                    hint="PNG, JPG or SVG up to 4MB"
+                    onUploaded={(url) => {
+                      update("logoUrl", url);
                       setSaved(false);
                     }}
-                    onUploadError={(err: Error) => {
-                      setError(`Upload failed: ${err.message}`);
-                    }}
-                    appearance={{
-                      button: "rounded-md bg-red-600 px-4 py-2 text-xs font-semibold text-white hover:bg-red-500",
-                      allowedContent: "text-xs text-zinc-500 mt-2",
-                    }}
+                    onError={(msg) => setError(`Upload failed: ${msg}`)}
                   />
                   <p className="mt-2 text-xs text-zinc-500">
                     PNG, JPG, or SVG up to 4MB. Click <strong>Save All Settings</strong> after uploading.

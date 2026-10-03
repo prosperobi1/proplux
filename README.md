@@ -13,8 +13,7 @@ A modern multi-vendor marketplace built with Next.js 16, TypeScript, Prisma, and
 - Support tickets — buyers and sellers open tickets, admins reply
 - Notifications bell — unread ticket replies in buyer, seller and admin panels; click to open the thread
 - Admin panel — users, orders, categories, settings, financials, news
-- Branding — uploadable logo, site name, primary color, all admin-configurable
-- UploadThing for logo storage
+- Branding — uploadable logo, site name, primary color, all admin-configurable (logo stored locally in ./uploads)
 
 ## Tech Stack
 
@@ -24,7 +23,7 @@ A modern multi-vendor marketplace built with Next.js 16, TypeScript, Prisma, and
 - NextAuth (credentials, JWT)
 - Tailwind CSS
 - lucide-react for icons
-- UploadThing for file uploads
+- Local upload storage (./uploads) with access-controlled downloads (/api/files)
 
 ## Quick Start
 
@@ -39,7 +38,7 @@ A modern multi-vendor marketplace built with Next.js 16, TypeScript, Prisma, and
 Then edit .env:
 
 - Set AUTH_SECRET to a random string: openssl rand -base64 32
-- Get an UPLOADTHING_TOKEN from https://uploadthing.com/dashboard
+- Uploads are stored in the project (./uploads) — no third-party upload token needed
 
 3. Set up the database
 
@@ -92,7 +91,8 @@ Vercel (recommended):
 
 1. Push to GitHub
 2. Import on Vercel
-3. Set env vars in Vercel dashboard: DATABASE_URL (Postgres), AUTH_SECRET, AUTH_TRUST_HOST=true, UPLOADTHING_TOKEN
+3. Set env vars in Vercel dashboard: DATABASE_URL (Postgres), AUTH_SECRET, AUTH_TRUST_HOST=true
+   (note: local file uploads need a persistent disk — use VPS/shared Node hosting; Vercel's filesystem is read-only)
 4. Switch Prisma datasource to postgresql in prisma/schema.prisma
 5. Run npx prisma db push against the production DB once
 
