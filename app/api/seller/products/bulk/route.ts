@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { isValidFileUrl } from "@/lib/delivery";
 
 type Row = Record<string, string>;
 
@@ -27,7 +28,10 @@ export async function POST(req: Request) {
   const dt = ["credentials", "text", "file"].includes(deliveryType) ? deliveryType : "credentials";
 
   if (dt === "file" && !fileUrl) {
-    return NextResponse.json({ error: "File delivery requires an uploaded file" }, { status: 400 });
+    return NextResponse.json({ error: "File delivery requires an uploaded file or a download link" }, { status: 400 });
+  }
+  if (dt === "file" && fileUrl !== undefined && fileUrl !== null && fileUrl !== "" && !isValidFileUrl(fileUrl)) {
+    return NextResponse.json({ error: "Invalid delivery link — use an http(s) URL or an uploaded file" }, { status: 400 });
   }
 
   const sellerId = (session.user as any).id;

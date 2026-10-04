@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Plus, Trash2, KeyRound, FileText, Package, Check, Pencil, X, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { LocalUpload } from "../../../../components/LocalUpload";
+import { isValidFileUrl } from "@/lib/delivery";
 
 type FieldDef = {
   name: string;
@@ -99,7 +100,12 @@ export default function SellerToolPage() {
     setResponse("");
 
     if (deliveryType === "file" && !fileUrl) {
-      setResponse("Please upload a file for File delivery");
+      setResponse("Please upload a file or paste a download link for File delivery");
+      setSaving(false);
+      return;
+    }
+    if (deliveryType === "file" && fileUrl && !isValidFileUrl(fileUrl)) {
+      setResponse("Invalid link — use an http(s) URL (e.g. https://mega.nz/...)");
       setSaving(false);
       return;
     }
@@ -285,7 +291,26 @@ export default function SellerToolPage() {
                   hint="Any file up to 64MB"
                   onUploaded={setFileUrl}
                 />
-                {fileUrl && <p className="mt-2 flex items-center gap-1 text-xs text-green-500"><Check className="h-3 w-3" /> File uploaded</p>}
+                <div className="mt-4 border-t border-zinc-800 pt-3">
+                  <label className="mb-1 block text-xs font-semibold uppercase text-zinc-500">…or paste a download link (large files hosted elsewhere)</label>
+                  <input
+                    type="url"
+                    value={fileUrl.startsWith("/api/files/") ? "" : fileUrl}
+                    onChange={(e) => setFileUrl(e.target.value.trim())}
+                    placeholder="https://mega.nz/file/..."
+                    className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-white placeholder-zinc-600 focus:border-red-500 focus:outline-none"
+                  />
+                  <p className="mt-1 text-[11px] text-zinc-600">Share setting must be “anyone with the link”. Buyers only see it after purchase.</p>
+                </div>
+                {fileUrl && (
+                  <p className={`mt-2 flex items-center gap-1 text-xs ${isValidFileUrl(fileUrl) ? "text-green-500" : "text-red-500"}`}>
+                    {isValidFileUrl(fileUrl) ? (
+                      <><Check className="h-3 w-3" /> {fileUrl.startsWith("/api/files/") ? "File uploaded" : "Link set"}</>
+                    ) : (
+                      "Link must start with http:// or https://"
+                    )}
+                  </p>
+                )}
               </div>
             )}
           </section>

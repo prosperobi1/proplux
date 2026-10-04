@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { encryptHiddenFields } from "@/lib/encrypt";
+import { isValidFileUrl } from "@/lib/delivery";
 
 // DELETE — existing
 export async function DELETE(
@@ -92,6 +93,9 @@ export async function PATCH(
   }
   if (deliveryType !== undefined && ["credentials", "text", "file"].includes(deliveryType)) {
     data.deliveryType = deliveryType;
+  }
+  if (fileUrl !== undefined && fileUrl !== null && fileUrl !== "" && !isValidFileUrl(fileUrl)) {
+    return NextResponse.json({ error: "Invalid delivery link — use an http(s) URL or an uploaded file" }, { status: 400 });
   }
   if (fileUrl !== undefined) {
     data.fileUrl = typeof fileUrl === "string" && fileUrl ? fileUrl : null;

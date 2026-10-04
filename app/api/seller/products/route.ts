@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { encryptHiddenFields, decryptAllFields } from "@/lib/encrypt";
+import { isValidFileUrl } from "@/lib/delivery";
 
 export async function GET(req: Request) {
   try {
@@ -61,6 +62,12 @@ export async function POST(req: Request) {
 
     if (!categorySlug) return NextResponse.json({ error: "Missing categorySlug" }, { status: 400 });
     if (price === undefined || price === null || price === "") return NextResponse.json({ error: "Missing price" }, { status: 400 });
+    if (deliveryType === "file" && !fileUrl) {
+      return NextResponse.json({ error: "File delivery requires an uploaded file or a download link" }, { status: 400 });
+    }
+    if (fileUrl !== undefined && fileUrl !== null && fileUrl !== "" && !isValidFileUrl(fileUrl)) {
+      return NextResponse.json({ error: "Invalid delivery link — use an http(s) URL or an uploaded file" }, { status: 400 });
+    }
 
     const meta = metadata || {};
     const country = meta.country || meta.location || "Unknown";
