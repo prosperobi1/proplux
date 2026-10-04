@@ -68,9 +68,16 @@ export default function CheckoutPage({
         return;
       }
 
+      // Already own it? Open the existing delivery — no new charge, so no
+      // "purchase successful" banner (and never claim success without an id).
+      if (data?.alreadyExists && data.order?.id) {
+        router.push(`/orders?open=${data.order.id}&owned=1`);
+        router.refresh();
+        return;
+      }
       // Land on Orders with the delivery open + "purchase successful" banner
       const amt = typeof data.totalPrice === "number" ? `&amt=${data.totalPrice}` : "";
-      router.push(data.id ? `/orders?open=${data.id}&paid=1${amt}` : `/orders?paid=1${amt}`);
+      router.push(data.id ? `/orders?open=${data.id}&paid=1${amt}` : "/orders");
       router.refresh();
     } catch (err) {
       console.error(err);

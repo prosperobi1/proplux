@@ -206,6 +206,7 @@ export default function MyOrdersPage() {
     count: number;
     amount: number | null;
     orderId: string | null;
+    owned?: boolean;
   } | null>(null);
   const [reportWindowHours, setReportWindowHours] = useState(16);
 
@@ -243,7 +244,10 @@ export default function MyOrdersPage() {
             const target = list.find((x: Order) => x.id === openId);
             if (target) setOpenOrder(target);
           }
-          if (paidCount > 0) {
+          const owned = params.get("owned") === "1";
+          if (owned && openId) {
+            setSuccess({ count: 1, amount: null, orderId: openId, owned: true });
+          } else if (paidCount > 0) {
             const amt = Number.parseFloat(params.get("amt") || "");
             setSuccess({
               count: paidCount,
@@ -350,12 +354,14 @@ export default function MyOrdersPage() {
           <Check className="mt-0.5 h-4 w-4 flex-shrink-0 font-bold text-red-500" />
           <div className="flex-1">
             <p className="text-xs font-bold uppercase tracking-widest text-white">
-              Purchase successful
+              {success.owned ? "Already purchased" : "Purchase successful"}
             </p>
             <p className="mt-1 text-zinc-400">
-              {success.count > 1
-                ? `${success.count} orders placed${success.amount !== null ? ` — $${success.amount.toFixed(2)} deducted` : ""}. The newest are at the top of your list.`
-                : `Payment confirmed${success.amount !== null ? ` — $${success.amount.toFixed(2)} deducted` : ""}. Your delivery is unlocked.`}
+              {success.owned
+                ? "You already own this order — no new charge. Your delivery is open."
+                : success.count > 1
+                  ? `${success.count} orders placed${success.amount !== null ? ` — $${success.amount.toFixed(2)} deducted` : ""}. The newest are at the top of your list.`
+                  : `Payment confirmed${success.amount !== null ? ` — $${success.amount.toFixed(2)} deducted` : ""}. Your delivery is unlocked.`}
             </p>
           </div>
           <button
@@ -691,8 +697,9 @@ export default function MyOrdersPage() {
                 </p>
                 {success?.orderId && openOrder.id === success.orderId && (
                   <p className="mt-1.5 font-mono text-[11px] font-bold uppercase tracking-widest text-red-500">
-                    ✓ Purchase successful
-                    {success.amount !== null ? ` — $${success.amount.toFixed(2)} deducted` : ""}
+                    {success.owned
+                      ? "You already own this — no new charge"
+                      : `✓ Purchase successful${success.amount !== null ? ` — $${success.amount.toFixed(2)} deducted` : ""}`}
                   </p>
                 )}
               </div>
