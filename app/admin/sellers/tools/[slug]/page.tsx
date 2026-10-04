@@ -13,6 +13,7 @@ type FieldDef = {
   required?: boolean;
   options?: string[];
   placeholder?: string;
+  visible?: boolean;
 };
 
 type Product = {
@@ -81,6 +82,10 @@ export default function SellerToolPage() {
     load();
   }, [slug]);
 
+  // Categories with no non-public field can't support Login Credentials
+  // delivery — there'd be nothing secret to hand over after purchase.
+  const hasHiddenFields = fields.some((f) => f.visible !== true);
+
   const resetForm = () => {
     const reset: Record<string, string> = {};
     fields.forEach((f) => {
@@ -118,6 +123,12 @@ export default function SellerToolPage() {
           ? `Content too large (max ${MAX_TEXT_CONTENT} characters)`
           : "Please paste the delivery content for Text List"
       );
+      setSaving(false);
+      return;
+    }
+
+    if (fields.length > 0 && deliveryType === "credentials" && !hasHiddenFields) {
+      setResponse("This category has no hidden fields — switch to Text List delivery, or ask the admin to add hidden fields.");
       setSaving(false);
       return;
     }
@@ -296,6 +307,13 @@ export default function SellerToolPage() {
                 <p className="mt-1 text-xs text-zinc-500">ZIP, PDF</p>
               </button>
             </div>
+            {fields.length > 0 && deliveryType === "credentials" && !hasHiddenFields && (
+              <p className="rounded-lg border border-yellow-900/60 bg-yellow-950/20 p-3 text-xs leading-relaxed text-yellow-400">
+                ⚠ This category has no hidden fields — there&apos;s nothing secret to deliver as
+                Login Credentials. Switch to <strong>Text List</strong>, or ask the admin to add
+                hidden fields to this category.
+              </p>
+            )}
             {deliveryType === "text" && (
               <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-4">
                 <label className="mb-2 block text-xs font-semibold uppercase text-zinc-500">Delivery content — what buyers receive after purchase</label>

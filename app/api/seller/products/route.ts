@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { encryptHiddenFields, decryptAllFields } from "@/lib/encrypt";
-import { isValidFileUrl, isValidTextContent, MAX_TEXT_CONTENT } from "@/lib/delivery";
+import { isValidFileUrl, isValidTextContent, MAX_TEXT_CONTENT, categoryHasHiddenFields, CREDENTIALS_NO_HIDDEN_ERROR } from "@/lib/delivery";
 
 export async function GET(req: Request) {
   try {
@@ -90,6 +90,13 @@ export async function POST(req: Request) {
       try {
         fieldDefs = JSON.parse(category.fields);
       } catch {}
+    }
+
+    // A credentials product in a category with no hidden fields would deliver
+    // nothing beyond the public listing — refuse it up front.
+    const effectiveDt = deliveryType === "file" || deliveryType === "text" ? deliveryType : "credentials";
+    if (effectiveDt === "credentials" && !categoryHasHiddenFields(fieldDefs)) {
+      return NextResponse.json({ error: CREDENTIALS_NO_HIDDEN_ERROR }, { status: 400 });
     }
 
     const encryptedMeta = encryptHiddenFields(meta, fieldDefs);

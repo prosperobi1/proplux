@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { encryptHiddenFields } from "@/lib/encrypt";
-import { isValidFileUrl, isValidTextContent, MAX_TEXT_CONTENT } from "@/lib/delivery";
+import { isValidFileUrl, isValidTextContent, MAX_TEXT_CONTENT, categoryHasHiddenFields, CREDENTIALS_NO_HIDDEN_ERROR } from "@/lib/delivery";
 
 // DELETE — existing
 export async function DELETE(
@@ -120,6 +120,18 @@ export async function PATCH(
     const finalText = data.textContent !== undefined ? data.textContent : product.textContent;
     if (typeof finalText !== "string" || !finalText.trim()) {
       return NextResponse.json({ error: "Text delivery requires delivery content" }, { status: 400 });
+    }
+  }
+  // Same rule on edit: a credentials listing in a category with no hidden
+  // fields delivers nothing beyond the public listing (also forces legacy
+  // rows to switch to Text delivery or gain hidden fields first).
+  if (effectiveType === "credentials") {
+    const category = await prisma.category.findUnique({
+      where: { slug: product.categorySlug || "" },
+      select: { fields: true },
+    });
+    if (!categoryHasHiddenFields(category?.fields ?? null)) {
+      return NextResponse.json({ error: CREDENTIALS_NO_HIDDEN_ERROR }, { status: 400 });
     }
   }
 

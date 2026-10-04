@@ -712,20 +712,18 @@ export default function MyOrdersPage() {
                 <span className="text-sm text-zinc-400">Quantity</span>
                 <span className="text-sm text-white">{openOrder.quantity}</span>
               </div>
-              <div className="flex justify-between border-b border-zinc-800 pb-2">
-                <span className="text-sm text-zinc-400">Country</span>
-                <span className="text-sm text-white">{openOrder.product.country}</span>
-              </div>
+              {openOrder.product.country && openOrder.product.country !== "Unknown" && (
+                <div className="flex justify-between border-b border-zinc-800 pb-2">
+                  <span className="text-sm text-zinc-400">Country</span>
+                  <span className="text-sm text-white">{openOrder.product.country}</span>
+                </div>
+              )}
 
               <div className="rounded-lg border border-zinc-800 bg-zinc-950/30 p-4">
                 <p className="mb-3 text-xs font-semibold uppercase text-zinc-500">What you bought</p>
                 <DeliveryContent product={openOrder.product} />
               </div>
 
-              <div className="flex justify-between border-b border-zinc-800 pb-2">
-                <span className="text-sm text-zinc-400">Detected Hosting</span>
-                <span className="text-sm text-white">{openOrder.product.hosting}</span>
-              </div>
               <div className="flex justify-between pb-2">
                 <span className="text-sm text-zinc-400">Status</span>
                 <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${

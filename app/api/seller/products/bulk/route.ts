@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { isValidFileUrl, isValidTextContent } from "@/lib/delivery";
+import { isValidFileUrl, isValidTextContent, categoryHasHiddenFields, CREDENTIALS_NO_HIDDEN_ERROR } from "@/lib/delivery";
 
 type Row = Record<string, string>;
 
@@ -26,6 +26,16 @@ export async function POST(req: Request) {
   }
 
   const dt = ["credentials", "text", "file"].includes(deliveryType) ? deliveryType : "credentials";
+
+  if (dt === "credentials") {
+    const category = await prisma.category.findUnique({
+      where: { slug: categorySlug },
+      select: { fields: true },
+    });
+    if (!categoryHasHiddenFields(category?.fields ?? null)) {
+      return NextResponse.json({ error: CREDENTIALS_NO_HIDDEN_ERROR }, { status: 400 });
+    }
+  }
 
   if (dt === "file" && !fileUrl) {
     return NextResponse.json({ error: "File delivery requires an uploaded file or a download link" }, { status: 400 });

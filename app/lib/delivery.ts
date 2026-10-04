@@ -65,3 +65,27 @@ export function readDeliverySnapshot(order: {
     return null;
   }
 }
+
+/**
+ * Credentials delivery only makes sense when the category defines at least
+ * one non-public field (visible !== true) — otherwise the "delivery" is
+ * exactly what everyone already sees on the listing. Accepts the category's
+ * `fields` JSON string or an already-parsed array.
+ */
+export function categoryHasHiddenFields(fields: unknown): boolean {
+  let defs: unknown = fields;
+  if (typeof fields === "string") {
+    try {
+      defs = JSON.parse(fields);
+    } catch {
+      return false;
+    }
+  }
+  if (!Array.isArray(defs)) return false;
+  return defs.some(
+    (f) => !!f && typeof f === "object" && (f as { visible?: unknown }).visible !== true
+  );
+}
+
+export const CREDENTIALS_NO_HIDDEN_ERROR =
+  "This category has no hidden fields — credentials delivery would send nothing new. Use Text List delivery, or add hidden fields to the category in Admin → Categories.";
