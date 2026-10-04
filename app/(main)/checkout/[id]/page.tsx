@@ -68,8 +68,9 @@ export default function CheckoutPage({
         return;
       }
 
-      // Land on Orders with the new order's delivery already open
-      router.push(data.id ? `/orders?open=${data.id}` : "/orders");
+      // Land on Orders with the delivery open + "purchase successful" banner
+      const amt = typeof data.totalPrice === "number" ? `&amt=${data.totalPrice}` : "";
+      router.push(data.id ? `/orders?open=${data.id}&paid=1${amt}` : `/orders?paid=1${amt}`);
       router.refresh();
     } catch (err) {
       console.error(err);

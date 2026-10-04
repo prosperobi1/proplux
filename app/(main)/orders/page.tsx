@@ -3,7 +3,7 @@
 import { useEffect, useState, Fragment } from "react";
 import Link from "next/link";
 
-import { Flag, X, Eye, EyeOff, Copy, Download, AlertCircle, Star } from "lucide-react";
+import { Flag, X, Eye, EyeOff, Copy, Download, AlertCircle, Star, Check } from "lucide-react";
 
 type Order = {
   id: string;
@@ -202,6 +202,11 @@ export default function MyOrdersPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("ALL");
   const [openOrder, setOpenOrder] = useState<Order | null>(null);
+  const [success, setSuccess] = useState<{
+    count: number;
+    amount: number | null;
+    orderId: string | null;
+  } | null>(null);
   const [reportWindowHours, setReportWindowHours] = useState(16);
 
   const [reportFor, setReportFor] = useState<string | null>(null);
@@ -229,11 +234,23 @@ export default function MyOrdersPage() {
         if (s && typeof s.reportWindowHours === "number") {
           setReportWindowHours(s.reportWindowHours);
         }
-        // Deep link from checkout: land with the new order's delivery open
-        const openId = new URLSearchParams(window.location.search).get("open");
-        if (openId) {
-          const target = list.find((x: Order) => x.id === openId);
-          if (target) setOpenOrder(target);
+        // Deep link from checkout: open the new order + confirm the purchase
+        const params = new URLSearchParams(window.location.search);
+        const openId = params.get("open");
+        const paidCount = Number.parseInt(params.get("paid") || "", 10);
+        if (openId || paidCount > 0) {
+          if (openId) {
+            const target = list.find((x: Order) => x.id === openId);
+            if (target) setOpenOrder(target);
+          }
+          if (paidCount > 0) {
+            const amt = Number.parseFloat(params.get("amt") || "");
+            setSuccess({
+              count: paidCount,
+              amount: Number.isFinite(amt) ? amt : null,
+              orderId: openId,
+            });
+          }
           window.history.replaceState(null, "", window.location.pathname);
         }
         setLoading(false);
@@ -327,6 +344,29 @@ export default function MyOrdersPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-red-500">Your Orders</h1>
+
+      {success && (
+        <div className="flex items-start gap-3 rounded-lg border border-red-600/60 bg-red-600/10 p-4 text-sm">
+          <Check className="mt-0.5 h-4 w-4 flex-shrink-0 font-bold text-red-500" />
+          <div className="flex-1">
+            <p className="text-xs font-bold uppercase tracking-widest text-white">
+              Purchase successful
+            </p>
+            <p className="mt-1 text-zinc-400">
+              {success.count > 1
+                ? `${success.count} orders placed${success.amount !== null ? ` — $${success.amount.toFixed(2)} deducted` : ""}. The newest are at the top of your list.`
+                : `Payment confirmed${success.amount !== null ? ` — $${success.amount.toFixed(2)} deducted` : ""}. Your delivery is unlocked.`}
+            </p>
+          </div>
+          <button
+            onClick={() => setSuccess(null)}
+            aria-label="Dismiss"
+            className="text-zinc-500 hover:text-white"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
 
       <div className="flex items-start gap-3 rounded-lg border border-blue-900/50 bg-blue-950/20 p-4 text-sm text-blue-300">
         <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
@@ -649,6 +689,12 @@ export default function MyOrdersPage() {
                   {openOrder.product.seller} ·{" "}
                   {new Date(openOrder.createdAt).toLocaleString()}
                 </p>
+                {success?.orderId && openOrder.id === success.orderId && (
+                  <p className="mt-1.5 font-mono text-[11px] font-bold uppercase tracking-widest text-red-500">
+                    ✓ Purchase successful
+                    {success.amount !== null ? ` — $${success.amount.toFixed(2)} deducted` : ""}
+                  </p>
+                )}
               </div>
               <button onClick={() => setOpenOrder(null)} className="text-zinc-500 hover:text-white">
                 <X className="h-5 w-5" />

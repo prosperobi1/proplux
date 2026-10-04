@@ -74,8 +74,9 @@ function BulkCheckoutContent() {
         return;
       }
 
-      // Bulk response has no order ids — land on the Orders list (newest first)
-      router.push("/orders");
+      // Bulk response has count + total (no ids) — Orders list with success banner
+      const amt = typeof data.total === "number" ? `&amt=${data.total}` : "";
+      router.push(`/orders?paid=${data.count ?? 1}${amt}`);
       router.refresh();
     } catch (err) {
       console.error(err);
