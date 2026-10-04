@@ -3,6 +3,7 @@ import { auth } from "../../lib/auth";
 import { NextResponse } from "next/server";
 import { sendEmail, emailLayout } from "../../lib/email";
 import { decryptAllFields } from "../../lib/encrypt";
+import { buildDeliverySnapshot, readDeliverySnapshot } from "../../lib/delivery";
 
 const DEFAULT_COMMISSION_PERCENT = 65;
 const MAX_QUANTITY = 10;
@@ -83,6 +84,7 @@ export async function POST(req: Request) {
           totalPrice,
           quantity,
           status: initialStatus,
+          delivery: buildDeliverySnapshot(product),
         },
         include: { product: true },
       }),
@@ -188,27 +190,34 @@ export async function GET() {
     });
     const ratingMap = new Map(ratingRows.map((r) => [r.orderId, r.stars]));
 
-    const formatted = orders.map((o) => ({
-      id: o.id,
-      status: o.status,
-      totalPrice: o.totalPrice,
-      createdAt: o.createdAt,
-      reported: reportedOrderIds.has(o.id),
-      rating: ratingMap.get(o.id) ?? null,
-      product: {
-        id: o.product.id,
-        country: o.product.country,
-        tld: o.product.tld,
-        hosting: o.product.hosting,
-        price: o.product.price,
-        seller: o.product.seller.username,
-        categorySlug: o.product.categorySlug,
-        deliveryType: o.product.deliveryType || "credentials",
-        fileUrl: o.product.fileUrl,
-        textContent: o.product.textContent,
-        metadata: (() => { try { return o.product.metadata ? decryptAllFields(JSON.parse(o.product.metadata)) : {}; } catch { return {}; } })(),
-      },
-    }));
+    const formatted = orders.map((o) => {
+      // Purchase-time snapshot wins: later edits to the listing must not
+      // change what this buyer received. Legacy orders fall back to live.
+      const snap = readDeliverySnapshot(o);
+      return {
+        id: o.id,
+        status: o.status,
+        totalPrice: o.totalPrice,
+        createdAt: o.createdAt,
+        reported: reportedOrderIds.has(o.id),
+        rating: ratingMap.get(o.id) ?? null,
+        product: {
+          id: o.product.id,
+          country: o.product.country,
+          tld: o.product.tld,
+          hosting: o.product.hosting,
+          price: o.product.price,
+          seller: o.product.seller.username,
+          categorySlug: o.product.categorySlug,
+          deliveryType: snap ? snap.deliveryType : o.product.deliveryType || "credentials",
+          fileUrl: snap ? snap.fileUrl : o.product.fileUrl,
+          textContent: snap ? snap.textContent : o.product.textContent,
+          metadata: snap
+            ? (snap.metadata ? (() => { try { return decryptAllFields(snap.metadata); } catch { return {}; } })() : {})
+            : (() => { try { return o.product.metadata ? decryptAllFields(JSON.parse(o.product.metadata)) : {}; } catch { return {}; } })(),
+        },
+      };
+    });
 
     return NextResponse.json(formatted);
   } catch (error) {

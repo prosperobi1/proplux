@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { decryptAllFields } from "@/lib/encrypt";
+import { readDeliverySnapshot } from "@/lib/delivery";
 
 export async function GET(
   req: Request,
@@ -28,8 +29,16 @@ export async function GET(
 
   if (!order) return NextResponse.json({ error: "Order not found" }, { status: 404 });
 
-  const metadata = order.product.metadata ? (() => {
-    try { return decryptAllFields(JSON.parse(order.product.metadata!)); } catch { return {}; }
+  // What the buyer received is the purchase-time snapshot; legacy orders
+  // (created before snapshots existed) fall back to the live product.
+  const snap = readDeliverySnapshot(order);
+  const rawMeta: Record<string, unknown> | null = snap
+    ? snap.metadata
+    : order.product.metadata
+      ? (() => { try { return JSON.parse(order.product.metadata!); } catch { return null; } })()
+      : null;
+  const metadata = rawMeta ? (() => {
+    try { return decryptAllFields(rawMeta); } catch { return {}; }
   })() : {};
 
   return NextResponse.json({
@@ -48,9 +57,9 @@ export async function GET(
       price: order.product.price,
       checkStatus: order.product.checkStatus,
       categorySlug: order.product.categorySlug,
-      deliveryType: order.product.deliveryType,
-      fileUrl: order.product.fileUrl,
-      textContent: order.product.textContent,
+      deliveryType: snap ? snap.deliveryType : order.product.deliveryType,
+      fileUrl: snap ? snap.fileUrl : order.product.fileUrl,
+      textContent: snap ? snap.textContent : order.product.textContent,
       metadata,
     },
   });

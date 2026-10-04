@@ -1,5 +1,6 @@
 import { prisma } from "../../../lib/prisma";
 import { auth } from "../../../lib/auth";
+import { buildDeliverySnapshot } from "../../../lib/delivery";
 import { NextResponse } from "next/server";
 
 const DEFAULT_COMMISSION_PERCENT = 65;
@@ -120,6 +121,7 @@ export async function POST(req: Request) {
             totalPrice: p.price,
             quantity: 1,
             status: "Pending Confirmation",
+            delivery: buildDeliverySnapshot(p),
           },
         })
       ),
