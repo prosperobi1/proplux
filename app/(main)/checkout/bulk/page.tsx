@@ -74,7 +74,8 @@ function BulkCheckoutContent() {
         return;
       }
 
-      router.push("/dashboard");
+      // Bulk response has no order ids — land on the Orders list (newest first)
+      router.push("/orders");
       router.refresh();
     } catch (err) {
       console.error(err);

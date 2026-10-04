@@ -66,7 +66,8 @@ export default function ConfirmPurchasePage({
         return;
       }
 
-      router.push("/dashboard");
+      // Land on Orders with the new order's delivery already open
+      router.push(data.id ? `/orders?open=${data.id}` : "/orders");
       router.refresh();
     } catch (err) {
       console.error(err);

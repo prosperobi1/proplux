@@ -223,10 +223,18 @@ export default function MyOrdersPage() {
       fetch("/api/settings/public").then((r) => r.json()),
     ])
       .then(([o, r, s]) => {
-        setOrders(Array.isArray(o) ? o : []);
+        const list = Array.isArray(o) ? o : [];
+        setOrders(list);
         setReports(Array.isArray(r) ? r : []);
         if (s && typeof s.reportWindowHours === "number") {
           setReportWindowHours(s.reportWindowHours);
+        }
+        // Deep link from checkout: land with the new order's delivery open
+        const openId = new URLSearchParams(window.location.search).get("open");
+        if (openId) {
+          const target = list.find((x: Order) => x.id === openId);
+          if (target) setOpenOrder(target);
+          window.history.replaceState(null, "", window.location.pathname);
         }
         setLoading(false);
       })
