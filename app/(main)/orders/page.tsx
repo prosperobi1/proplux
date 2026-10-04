@@ -105,7 +105,7 @@ function DeliveryContent({ product }: { product: any }) {
   const copy = (v: string) => navigator.clipboard.writeText(v);
 
   const downloadTxt = () => {
-    const content = Object.entries(meta).map(([k, v]) => k + ": " + v).join("\n");
+    const content = product.textContent || Object.entries(meta).map(([k, v]) => k + ": " + v).join("\n");
     const blob = new Blob([content], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -136,7 +136,7 @@ function DeliveryContent({ product }: { product: any }) {
   }
 
   if (type === "text") {
-    const content = Object.values(meta).join("\n");
+    const content = product.textContent || Object.values(meta).join("\n");
     return (
       <div className="rounded-lg border border-zinc-800 bg-zinc-950/50 p-4">
         <div className="mb-3 flex items-center justify-between">

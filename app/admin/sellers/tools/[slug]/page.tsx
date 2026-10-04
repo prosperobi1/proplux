@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Plus, Trash2, KeyRound, FileText, Package, Check, Pencil, X, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { LocalUpload } from "../../../../components/LocalUpload";
-import { isValidFileUrl } from "@/lib/delivery";
+import { isValidFileUrl, MAX_TEXT_CONTENT } from "@/lib/delivery";
 
 type FieldDef = {
   name: string;
@@ -25,6 +25,7 @@ type Product = {
   metadata?: Record<string, any>;
   deliveryType?: string;
   fileUrl?: string;
+  textContent?: string;
 };
 
 export default function SellerToolPage() {
@@ -40,6 +41,7 @@ export default function SellerToolPage() {
   const [response, setResponse] = useState("");
   const [deliveryType, setDeliveryType] = useState<"credentials" | "text" | "file">("credentials");
   const [fileUrl, setFileUrl] = useState("");
+  const [textContent, setTextContent] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -87,6 +89,7 @@ export default function SellerToolPage() {
     setValues(reset);
     setDeliveryType("credentials");
     setFileUrl("");
+    setTextContent("");
     setEditingId(null);
   };
 
@@ -109,6 +112,15 @@ export default function SellerToolPage() {
       setSaving(false);
       return;
     }
+    if (deliveryType === "text" && (textContent.trim().length === 0 || textContent.length > MAX_TEXT_CONTENT)) {
+      setResponse(
+        textContent.trim()
+          ? `Content too large (max ${MAX_TEXT_CONTENT} characters)`
+          : "Please paste the delivery content for Text List"
+      );
+      setSaving(false);
+      return;
+    }
 
     const price = values["price"] || "0";
     const metadata = { ...values };
@@ -126,6 +138,7 @@ export default function SellerToolPage() {
         metadata,
         deliveryType,
         fileUrl,
+        textContent,
         country: metadata["country"] || metadata["location"] || "Unknown",
       }),
     });
@@ -146,6 +159,7 @@ export default function SellerToolPage() {
     setEditingId(p.id);
     setDeliveryType((p.deliveryType as any) || "credentials");
     setFileUrl(p.fileUrl || "");
+    setTextContent(p.textContent || "");
     const meta = p.metadata || {};
     const next: Record<string, string> = {};
     fields.forEach((f) => {
@@ -282,6 +296,25 @@ export default function SellerToolPage() {
                 <p className="mt-1 text-xs text-zinc-500">ZIP, PDF</p>
               </button>
             </div>
+            {deliveryType === "text" && (
+              <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-4">
+                <label className="mb-2 block text-xs font-semibold uppercase text-zinc-500">Delivery content — what buyers receive after purchase</label>
+                <textarea
+                  value={textContent}
+                  onChange={(e) => setTextContent(e.target.value)}
+                  rows={8}
+                  maxLength={MAX_TEXT_CONTENT}
+                  placeholder={"Paste the full list here — one entry per line…"}
+                  className="mt-2 w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 font-mono text-xs text-white placeholder-zinc-600 focus:border-red-500 focus:outline-none"
+                />
+                <p className="mt-1 text-[11px] text-zinc-600">Only buyers who purchased see this. Line breaks are preserved.</p>
+                {textContent.trim() && (
+                  <p className="mt-2 flex items-center gap-1 text-xs text-green-500">
+                    <Check className="h-3 w-3" /> Content set ({textContent.trim().split("\n").length} {textContent.trim().split("\n").length === 1 ? "line" : "lines"})
+                  </p>
+                )}
+              </div>
+            )}
             {deliveryType === "file" && (
               <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-4">
                 <label className="mb-2 block text-xs font-semibold uppercase text-zinc-500">Upload File (max 64MB)</label>

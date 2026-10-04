@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { encryptHiddenFields } from "@/lib/encrypt";
-import { isValidFileUrl } from "@/lib/delivery";
+import { isValidFileUrl, isValidTextContent, MAX_TEXT_CONTENT } from "@/lib/delivery";
 
 // DELETE — existing
 export async function DELETE(
@@ -61,7 +61,7 @@ export async function PATCH(
   }
 
   const body = await req.json().catch(() => ({}));
-  const { metadata, price, deliveryType, fileUrl } = body;
+  const { metadata, price, deliveryType, fileUrl, textContent } = body;
 
   if (price !== undefined) {
     const p = Number(price);
@@ -99,6 +99,28 @@ export async function PATCH(
   }
   if (fileUrl !== undefined) {
     data.fileUrl = typeof fileUrl === "string" && fileUrl ? fileUrl : null;
+  }
+  if (textContent !== undefined) {
+    if (textContent === null || textContent === "") {
+      data.textContent = null;
+    } else if (isValidTextContent(textContent)) {
+      data.textContent = textContent;
+    } else {
+      return NextResponse.json({ error: `Delivery content too large (max ${MAX_TEXT_CONTENT} characters)` }, { status: 400 });
+    }
+  }
+  // A text product with no content delivers nothing — enforce on every edit
+  // that leaves the product as text (also repairs legacy rows created before
+  // this field existed).
+  const effectiveType =
+    deliveryType !== undefined && ["credentials", "text", "file"].includes(deliveryType)
+      ? deliveryType
+      : product.deliveryType;
+  if (effectiveType === "text") {
+    const finalText = data.textContent !== undefined ? data.textContent : product.textContent;
+    if (typeof finalText !== "string" || !finalText.trim()) {
+      return NextResponse.json({ error: "Text delivery requires delivery content" }, { status: 400 });
+    }
   }
 
   const updated = await prisma.product.update({ where: { id }, data });

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { encryptHiddenFields, decryptAllFields } from "@/lib/encrypt";
-import { isValidFileUrl } from "@/lib/delivery";
+import { isValidFileUrl, isValidTextContent, MAX_TEXT_CONTENT } from "@/lib/delivery";
 
 export async function GET(req: Request) {
   try {
@@ -39,6 +39,7 @@ export async function GET(req: Request) {
       categorySlug: p.categorySlug,
       deliveryType: p.deliveryType,
       fileUrl: p.fileUrl,
+      textContent: p.textContent,
       metadata: p.metadata ? decryptAllFields(JSON.parse(p.metadata)) : {},
       sold: p.orders.length > 0,
       soldOrderId: p.orders[0]?.id || null,
@@ -58,7 +59,7 @@ export async function POST(req: Request) {
     }
     const body = await req.json();
 
-    const { categorySlug, price, metadata, deliveryType, fileUrl } = body;
+    const { categorySlug, price, metadata, deliveryType, fileUrl, textContent } = body;
 
     if (!categorySlug) return NextResponse.json({ error: "Missing categorySlug" }, { status: 400 });
     if (price === undefined || price === null || price === "") return NextResponse.json({ error: "Missing price" }, { status: 400 });
@@ -67,6 +68,13 @@ export async function POST(req: Request) {
     }
     if (fileUrl !== undefined && fileUrl !== null && fileUrl !== "" && !isValidFileUrl(fileUrl)) {
       return NextResponse.json({ error: "Invalid delivery link — use an http(s) URL or an uploaded file" }, { status: 400 });
+    }
+    const tc = typeof textContent === "string" && textContent.trim() ? textContent : null;
+    if (tc !== null && !isValidTextContent(tc)) {
+      return NextResponse.json({ error: `Delivery content too large (max ${MAX_TEXT_CONTENT} characters)` }, { status: 400 });
+    }
+    if (deliveryType === "text" && !tc) {
+      return NextResponse.json({ error: "Text delivery requires delivery content" }, { status: 400 });
     }
 
     const meta = metadata || {};
@@ -97,6 +105,7 @@ export async function POST(req: Request) {
         metadata: JSON.stringify(encryptedMeta),
         deliveryType: deliveryType === "file" || deliveryType === "text" ? deliveryType : "credentials",
         fileUrl: typeof fileUrl === "string" ? fileUrl : null,
+        textContent: deliveryType === "text" ? tc : null,
         sellerId: (session.user as any).id,
       },
     });

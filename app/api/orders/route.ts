@@ -205,6 +205,7 @@ export async function GET() {
         categorySlug: o.product.categorySlug,
         deliveryType: o.product.deliveryType || "credentials",
         fileUrl: o.product.fileUrl,
+        textContent: o.product.textContent,
         metadata: (() => { try { return o.product.metadata ? decryptAllFields(JSON.parse(o.product.metadata)) : {}; } catch { return {}; } })(),
       },
     }));

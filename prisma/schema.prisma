@@ -52,6 +52,7 @@ model Product {
   metadata     String?
   deliveryType String   @default("credentials")
   fileUrl      String?
+  textContent  String?
   soldAt       DateTime?
   soldToId     String?
   price       Float

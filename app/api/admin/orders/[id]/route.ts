@@ -50,6 +50,7 @@ export async function GET(
       categorySlug: order.product.categorySlug,
       deliveryType: order.product.deliveryType,
       fileUrl: order.product.fileUrl,
+      textContent: order.product.textContent,
       metadata,
     },
   });

@@ -23,6 +23,7 @@ type OrderDetail = {
     categorySlug: string | null;
     deliveryType: string;
     fileUrl: string | null;
+    textContent: string | null;
     metadata: Record<string, any>;
   };
 };
@@ -128,7 +129,12 @@ export default function AdminOrderDetailPage() {
           🔓 Delivered Content (what the buyer received)
         </h3>
 
-        {order.product.deliveryType === "file" && order.product.fileUrl ? (
+        {order.product.deliveryType === "text" && order.product.textContent ? (
+          <div>
+            <p className="text-sm text-zinc-400">Text delivery</p>
+            <pre className="mt-2 max-h-64 overflow-y-auto whitespace-pre-wrap rounded bg-zinc-950 p-3 text-xs text-zinc-300">{order.product.textContent}</pre>
+          </div>
+        ) : order.product.deliveryType === "file" && order.product.fileUrl ? (
           <div className="text-center">
             <p className="text-sm text-zinc-400">File delivery</p>
             <a

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { isValidFileUrl } from "@/lib/delivery";
+import { isValidFileUrl, isValidTextContent } from "@/lib/delivery";
 
 type Row = Record<string, string>;
 
@@ -13,7 +13,7 @@ export async function POST(req: Request) {
   }
 
   const body = await req.json().catch(() => ({}));
-  const { categorySlug, deliveryType, fileUrl, rows } = body;
+  const { categorySlug, deliveryType, fileUrl, textContent, rows } = body;
 
   if (!categorySlug || typeof categorySlug !== "string") {
     return NextResponse.json({ error: "Missing categorySlug" }, { status: 400 });
@@ -32,6 +32,12 @@ export async function POST(req: Request) {
   }
   if (dt === "file" && fileUrl !== undefined && fileUrl !== null && fileUrl !== "" && !isValidFileUrl(fileUrl)) {
     return NextResponse.json({ error: "Invalid delivery link — use an http(s) URL or an uploaded file" }, { status: 400 });
+  }
+  if (dt === "text" && (typeof textContent !== "string" || !textContent.trim())) {
+    return NextResponse.json({ error: "Text delivery requires delivery content" }, { status: 400 });
+  }
+  if (dt === "text" && !isValidTextContent(textContent)) {
+    return NextResponse.json({ error: "Delivery content too large (max 1000000 characters)" }, { status: 400 });
   }
 
   const sellerId = (session.user as any).id;
@@ -54,6 +60,7 @@ export async function POST(req: Request) {
       metadata: JSON.stringify(metadata),
       deliveryType: dt,
       fileUrl: dt === "file" ? fileUrl : null,
+      textContent: dt === "text" ? textContent : null,
       sellerId,
     });
   }

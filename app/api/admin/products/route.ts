@@ -46,6 +46,7 @@ export async function GET(req: Request) {
     categorySlug: p.categorySlug,
     deliveryType: p.deliveryType,
     fileUrl: p.fileUrl,
+    textContent: p.textContent,
     sellOnce: sellOnceMap.get(p.categorySlug || "") ?? false,
     sold: p.orders.length > 0,
     soldAt: p.orders[0]?.createdAt || null,

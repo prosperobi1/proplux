@@ -4,12 +4,12 @@ import { useEffect, useState, useRef } from "react";
 import { useParams } from "next/navigation";
 import { Plus, Trash2, KeyRound, FileText, Package, Check, Pencil, X, Search, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { LocalUpload } from "../../../components/LocalUpload";
-import { isValidFileUrl } from "@/lib/delivery";
+import { isValidFileUrl, MAX_TEXT_CONTENT } from "@/lib/delivery";
 import { CheckResult } from "@/components/CheckResult";
 import { COUNTRIES } from "@/lib/countries";
 
 type FieldDef = { name: string; label: string; type?: string; required?: boolean; options?: string[]; placeholder?: string };
-type Product = { id: string; country: string; tld: string; hosting: string; price: number; createdAt: string; metadata?: Record<string, any>; deliveryType?: string; fileUrl?: string; sold?: boolean };
+type Product = { id: string; country: string; tld: string; hosting: string; price: number; createdAt: string; metadata?: Record<string, any>; deliveryType?: string; fileUrl?: string; textContent?: string; sold?: boolean };
 
 export default function SellerToolPage() {
   const params = useParams();
@@ -27,6 +27,7 @@ export default function SellerToolPage() {
   const [response, setResponse] = useState("");
   const [deliveryType, setDeliveryType] = useState<"credentials" | "text" | "file">("credentials");
   const [fileUrl, setFileUrl] = useState("");
+  const [textContent, setTextContent] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -70,6 +71,7 @@ export default function SellerToolPage() {
     setValues(reset);
     setDeliveryType("credentials");
     setFileUrl("");
+    setTextContent("");
     setEditingId(null);
   };
 
@@ -91,6 +93,15 @@ export default function SellerToolPage() {
       setSaving(false);
       return;
     }
+    if (deliveryType === "text" && (textContent.trim().length === 0 || textContent.length > MAX_TEXT_CONTENT)) {
+      setResponse(
+        textContent.trim()
+          ? `Content too large (max ${MAX_TEXT_CONTENT} characters)`
+          : "Please paste the delivery content for Text List"
+      );
+      setSaving(false);
+      return;
+    }
     const price = values["price"] || "0";
     const metadata = { ...values };
     delete metadata.price;
@@ -99,7 +110,7 @@ export default function SellerToolPage() {
     const res = await fetch(url, {
       method: isEdit ? "PATCH" : "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ categorySlug: slug, price: Number(price), metadata, deliveryType, fileUrl, country: metadata["country"] || metadata["location"] || "Unknown" }),
+      body: JSON.stringify({ categorySlug: slug, price: Number(price), metadata, deliveryType, fileUrl, textContent, country: metadata["country"] || metadata["location"] || "Unknown" }),
     });
     const data = await res.json();
     setSaving(false);
@@ -117,6 +128,7 @@ export default function SellerToolPage() {
     setEditingId(p.id);
     setDeliveryType((p.deliveryType as any) || "credentials");
     setFileUrl(p.fileUrl || "");
+    setTextContent(p.textContent || "");
     const meta = p.metadata || {};
     const next: Record<string, string> = {};
     fields.forEach((f) => { next[f.name] = meta[f.name] !== undefined ? String(meta[f.name]) : (f.type === "select" && f.options ? f.options[0] : ""); });
@@ -440,6 +452,25 @@ export default function SellerToolPage() {
                 <p className="mt-1 text-xs text-zinc-500">ZIP, PDF</p>
               </button>
             </div>
+            {deliveryType === "text" && (
+              <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-4">
+                <label className="mb-2 block text-xs font-semibold uppercase text-zinc-500">Delivery content — what buyers receive after purchase</label>
+                <textarea
+                  value={textContent}
+                  onChange={(e) => setTextContent(e.target.value)}
+                  rows={8}
+                  maxLength={MAX_TEXT_CONTENT}
+                  placeholder={"Paste the full list here — one entry per line…"}
+                  className="mt-2 w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 font-mono text-xs text-white placeholder-zinc-600 focus:border-red-500 focus:outline-none"
+                />
+                <p className="mt-1 text-[11px] text-zinc-600">Only buyers who purchased see this. Line breaks are preserved.</p>
+                {textContent.trim() && (
+                  <p className="mt-2 flex items-center gap-1 text-xs text-green-500">
+                    <Check className="h-3 w-3" /> Content set ({textContent.trim().split("\n").length} {textContent.trim().split("\n").length === 1 ? "line" : "lines"})
+                  </p>
+                )}
+              </div>
+            )}
             {deliveryType === "file" && (
               <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-4">
                 <label className="mb-2 block text-xs font-semibold uppercase text-zinc-500">Upload File (max 64MB)</label>
@@ -638,6 +669,7 @@ function MassAddTab({
 }) {
   const [massDeliveryType, setMassDeliveryType] = useState<"credentials" | "text" | "file">("credentials");
   const [massFileUrl, setMassFileUrl] = useState("");
+  const [massTextContent, setMassTextContent] = useState("");
   const [massText, setMassText] = useState("");
   const [parsedRows, setParsedRows] = useState<{ values: Record<string, string>; valid: boolean; error?: string }[]>([]);
   const [massSaving, setMassSaving] = useState(false);
@@ -701,6 +733,10 @@ function MassAddTab({
     }
     if (massDeliveryType === "file" && !massFileUrl) { setMassResponse("Upload a file or paste a download link first"); return; }
     if (massDeliveryType === "file" && !isValidFileUrl(massFileUrl)) { setMassResponse("Invalid link — use an http(s) URL (e.g. https://mega.nz/...)"); return; }
+    if (massDeliveryType === "text" && (massTextContent.trim().length === 0 || massTextContent.length > MAX_TEXT_CONTENT)) {
+      setMassResponse(massTextContent.trim() ? `Content too large (max ${MAX_TEXT_CONTENT} characters)` : "Paste the delivery content first");
+      return;
+    }
 
     setMassSaving(true);
     setMassResponse("");
@@ -716,12 +752,13 @@ function MassAddTab({
       const res = await fetch("/api/seller/products/bulk", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ categorySlug: slug, deliveryType: massDeliveryType, fileUrl: massFileUrl, rows }),
+        body: JSON.stringify({ categorySlug: slug, deliveryType: massDeliveryType, fileUrl: massFileUrl, textContent: massTextContent, rows }),
       });
       const data = await res.json();
       if (!res.ok) { setMassResponse(data.error || "Failed"); return; }
       setMassResponse("Added " + data.added + " products successfully");
       setMassText("");
+      setMassTextContent("");
       setParsedRows([]);
       setMassFileUrl("");
       onDone();
@@ -751,6 +788,25 @@ function MassAddTab({
             <p className="mt-2 text-sm font-semibold text-white">File (shared)</p>
           </button>
         </div>
+        {massDeliveryType === "text" && (
+          <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-4">
+            <label className="mb-2 block text-xs font-semibold uppercase text-zinc-500">Delivery content (shared by all rows) — buyers receive this after purchase</label>
+            <textarea
+              value={massTextContent}
+              onChange={(e) => setMassTextContent(e.target.value)}
+              rows={8}
+              maxLength={MAX_TEXT_CONTENT}
+              placeholder={"Paste the full list here — one entry per line…"}
+              className="mt-2 w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 font-mono text-xs text-white placeholder-zinc-600 focus:border-red-500 focus:outline-none"
+            />
+            <p className="mt-1 text-[11px] text-zinc-600">Only buyers who purchased see this. Line breaks are preserved.</p>
+            {massTextContent.trim() && (
+              <p className="mt-2 flex items-center gap-1 text-xs text-green-500">
+                <Check className="h-3 w-3" /> Content set ({massTextContent.trim().split("\n").length} {massTextContent.trim().split("\n").length === 1 ? "line" : "lines"})
+              </p>
+            )}
+          </div>
+        )}
         {massDeliveryType === "file" && (
           <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-4">
             <label className="mb-2 block text-xs font-semibold uppercase text-zinc-500">Upload File (shared by all rows)</label>

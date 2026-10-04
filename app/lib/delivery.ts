@@ -9,3 +9,11 @@ export function isValidFileUrl(u: unknown): u is string {
   if (/^https?:\/\/\S+$/i.test(u)) return true;
   return /^\/api\/files\/products\/[A-Za-z0-9][A-Za-z0-9._-]*$/.test(u);
 }
+
+/** Text List delivery content: non-empty, capped (bigger payloads should use file delivery). */
+export const MAX_TEXT_CONTENT = 1_000_000; // characters
+
+export function isValidTextContent(u: unknown): u is string {
+  if (typeof u !== "string") return false;
+  return u.trim().length > 0 && u.length <= MAX_TEXT_CONTENT;
+}
