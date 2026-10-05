@@ -22,7 +22,7 @@ async function getConfig() {
   };
 }
 
-async function npFetch(path: string, init: RequestInit = {}) {
+export async function npFetch(path: string, init: RequestInit = {}) {
   const cfg = await getConfig();
   if (!cfg.apiKey) throw new Error("NOWPayments API key is not configured");
 
