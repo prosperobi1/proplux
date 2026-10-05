@@ -18,6 +18,10 @@ export async function GET() {
   if (!session?.user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const role = (session.user as { role?: string }).role;
+  if (role !== "SELLER" && role !== "ADMIN") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
   const sellerId = (session.user as any).id;
 
   const [user, orders, commissionPercent] = await Promise.all([

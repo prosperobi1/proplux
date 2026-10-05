@@ -5,17 +5,19 @@ import { createPayment } from "@/lib/nowpayments";
 
 const ALLOWED_COINS = ["btc", "eth", "usdttrc20", "usdterc20"];
 
-function buildIpnCallbackUrl(req: Request): string {
-  // Prefer explicit production URL if set (recommended for live deployments)
+function buildIpnCallbackUrl(req: Request): string | null {
+  // Prefer explicit production URL if set (required for live deployments)
   if (process.env.NEXT_PUBLIC_APP_URL) {
     return `${process.env.NEXT_PUBLIC_APP_URL}/api/deposit/ipn`;
   }
-  // Otherwise, derive from the request headers (works with ngrok, Vercel, Cloudflare)
-  const host = req.headers.get("host") || "localhost:3000";
-  const proto =
-    req.headers.get("x-forwarded-proto") ||
-    (host.startsWith("localhost") || host.startsWith("127.0.0.1") ? "http" : "https");
-  return `${proto}://${host}/api/deposit/ipn`;
+  // Local dev only. Never derive the callback from request headers: host and
+  // x-forwarded-* are client-controllable, so a forged value would hand
+  // payment IPNs to an attacker-controlled server.
+  const host = req.headers.get("host") || "";
+  if (host.startsWith("localhost:") || host.startsWith("127.0.0.1:")) {
+    return `http://${host}/api/deposit/ipn`;
+  }
+  return null;
 }
 
 export async function POST(req: Request) {
@@ -44,6 +46,12 @@ export async function POST(req: Request) {
   const userId = (session.user as any).id;
   const orderId = `dep_${userId}_${Date.now()}`;
   const ipnCallbackUrl = buildIpnCallbackUrl(req);
+  if (!ipnCallbackUrl) {
+    return NextResponse.json(
+      { error: "Server URL not configured — set NEXT_PUBLIC_APP_URL so payments can call back" },
+      { status: 503 }
+    );
+  }
 
   try {
     const payment = await createPayment({
