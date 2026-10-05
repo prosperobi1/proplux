@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { Plus, Trash2, KeyRound, FileText, Package, Check, Pencil, X, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Loader2, Plus, Trash2, KeyRound, FileText, Package, Check, Pencil, X, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { LocalUpload } from "../../../../components/LocalUpload";
 import { isValidFileUrl, MAX_TEXT_CONTENT } from "@/lib/delivery";
 
@@ -400,7 +400,7 @@ export default function SellerToolPage() {
           </section>
 
           <button type="submit" disabled={saving} className="flex w-full items-center justify-center gap-2 rounded-md bg-red-600 px-6 py-3 text-sm font-semibold text-white hover:bg-red-500 disabled:opacity-50">
-            <Plus className="h-4 w-4" /> {saving ? "Saving..." : editingId ? "Save Changes" : "Add Product"}
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} {saving ? "Saving..." : editingId ? "Save Changes" : "Add Product"}
           </button>
 
           {response && (
@@ -449,7 +449,7 @@ export default function SellerToolPage() {
               </thead>
               <tbody className="divide-y divide-zinc-800 bg-zinc-950">
                 {loading ? (
-                  <tr><td colSpan={displayFields.slice(0, 4).length + 3} className="px-3 py-6 text-center text-zinc-500">Loading...</td></tr>
+                  <tr><td colSpan={displayFields.slice(0, 4).length + 3} className="px-3 py-6 text-center text-zinc-500"><span className="flex items-center justify-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Loading...</span></td></tr>
                 ) : pagedProducts.length === 0 ? (
                   <tr><td colSpan={displayFields.slice(0, 4).length + 3} className="px-3 py-6 text-center text-zinc-500">
                     {search ? "No products match." : "No products yet."}

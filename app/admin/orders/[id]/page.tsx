@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Copy, Eye, EyeOff, Check, Download } from "lucide-react";
+import { Loader2, ArrowLeft, Copy, Eye, EyeOff, Check, Download } from "lucide-react";
 
 type OrderDetail = {
   id: string;
@@ -57,7 +57,11 @@ export default function AdminOrderDetailPage() {
 
   const copy = (v: string) => navigator.clipboard.writeText(v);
 
-  if (loading) return <div className="p-8 text-zinc-500">Loading...</div>;
+  if (loading) return (
+   <div className="flex items-center justify-center gap-2 p-8 text-zinc-500">
+     <Loader2 className="h-4 w-4 animate-spin" /> Loading...
+   </div>
+ );
   if (!order) return <div className="p-8 text-red-500">Order not found.</div>;
 
   return (

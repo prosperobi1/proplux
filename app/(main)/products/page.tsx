@@ -413,7 +413,7 @@ function ProductsContent() {
             {loading ? (
               <tr>
                 <td colSpan={colCount} className="px-4 py-6 text-center text-zinc-500">
-                  Loading products...
+                  <span className="flex items-center justify-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Loading products...</span>
                 </td>
               </tr>
             ) : filtered.length === 0 ? (
@@ -598,7 +598,7 @@ function ProductsContent() {
 
 export default function ProductsPage() {
   return (
-    <Suspense fallback={<p className="text-zinc-500">Loading...</p>}>
+    <Suspense fallback={<p className="flex items-center gap-2 text-zinc-500"><Loader2 className="h-4 w-4 animate-spin" /> Loading...</p>}>
       <ProductsContent />
     </Suspense>
   );

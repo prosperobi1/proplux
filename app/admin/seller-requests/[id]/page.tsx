@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, CheckCircle2, XCircle, Send } from "lucide-react";
+import { Loader2, ArrowLeft, CheckCircle2, XCircle, Send } from "lucide-react";
 
 type Req = {
   id: string;
@@ -78,7 +78,11 @@ export default function AdminSellerRequestDetail() {
     }
   };
 
-  if (loading) return <div className="p-8 text-zinc-500">Loading...</div>;
+  if (loading) return (
+   <div className="flex items-center justify-center gap-2 p-8 text-zinc-500">
+     <Loader2 className="h-4 w-4 animate-spin" /> Loading...
+   </div>
+ );
   if (!req) return <div className="p-8 text-red-500">Not found.</div>;
 
   return (
@@ -142,7 +146,7 @@ export default function AdminSellerRequestDetail() {
               disabled={sending || !reply.trim()}
               className="flex items-center gap-2 rounded-md bg-zinc-800 px-4 py-2 text-xs font-semibold text-white hover:bg-zinc-700 disabled:opacity-50"
             >
-              <Send className="h-3 w-3" /> {sending ? "Sending..." : "Send Reply"}
+              {sending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />} {sending ? "Sending..." : "Send Reply"}
             </button>
           </div>
 

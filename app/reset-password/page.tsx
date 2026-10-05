@@ -130,7 +130,7 @@ function ResetPasswordContent() {
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={<p className="p-8 text-zinc-500">Loading...</p>}>
+    <Suspense fallback={<p className="flex items-center justify-center gap-2 p-8 text-zinc-500"><Loader2 className="h-4 w-4 animate-spin" /> Loading...</p>}>
       <ResetPasswordContent />
     </Suspense>
   );

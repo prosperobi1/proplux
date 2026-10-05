@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Search, Check, X, ChevronLeft, ChevronRight, Eye } from "lucide-react";
+import { Loader2, Search, Check, X, ChevronLeft, ChevronRight, Eye } from "lucide-react";
 
 type Order = {
   id: string;
@@ -144,7 +144,7 @@ export default function AdminOrdersPage() {
             {loading ? (
               <tr>
                 <td colSpan={8} className="px-3 py-6 text-center text-zinc-500">
-                  Loading orders...
+                  <span className="flex items-center justify-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Loading orders...</span>
                 </td>
               </tr>
             ) : filtered.length === 0 ? (

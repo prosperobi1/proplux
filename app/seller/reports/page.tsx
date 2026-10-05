@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Flag } from "lucide-react";
+import { Loader2, Flag } from "lucide-react";
 
 type Report = {
   id: string;
@@ -50,7 +50,7 @@ export default function SellerReportsPage() {
           </thead>
           <tbody className="divide-y divide-zinc-800 bg-zinc-950">
             {loading ? (
-              <tr><td colSpan={6} className="px-4 py-6 text-center text-zinc-500">Loading...</td></tr>
+              <tr><td colSpan={6} className="px-4 py-6 text-center text-zinc-500"><span className="flex items-center justify-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Loading...</span></td></tr>
             ) : reports.length === 0 ? (
               <tr><td colSpan={6} className="px-4 py-6 text-center text-zinc-500">No reports against you. Keep up the good work.</td></tr>
             ) : (

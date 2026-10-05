@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Plus, Trash2, ChevronUp, ChevronDown, Save, Eye, EyeOff } from "lucide-react";
+import { Loader2, ArrowLeft, Plus, Trash2, ChevronUp, ChevronDown, Save, Eye, EyeOff } from "lucide-react";
 
 type FieldDef = {
   name: string;
@@ -120,7 +120,11 @@ export default function CategoryFieldsPage() {
     }
   };
 
-  if (loading) return <div className="p-8 text-zinc-500">Loading...</div>;
+  if (loading) return (
+   <div className="flex items-center justify-center gap-2 p-8 text-zinc-500">
+     <Loader2 className="h-4 w-4 animate-spin" /> Loading...
+   </div>
+ );
   if (!category) return <div className="p-8 text-red-500">{error || "Category not found"}</div>;
 
   const labelCol = "px-3 py-3 text-xs";
@@ -147,7 +151,7 @@ export default function CategoryFieldsPage() {
             saved ? "bg-green-600" : "bg-red-600 hover:bg-red-500"
           }`}
         >
-          <Save className="h-4 w-4" />
+          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
           {saving ? "Saving..." : saved ? "Saved!" : "Save Fields"}
         </button>
       </div>

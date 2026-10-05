@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Send } from "lucide-react";
+import { Loader2, ArrowLeft, Send } from "lucide-react";
 
 export default function TicketViewPage() {
   const params = useParams();
@@ -51,7 +51,7 @@ export default function TicketViewPage() {
     load();
   };
 
-  if (loading) return <p className="p-8 text-zinc-500">Loading ticket...</p>;
+  if (loading) return <p className="flex items-center justify-center gap-2 p-8 text-zinc-500"><Loader2 className="h-4 w-4 animate-spin" /> Loading ticket...</p>;
   if (!ticket) return <p className="p-8 text-zinc-500">Ticket not found.</p>;
 
   return (
@@ -83,7 +83,7 @@ export default function TicketViewPage() {
       <form onSubmit={handleReply} className="space-y-3 rounded-lg border border-zinc-800 bg-zinc-900/30 p-4">
         <textarea value={reply} onChange={e => setReply(e.target.value)} placeholder="Type your reply..." rows={3} className="w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-white placeholder-zinc-500 focus:border-red-500 focus:outline-none" required />
         <button type="submit" disabled={sending} className="flex items-center gap-2 rounded-md bg-red-600 px-6 py-2 text-sm font-semibold text-white hover:bg-red-500 disabled:opacity-50">
-          <Send className="h-4 w-4" /> {sending ? "Sending..." : "Send Reply"}
+          {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} {sending ? "Sending..." : "Send Reply"}
         </button>
       </form>
     </div>

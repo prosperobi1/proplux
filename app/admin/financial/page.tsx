@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { DollarSign, Bitcoin, TrendingUp, RotateCcw, Users } from "lucide-react";
+import { Loader2, DollarSign, Bitcoin, TrendingUp, RotateCcw, Users } from "lucide-react";
 
 type Deposit = {
   id: string;
@@ -73,7 +73,7 @@ export default function FinancialStatusPage() {
               <div className="flex flex-col items-center justify-center bg-zinc-900 p-6 md:p-8">
                 <Icon className={`h-8 w-8 md:h-12 md:w-12 ${iconColor}`} />
                 <p className={`mt-4 text-center text-lg font-bold md:text-2xl ${iconColor}`}>
-                  {loading ? "..." : `$${card.value.toFixed(2)}`}
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : `$${card.value.toFixed(2)}`}
                 </p>
               </div>
               <div className={`p-3 text-center text-xs font-semibold text-white md:text-sm ${barBg}`}>
@@ -140,7 +140,7 @@ export default function FinancialStatusPage() {
               {loading ? (
                 <tr>
                   <td colSpan={6} className="px-3 py-6 text-center text-zinc-500">
-                    Loading...
+                    <span className="flex items-center justify-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Loading...</span>
                   </td>
                 </tr>
               ) : !data?.recentDeposits?.length ? (

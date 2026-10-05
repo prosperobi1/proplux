@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Clock, AlertTriangle, Users, Flame } from "lucide-react";
+import { Loader2, Clock, AlertTriangle, Users, Flame } from "lucide-react";
 
 type RecentUser = {
   id: string;
@@ -79,7 +79,7 @@ export default function AdminDashboard() {
               <div className="flex flex-col items-center justify-center bg-zinc-900 p-6 md:p-8">
                 <Icon className={`h-8 w-8 md:h-12 md:w-12 ${iconColor}`} />
                 <p className={`mt-4 text-2xl md:text-3xl font-bold ${iconColor}`}>
-                  {loading ? "..." : card.value}
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : card.value}
                 </p>
               </div>
               <div
@@ -112,7 +112,7 @@ export default function AdminDashboard() {
                     colSpan={4}
                     className="px-3 py-6 text-center text-zinc-500"
                   >
-                    Loading users...
+                    <span className="flex items-center justify-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Loading users...</span>
                   </td>
                 </tr>
               ) : !stats?.recentUsers?.length ? (

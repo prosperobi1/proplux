@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { Search, CheckCircle2, XCircle, DollarSign, ChevronLeft, ChevronRight, Trash2, AlertTriangle, X } from "lucide-react";
+import { Loader2, Search, CheckCircle2, XCircle, DollarSign, ChevronLeft, ChevronRight, Trash2, AlertTriangle, X } from "lucide-react";
 
 type Withdrawal = {
   id: string;
@@ -211,7 +211,7 @@ export default function AdminWithdrawalsPage() {
           </thead>
           <tbody className="divide-y divide-zinc-800 bg-zinc-950">
             {loading ? (
-              <tr><td colSpan={9} className="px-4 py-6 text-center text-zinc-500">Loading...</td></tr>
+              <tr><td colSpan={9} className="px-4 py-6 text-center text-zinc-500"><span className="flex items-center justify-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Loading...</span></td></tr>
             ) : paged.length === 0 ? (
               <tr><td colSpan={9} className="px-4 py-6 text-center text-zinc-500">No withdrawals match.</td></tr>
             ) : (
@@ -368,9 +368,13 @@ export default function AdminWithdrawalsPage() {
                 <button
                   onClick={confirmBulkDelete}
                   disabled={bulkBusy || bulkText !== "DELETE"}
-                  className="flex-1 rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-500 disabled:opacity-50"
+                  className="flex flex-1 items-center justify-center gap-2 rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-500 disabled:opacity-50"
                 >
-                  {bulkBusy ? "Deleting..." : `Delete ${selectedCount}`}
+                  {bulkBusy ? (
+                    <><Loader2 className="h-4 w-4 animate-spin" /> Deleting…</>
+                  ) : (
+                    `Delete ${selectedCount}`
+                  )}
                 </button>
                 <button onClick={() => setShowBulk(false)} disabled={bulkBusy} className="rounded-md border border-zinc-700 bg-zinc-900 px-4 py-2 text-sm font-semibold text-white hover:bg-zinc-800">Cancel</button>
               </div>

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowRight, Megaphone, Store } from "lucide-react";
+import { Loader2, ArrowRight, Megaphone, Store } from "lucide-react";
 
 type Order = {
   id: string;
@@ -70,7 +70,11 @@ export default function DashboardPage() {
   }, [status]);
 
   if (status === "loading" || loading) {
-    return <div className="p-8 text-zinc-500">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center gap-2 p-8 text-zinc-500">
+        <Loader2 className="h-4 w-4 animate-spin" /> Loading...
+      </div>
+    );
   }
 
   const totalSpent = orders.reduce((sum, order) => sum + order.totalPrice, 0);

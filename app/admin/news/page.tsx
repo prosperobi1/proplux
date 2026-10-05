@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Trash2, Pencil, X } from "lucide-react";
+import { Loader2, Plus, Trash2, Pencil, X } from "lucide-react";
 
 type NewsItem = {
   id: string;
@@ -139,7 +139,7 @@ export default function AdminNewsPage() {
           disabled={submitting}
           className="flex items-center gap-2 rounded-md bg-red-600 px-6 py-3 text-sm font-semibold text-white hover:bg-red-500 disabled:opacity-50"
         >
-          <Plus className="h-4 w-4" /> {submitting ? "Publishing..." : "Publish News"}
+          {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} {submitting ? "Publishing..." : "Publish News"}
         </button>
         {saved && (
           <div className="rounded-lg border border-green-900/50 bg-green-950/20 p-3 text-sm text-green-500">
@@ -159,7 +159,7 @@ export default function AdminNewsPage() {
         </h2>
         <div className="space-y-3">
           {loading ? (
-            <p className="text-sm text-zinc-500">Loading...</p>
+            <p className="flex items-center gap-2 text-sm text-zinc-500"><Loader2 className="h-4 w-4 animate-spin" /> Loading...</p>
           ) : news.length === 0 ? (
             <p className="text-sm text-zinc-500">No news yet.</p>
           ) : (
@@ -198,7 +198,11 @@ export default function AdminNewsPage() {
                           disabled={editBusy}
                           className="min-h-9 rounded-md bg-green-600 px-4 py-2 text-xs font-semibold text-white hover:bg-green-500 disabled:opacity-50"
                         >
-                          {editBusy ? "Saving..." : "Save Changes"}
+                          {editBusy ? (
+                            <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Saving…</>
+                          ) : (
+                            "Save Changes"
+                          )}
                         </button>
                         <button
                           onClick={closeEdit}

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import {
-  LayoutDashboard, ShoppingCart, Store, Server, Terminal, Monitor,
+  Loader2, LayoutDashboard, ShoppingCart, Store, Server, Terminal, Monitor,
   Send, Mail, AtSign, CreditCard, Landmark, Sparkles, Headphones,
   User, Menu, X, Shield, Package, AlertTriangle, BookOpen, Users,
   Zap, Globe, Cloud, Database, Smartphone, Key, Lock, Fingerprint,
@@ -117,7 +117,7 @@ function SidebarLayoutInner({ children }: { children: React.ReactNode }) {
           </div>
 
           {categories.length === 0 ? (
-            <p className="px-4 py-2 text-xs text-zinc-600">Loading...</p>
+            <p className="flex items-center gap-2 px-4 py-2 text-xs text-zinc-600"><Loader2 className="h-3 w-3 animate-spin" /> Loading...</p>
           ) : (
             (() => {
               // Group categories by group name; ungrouped go to "OTHER"
@@ -238,7 +238,7 @@ function SidebarLayoutInner({ children }: { children: React.ReactNode }) {
 
 export function SidebarLayout({ children }: { children: React.ReactNode }) {
   return (
-    <Suspense fallback={<div className="p-8 text-zinc-500">Loading...</div>}>
+    <Suspense fallback={<div className="flex items-center justify-center gap-2 p-8 text-zinc-500"><Loader2 className="h-4 w-4 animate-spin" /> Loading...</div>}>
       <SidebarLayoutInner>{children}</SidebarLayoutInner>
     </Suspense>
   );

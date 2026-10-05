@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import {
-  ArrowLeft, LayoutDashboard, ShoppingCart, DollarSign, Flag,
+  Loader2, ArrowLeft, LayoutDashboard, ShoppingCart, DollarSign, Flag,
   LogOut, Menu, X, Package, Monitor, Terminal, Server, Mail,
   AtSign, Users, AlertTriangle, BookOpen, Landmark, CreditCard,
   Sparkles, Send, Shield, Zap, Globe, Cloud, Database, Smartphone,
@@ -117,7 +117,7 @@ export function SellerSidebar({ children }: { children: React.ReactNode }) {
           <div className="mt-4 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-zinc-500">Tools Management</div>
 
           {categories.length === 0 ? (
-            <p className="px-4 py-2 text-xs text-zinc-600">Loading tools...</p>
+            <p className="flex items-center gap-2 px-4 py-2 text-xs text-zinc-600"><Loader2 className="h-3 w-3 animate-spin" /> Loading tools...</p>
           ) : (
             (() => {
               const grouped: Record<string, { order: number; items: any[] }> = {};

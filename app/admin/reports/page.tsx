@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { Flag, Search, ChevronLeft, ChevronRight, Trash2, AlertTriangle, X } from "lucide-react";
+import { Loader2, Flag, Search, ChevronLeft, ChevronRight, Trash2, AlertTriangle, X } from "lucide-react";
 
 type Report = {
   id: string;
@@ -186,7 +186,7 @@ export default function AdminReportsPage() {
           </thead>
           <tbody className="divide-y divide-zinc-800 bg-zinc-950">
             {loading ? (
-              <tr><td colSpan={9} className="px-4 py-6 text-center text-zinc-500">Loading...</td></tr>
+              <tr><td colSpan={9} className="px-4 py-6 text-center text-zinc-500"><span className="flex items-center justify-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Loading...</span></td></tr>
             ) : paged.length === 0 ? (
               <tr><td colSpan={9} className="px-4 py-6 text-center text-zinc-500">No reports match.</td></tr>
             ) : (
@@ -285,8 +285,12 @@ export default function AdminReportsPage() {
               </div>
               {bulkError && <div className="rounded-md border border-red-900 bg-red-950/50 p-3 text-sm text-red-400">{bulkError}</div>}
               <div className="flex gap-2">
-                <button onClick={confirmBulk} disabled={bulkBusy || bulkText !== "DELETE"} className="flex-1 rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-500 disabled:opacity-50">
-                  {bulkBusy ? "Deleting..." : `Delete ${selectedCount}`}
+                <button onClick={confirmBulk} disabled={bulkBusy || bulkText !== "DELETE"} className="flex flex-1 items-center justify-center gap-2 rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-500 disabled:opacity-50">
+                  {bulkBusy ? (
+                    <><Loader2 className="h-4 w-4 animate-spin" /> Deleting…</>
+                  ) : (
+                    `Delete ${selectedCount}`
+                  )}
                 </button>
                 <button onClick={() => setShowBulk(false)} disabled={bulkBusy} className="rounded-md border border-zinc-700 bg-zinc-900 px-4 py-2 text-sm font-semibold text-white hover:bg-zinc-800">Cancel</button>
               </div>

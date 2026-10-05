@@ -3,7 +3,7 @@
 import { useEffect, useState, Fragment } from "react";
 import Link from "next/link";
 
-import { Flag, X, Eye, EyeOff, Copy, Download, AlertCircle, Star, Check } from "lucide-react";
+import { Loader2, Flag, X, Eye, EyeOff, Copy, Download, AlertCircle, Star, Check } from "lucide-react";
 
 type Order = {
   id: string;
@@ -436,7 +436,7 @@ export default function MyOrdersPage() {
               </thead>
               <tbody className="divide-y divide-zinc-800 bg-zinc-950">
                 {loading ? (
-                  <tr><td colSpan={10} className="px-4 py-6 text-center text-zinc-500">Loading...</td></tr>
+                  <tr><td colSpan={10} className="px-4 py-6 text-center text-zinc-500"><span className="flex items-center justify-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Loading...</span></td></tr>
                 ) : filteredOrders.length === 0 ? (
                   <tr>
                     <td colSpan={10} className="px-4 py-6 text-center text-zinc-500">
@@ -566,9 +566,13 @@ export default function MyOrdersPage() {
                                   <button
                                     onClick={() => submitReport(o.id)}
                                     disabled={submitting}
-                                    className="min-h-9 rounded-md bg-red-600 px-4 py-2 text-xs font-semibold text-white hover:bg-red-500 disabled:opacity-50"
+                                    className="flex min-h-9 items-center justify-center gap-1.5 rounded-md bg-red-600 px-4 py-2 text-xs font-semibold text-white hover:bg-red-500 disabled:opacity-50"
                                   >
-                                    {submitting ? "Submitting..." : "Submit Report"}
+                                    {submitting ? (
+                                      <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Submitting…</>
+                                    ) : (
+                                      "Submit Report"
+                                    )}
                                   </button>
                                   <button
                                     onClick={closeReport}
@@ -613,9 +617,13 @@ export default function MyOrdersPage() {
                                   <button
                                     onClick={() => submitRating(o.id)}
                                     disabled={ratingBusy}
-                                    className="min-h-9 rounded-md bg-yellow-500 px-4 py-2 text-xs font-semibold text-black hover:bg-yellow-400 disabled:opacity-50"
+                                    className="flex min-h-9 items-center justify-center gap-1.5 rounded-md bg-yellow-500 px-4 py-2 text-xs font-semibold text-black hover:bg-yellow-400 disabled:opacity-50"
                                   >
-                                    {ratingBusy ? "Submitting..." : "Submit Rating"}
+                                    {ratingBusy ? (
+                                      <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Submitting…</>
+                                    ) : (
+                                      "Submit Rating"
+                                    )}
                                   </button>
                                   <button
                                     onClick={closeRate}

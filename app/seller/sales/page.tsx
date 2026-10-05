@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
 
 type Sale = {
   id: string;
@@ -71,7 +72,7 @@ export default function SellerSalesPage() {
               {loading ? (
                 <tr>
                   <td className="px-4 py-6 text-center text-sm text-zinc-500" colSpan={6}>
-                    Loading...
+                    <span className="flex items-center justify-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Loading...</span>
                   </td>
                 </tr>
               ) : sales.length === 0 ? (

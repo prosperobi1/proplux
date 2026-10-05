@@ -87,7 +87,11 @@ function BulkCheckoutContent() {
   };
 
   if (loading) {
-    return <div className="p-8 text-zinc-500">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center gap-2 p-8 text-zinc-500">
+        <Loader2 className="h-4 w-4 animate-spin" /> Loading...
+      </div>
+    );
   }
 
   if (ids.length === 0) {
@@ -257,7 +261,7 @@ function BulkCheckoutContent() {
 
 export default function BulkCheckoutPage() {
   return (
-    <Suspense fallback={<p className="p-8 text-zinc-500">Loading...</p>}>
+    <Suspense fallback={<p className="flex items-center justify-center gap-2 p-8 text-zinc-500"><Loader2 className="h-4 w-4 animate-spin" /> Loading...</p>}>
       <BulkCheckoutContent />
     </Suspense>
   );

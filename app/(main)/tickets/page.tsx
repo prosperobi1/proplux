@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Plus, MessageSquare } from "lucide-react";
+import { Loader2, Plus, MessageSquare } from "lucide-react";
 
 export default function TicketsPage() {
   type Ticket = {
@@ -52,7 +52,7 @@ export default function TicketsPage() {
 
       <div className="space-y-3">
         {loading ? (
-          <p className="text-center text-sm text-zinc-500">Loading...</p>
+          <p className="flex items-center justify-center gap-2 text-center text-sm text-zinc-500"><Loader2 className="h-4 w-4 animate-spin" /> Loading...</p>
         ) : tickets.length === 0 ? (
           <div className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-8 text-center text-sm text-zinc-500">No tickets yet. Click &quot;New Ticket&quot; to open one.</div>
         ) : tickets.map(t => (

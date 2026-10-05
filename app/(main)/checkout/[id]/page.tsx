@@ -88,7 +88,11 @@ export default function CheckoutPage({
   };
 
   if (loading) {
-    return <div className="p-8 text-zinc-500">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center gap-2 p-8 text-zinc-500">
+        <Loader2 className="h-4 w-4 animate-spin" /> Loading...
+      </div>
+    );
   }
 
   if (!product) {

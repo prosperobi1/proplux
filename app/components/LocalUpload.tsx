@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { Loader2 } from "lucide-react";
 
 type Kind = "logo" | "product";
 
@@ -68,7 +69,7 @@ export function LocalUpload({
         disabled={busy}
         className={className}
       >
-        {busy ? "Uploading…" : label}
+        {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : label}
       </button>
       {hint && !err && <p className="mt-2 text-xs text-zinc-500">{hint}</p>}
       {err && <p className="mt-2 text-xs text-red-500">{err}</p>}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Package, Trash2, Eye, X } from "lucide-react";
+import { Loader2, Package, Trash2, Eye, X } from "lucide-react";
 
 type Product = {
   id: string;
@@ -150,7 +150,7 @@ export default function AdminToolsPage() {
           </thead>
           <tbody className="divide-y divide-zinc-800 bg-zinc-950">
             {loading ? (
-              <tr><td colSpan={10} className="px-4 py-6 text-center text-zinc-500">Loading...</td></tr>
+              <tr><td colSpan={10} className="px-4 py-6 text-center text-zinc-500"><span className="flex items-center justify-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Loading...</span></td></tr>
             ) : filtered.length === 0 ? (
               <tr><td colSpan={10} className="px-4 py-6 text-center text-zinc-500">No products in this category.</td></tr>
             ) : (

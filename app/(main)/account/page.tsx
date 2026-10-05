@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSession, signOut } from "next-auth/react";
-import { User, Lock, Mail, Shield, LogOut, CheckCircle2, AlertCircle, Pencil, X } from "lucide-react";
+import { Loader2, User, Lock, Mail, Shield, LogOut, CheckCircle2, AlertCircle, Pencil, X } from "lucide-react";
 
 type Me = {
   id: string;
@@ -135,7 +135,11 @@ export default function AccountPage() {
   };
 
   if (loading) {
-    return <div className="p-8 text-zinc-500">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center gap-2 p-8 text-zinc-500">
+        <Loader2 className="h-4 w-4 animate-spin" /> Loading...
+      </div>
+    );
   }
 
   if (!me) {
@@ -214,10 +218,14 @@ export default function AccountPage() {
               <button
                 type="submit"
                 disabled={editBusy}
-                className="rounded-md py-2 px-5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+                className="flex items-center justify-center gap-2 rounded-md py-2 px-5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
                 style={{ backgroundColor: "var(--brand-color, #dc2626)" }}
               >
-                {editBusy ? "Saving..." : "Save Changes"}
+                {editBusy ? (
+                  <><Loader2 className="h-4 w-4 animate-spin" /> Saving…</>
+                ) : (
+                  "Save Changes"
+                )}
               </button>
               <button
                 type="button"
@@ -313,10 +321,14 @@ export default function AccountPage() {
           <button
             type="submit"
             disabled={pwBusy}
-            className="rounded-md py-3 px-6 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+            className="flex items-center justify-center gap-2 rounded-md py-3 px-6 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
             style={{ backgroundColor: "var(--brand-color, #dc2626)" }}
           >
-            {pwBusy ? "Updating..." : "Update Password"}
+            {pwBusy ? (
+              <><Loader2 className="h-4 w-4 animate-spin" /> Updating…</>
+            ) : (
+              "Update Password"
+            )}
           </button>
         </form>
       </div>

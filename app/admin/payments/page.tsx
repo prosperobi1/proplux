@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Bitcoin, Save, CheckCircle2, X, Wallet, AlertTriangle } from "lucide-react";
+import { Loader2, Bitcoin, Save, CheckCircle2, X, Wallet, AlertTriangle } from "lucide-react";
 
 type Settings = Record<string, string>;
 
@@ -68,7 +68,7 @@ export default function AdminPaymentsPage() {
     }
   };
 
-  if (loading) return <p className="p-8 text-zinc-500">Loading payments...</p>;
+  if (loading) return <p className="flex items-center justify-center gap-2 p-8 text-zinc-500"><Loader2 className="h-4 w-4 animate-spin" /> Loading payments...</p>;
   if (!settings) return (
     <div className="rounded-lg border border-red-900/50 bg-red-950/20 p-6 text-red-500">
       Failed to load payment settings. Make sure you are logged in as ADMIN.
@@ -199,7 +199,7 @@ export default function AdminPaymentsPage() {
             }`}
           >
             {saving ? (
-              "Saving..."
+              <><Loader2 className="h-4 w-4 animate-spin" /> Saving…</>
             ) : saved ? (
               <><CheckCircle2 className="h-4 w-4" /> Saved</>
             ) : (

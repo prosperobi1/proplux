@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
 import Link from "next/link";
 
 export default function AdminTicketsPage() {
@@ -39,7 +40,7 @@ export default function AdminTicketsPage() {
           </thead>
           <tbody className="divide-y divide-zinc-800 bg-zinc-950">
             {loading ? (
-              <tr><td colSpan={7} className="px-3 py-6 text-center text-zinc-500">Loading...</td></tr>
+              <tr><td colSpan={7} className="px-3 py-6 text-center text-zinc-500"><span className="flex items-center justify-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Loading...</span></td></tr>
             ) : tickets.length === 0 ? (
               <tr><td colSpan={7} className="px-3 py-6 text-center text-zinc-500">No open tickets. All caught up!</td></tr>
             ) : tickets.map((t, i) => (

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Layers, Plus, Trash2, Pencil, Check, X, ChevronUp, ChevronDown } from "lucide-react";
+import { Loader2, Layers, Plus, Trash2, Pencil, Check, X, ChevronUp, ChevronDown } from "lucide-react";
 
 type Group = {
   id: string;
@@ -130,7 +130,7 @@ export default function AdminCategoryGroupsPage() {
           disabled={creating || !newName.trim()}
           className="flex items-center justify-center gap-2 rounded-md bg-red-600 px-5 py-2 text-sm font-semibold text-white hover:bg-red-500 disabled:opacity-50"
         >
-          <Plus className="h-4 w-4" /> {creating ? "Creating..." : "Create Group"}
+          {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} {creating ? "Creating..." : "Create Group"}
         </button>
       </form>
 
@@ -150,7 +150,7 @@ export default function AdminCategoryGroupsPage() {
           </thead>
           <tbody className="divide-y divide-zinc-800 bg-zinc-950">
             {loading ? (
-              <tr><td colSpan={4} className="px-4 py-6 text-center text-zinc-500">Loading...</td></tr>
+              <tr><td colSpan={4} className="px-4 py-6 text-center text-zinc-500"><span className="flex items-center justify-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Loading...</span></td></tr>
             ) : groups.length === 0 ? (
               <tr><td colSpan={4} className="px-4 py-6 text-center text-zinc-500">No groups yet.</td></tr>
             ) : (

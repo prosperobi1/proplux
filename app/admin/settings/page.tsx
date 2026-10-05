@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Save, Globe, DollarSign, Mail, FileText, Bell, ToggleLeft, X, CheckCircle2, Eye, EyeOff } from "lucide-react";
+import { Loader2, Save, Globe, DollarSign, Mail, FileText, Bell, ToggleLeft, X, CheckCircle2, Eye, EyeOff } from "lucide-react";
 import { LocalUpload } from "../../components/LocalUpload";
 
 type Settings = Record<string, string>;
@@ -100,7 +100,7 @@ export default function AdminSettingsPage() {
     }
   };
 
-  if (loading) return <p className="p-8 text-zinc-500">Loading settings...</p>;  if (!settings) return (
+  if (loading) return <p className="flex items-center justify-center gap-2 p-8 text-zinc-500"><Loader2 className="h-4 w-4 animate-spin" /> Loading settings...</p>;  if (!settings) return (
     <div className="rounded-lg border border-red-900/50 bg-red-950/20 p-6 text-red-500">
       Failed to load settings. Make sure you are logged in as ADMIN.
     </div>
@@ -356,7 +356,7 @@ export default function AdminSettingsPage() {
                   disabled={testing}
                   className="flex items-center justify-center gap-2 rounded-md border border-red-600 px-4 py-2 text-sm font-semibold text-red-400 hover:bg-red-600/10 disabled:opacity-50"
                 >
-                  <Mail className="h-4 w-4" /> {testing ? "Sending..." : "Send test email"}
+                  {testing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />} {testing ? "Sending..." : "Send test email"}
                 </button>
               </div>
               {testResult && (
@@ -414,7 +414,7 @@ export default function AdminSettingsPage() {
             disabled={saving}
             className="flex items-center justify-center gap-2 rounded-md bg-red-600 px-6 py-3 text-sm font-semibold text-white hover:bg-red-500 disabled:opacity-50"
           >
-            <Save className="h-4 w-4" /> {saving ? "Saving..." : "Save All Settings"}
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} {saving ? "Saving..." : "Save All Settings"}
           </button>
           {saved && <span className="text-sm text-green-500">Settings saved</span>}
         </div>

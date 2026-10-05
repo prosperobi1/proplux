@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Trash2, Pencil, Eye, EyeOff, Check, X, Package, GripVertical, Settings2 } from "lucide-react";
+import { Loader2, Plus, Trash2, Pencil, Eye, EyeOff, Check, X, Package, GripVertical, Settings2 } from "lucide-react";
 
 type Category = {
   id: string;
@@ -193,7 +193,7 @@ export default function AdminCategoriesPage() {
             {loading ? (
               <tr>
                 <td colSpan={9} className="px-3 py-6 text-center text-zinc-500">
-                  Loading categories...
+                  <span className="flex items-center justify-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Loading categories...</span>
                 </td>
               </tr>
             ) : categories.length === 0 ? (
