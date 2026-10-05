@@ -16,6 +16,7 @@ type Product = {
   sold: boolean;
   deliveryType: string;
   fileUrl?: string | null;
+  textContent?: string | null;
   metadata?: Record<string, unknown>;
 };
 
@@ -245,6 +246,26 @@ export default function AdminToolsPage() {
               >
                 Open listing file ↗
               </a>
+            )}
+
+            {viewing.deliveryType === "text" && (
+              <div className="mt-3">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
+                  Text list delivery
+                  {viewing.textContent
+                    ? ` · ${viewing.textContent.trim().split("\n").length} line${
+                        viewing.textContent.trim().split("\n").length === 1 ? "" : "s"
+                      }`
+                    : ""}
+                </p>
+                {viewing.textContent ? (
+                  <pre className="mt-1 max-h-48 overflow-y-auto whitespace-pre-wrap break-words rounded border border-zinc-800 bg-zinc-950 p-2 font-mono text-xs text-zinc-200">
+                    {viewing.textContent}
+                  </pre>
+                ) : (
+                  <p className="mt-1 text-sm text-zinc-500">No text content set.</p>
+                )}
+              </div>
             )}
 
             <h3 className="mt-5 text-xs font-semibold uppercase tracking-wider text-red-500">
