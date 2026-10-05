@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { minVisible } from "@/lib/ui";
 import { Loader2, Plus, Trash2, Pencil, X } from "lucide-react";
 
 type NewsItem = {
@@ -41,6 +42,7 @@ export default function AdminNewsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    const vis = minVisible();
     setSubmitting(true);
     try {
       const res = await fetch("/api/admin/news", {
@@ -58,7 +60,7 @@ export default function AdminNewsPage() {
       setMessage("");
       load();
       setTimeout(() => setSaved(false), 3000);
-    } finally { setSubmitting(false); }
+    } finally { await vis(); setSubmitting(false); }
   };
 
   const handleDelete = async (id: string) => {
@@ -89,6 +91,7 @@ export default function AdminNewsPage() {
 
   const saveEdit = async () => {
     if (!editId) return;
+    const vis = minVisible();
     setEditBusy(true);
     setEditError(null);
     try {
@@ -104,7 +107,7 @@ export default function AdminNewsPage() {
       }
       closeEdit();
       load();
-    } finally { setEditBusy(false); }
+    } finally { await vis(); setEditBusy(false); }
   };
 
   return (

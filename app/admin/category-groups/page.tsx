@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { minVisible } from "@/lib/ui";
 import { Loader2, Layers, Plus, Trash2, Pencil, Check, X, ChevronUp, ChevronDown } from "lucide-react";
 
 type Group = {
@@ -34,6 +35,7 @@ export default function AdminCategoryGroupsPage() {
     setError(null);
     const name = newName.trim().toUpperCase();
     if (!name) return;
+    const vis = minVisible();
     setCreating(true);
     try {
       const res = await fetch("/api/admin/category-groups", {
@@ -45,7 +47,7 @@ export default function AdminCategoryGroupsPage() {
       if (!res.ok) { setError(data?.error || "Failed"); return; }
       setNewName("");
       load();
-    } finally { setCreating(false); }
+    } finally { await vis(); setCreating(false); }
   };
 
   const saveEdit = async (id: string) => {

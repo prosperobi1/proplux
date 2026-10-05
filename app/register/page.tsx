@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { minVisible } from "@/lib/ui";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -18,6 +19,7 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    const vis = minVisible();
     setSubmitting(true);
 
     const res = await fetch("/api/register", {
@@ -27,10 +29,12 @@ export default function RegisterPage() {
     });
 
     if (res.ok) {
+      await vis();
       router.push("/login");
     } else {
       const data = await res.json();
       setError(data.error || "Registration failed");
+      await vis();
       setSubmitting(false);
     }
   };

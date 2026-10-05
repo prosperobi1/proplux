@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
+import { minVisible } from "@/lib/ui";
 import { Loader2 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -35,6 +36,8 @@ function ResetPasswordContent() {
       return;
     }
 
+    const vis = minVisible();
+
     setLoading(true);
     try {
       const res = await fetch("/api/auth/reset-password", {
@@ -52,6 +55,7 @@ function ResetPasswordContent() {
     } catch (err) {
       setError(String(err));
     } finally {
+      await vis();
       setLoading(false);
     }
   };

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { minVisible } from "@/lib/ui";
 import { Loader2 } from "lucide-react";
 
 type Kind = "logo" | "product";
@@ -36,6 +37,7 @@ export function LocalUpload({
     e.target.value = "";
     if (!file) return;
     setErr("");
+    const vis = minVisible();
     setBusy(true);
     try {
       const fd = new FormData();
@@ -50,6 +52,7 @@ export function LocalUpload({
       setErr(msg);
       onError?.(msg);
     } finally {
+      await vis();
       setBusy(false);
     }
   };

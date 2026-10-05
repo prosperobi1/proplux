@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { minVisible } from "@/lib/ui";
 import Link from "next/link";
 import { ArrowLeft, Bitcoin, Copy, Check, CheckCircle2, Clock, Loader2 } from "lucide-react";
 import QRCode from "react-qr-code";
@@ -62,6 +63,7 @@ export default function DepositPage() {
       setError("Minimum deposit is $" + (minDeposit || 10));
       return;
     }
+    const vis = minVisible();
     setCreating(true);
     try {
       const res = await fetch("/api/deposit/create", {
@@ -78,6 +80,7 @@ export default function DepositPage() {
     } catch (err) {
       setError(String(err));
     } finally {
+      await vis();
       setCreating(false);
     }
   };

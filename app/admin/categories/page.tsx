@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { minVisible } from "@/lib/ui";
 import { Loader2, Plus, Trash2, Pencil, Eye, EyeOff, Check, X, Package, GripVertical, Settings2 } from "lucide-react";
 
 type Category = {
@@ -58,6 +59,7 @@ export default function AdminCategoriesPage() {
   const createCategory = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
+    const vis = minVisible();
     setSaving(true);
     await fetch("/api/admin/categories", {
       method: "POST",
@@ -67,6 +69,7 @@ export default function AdminCategoriesPage() {
     setName("");
     setIcon("Package");
     setGroupId("");
+    await vis();
     setSaving(false);
     load();
   };

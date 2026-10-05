@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { minVisible } from "@/lib/ui";
 import { Loader2, Bitcoin, Save, CheckCircle2, X, Wallet, AlertTriangle } from "lucide-react";
 
 type Settings = Record<string, string>;
@@ -45,6 +46,7 @@ export default function AdminPaymentsPage() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!settings) return;
+    const vis = minVisible();
     setSaving(true);
     setError(null);
     try {
@@ -64,6 +66,7 @@ export default function AdminPaymentsPage() {
     } catch (err) {
       setError(String(err));
     } finally {
+      await vis();
       setSaving(false);
     }
   };

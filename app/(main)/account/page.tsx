@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { minVisible } from "@/lib/ui";
 import { useSession, signOut } from "next-auth/react";
 import { Loader2, User, Lock, Mail, Shield, LogOut, CheckCircle2, AlertCircle, Pencil, X } from "lucide-react";
 
@@ -65,6 +66,7 @@ export default function AccountPage() {
   const submitEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     setEditError(null);
+    const vis = minVisible();
     setEditBusy(true);
     try {
       const res = await fetch("/api/me/profile", {
@@ -92,6 +94,7 @@ export default function AccountPage() {
     } catch (err) {
       setEditError(String(err));
     } finally {
+      await vis();
       setEditBusy(false);
     }
   };
@@ -109,6 +112,8 @@ export default function AccountPage() {
       setPwError("New passwords do not match");
       return;
     }
+
+    const vis = minVisible();
 
     setPwBusy(true);
     try {
@@ -130,6 +135,7 @@ export default function AccountPage() {
     } catch (err) {
       setPwError(String(err));
     } finally {
+      await vis();
       setPwBusy(false);
     }
   };

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { minVisible } from "@/lib/ui";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { Loader2, ArrowLeft, CheckCircle2, XCircle, Send } from "lucide-react";
@@ -38,6 +39,7 @@ export default function AdminSellerRequestDetail() {
   useEffect(() => { load(); }, [id]);
 
   const act = async (status: string) => {
+    const vis = minVisible();
     setBusy(true);
     try {
       const res = await fetch("/api/admin/seller-requests/" + id, {
@@ -53,12 +55,14 @@ export default function AdminSellerRequestDetail() {
       load();
       router.refresh();
     } finally {
+      await vis();
       setBusy(false);
     }
   };
 
   const sendReply = async () => {
     if (!reply.trim()) return;
+    const vis = minVisible();
     setSending(true);
     try {
       const res = await fetch("/api/admin/seller-requests/" + id, {
@@ -74,6 +78,7 @@ export default function AdminSellerRequestDetail() {
       setReply("");
       load();
     } finally {
+      await vis();
       setSending(false);
     }
   };

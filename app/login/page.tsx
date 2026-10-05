@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { minVisible } from "@/lib/ui";
 import { signIn } from "next-auth/react";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -18,6 +19,7 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    const vis = minVisible();
     setSubmitting(true);
 
     const result = await signIn("credentials", {
@@ -28,8 +30,10 @@ export default function LoginPage() {
 
     if (result?.error) {
       setError("Invalid email/username or password");
+      await vis();
       setSubmitting(false);
     } else {
+      await vis();
       router.push("/dashboard");
       router.refresh();
     }

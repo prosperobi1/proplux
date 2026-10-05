@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, Fragment } from "react";
+import { minVisible } from "@/lib/ui";
 import Link from "next/link";
 
 import { Loader2, Flag, X, Eye, EyeOff, Copy, Download, AlertCircle, Star, Check } from "lucide-react";
@@ -285,6 +286,7 @@ export default function MyOrdersPage() {
   };
 
   const submitReport = async (orderId: string) => {
+    const vis = minVisible();
     setSubmitting(true);
     setError(null);
     try {
@@ -303,6 +305,7 @@ export default function MyOrdersPage() {
     } catch (err) {
       setError(String(err));
     } finally {
+      await vis();
       setSubmitting(false);
     }
   };
@@ -321,6 +324,7 @@ export default function MyOrdersPage() {
   };
 
   const submitRating = async (orderId: string) => {
+    const vis = minVisible();
     setRatingBusy(true);
     setRatingError(null);
     try {
@@ -339,6 +343,7 @@ export default function MyOrdersPage() {
     } catch (err) {
       setRatingError(String(err));
     } finally {
+      await vis();
       setRatingBusy(false);
     }
   };

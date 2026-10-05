@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
+import { minVisible } from "@/lib/ui";
 import Link from "next/link";
 import { Loader2, Flame, Star, Search, ChevronLeft, ChevronRight, Trash2, AlertTriangle, X } from "lucide-react";
 
@@ -73,6 +74,7 @@ export default function AdminSellersPage() {
 
   const confirmBulk = async () => {
     if (bulkText !== "DELETE") { setBulkError("Type DELETE exactly"); return; }
+    const vis = minVisible();
     setBulkBusy(true);
     setBulkError(null);
     try {
@@ -88,7 +90,7 @@ export default function AdminSellersPage() {
       setBulkText("");
       load();
       setPage(1);
-    } finally { setBulkBusy(false); }
+    } finally { await vis(); setBulkBusy(false); }
   };
 
   const selectedCount = selected.size;

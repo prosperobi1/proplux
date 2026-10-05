@@ -5,6 +5,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { minVisible } from "@/lib/ui";
 import { usePathname, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Bell, CheckCheck, Inbox } from "lucide-react";
@@ -108,6 +109,7 @@ export function NotificationsBell({ anchor = "right" }: { anchor?: "right" | "le
 
   const markAll = async () => {
     if (busy || total === 0) return;
+    const vis = minVisible();
     setBusy(true);
     setItems([]);
     setTotal(0);
@@ -120,6 +122,7 @@ export function NotificationsBell({ anchor = "right" }: { anchor?: "right" | "le
     } catch {
       load();
     } finally {
+      await vis();
       setBusy(false);
     }
   };

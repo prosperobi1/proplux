@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { minVisible } from "@/lib/ui";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import { LogoMark } from "../components/Branding";
@@ -15,6 +16,7 @@ export default function ForgotPasswordPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    const vis = minVisible();
     setLoading(true);
     try {
       const res = await fetch("/api/auth/forgot-password", {
@@ -31,6 +33,7 @@ export default function ForgotPasswordPage() {
     } catch (err) {
       setError(String(err));
     } finally {
+      await vis();
       setLoading(false);
     }
   };

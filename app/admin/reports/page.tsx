@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
+import { minVisible } from "@/lib/ui";
 import { Loader2, Flag, Search, ChevronLeft, ChevronRight, Trash2, AlertTriangle, X } from "lucide-react";
 
 type Report = {
@@ -102,6 +103,7 @@ export default function AdminReportsPage() {
 
   const confirmBulk = async () => {
     if (bulkText !== "DELETE") { setBulkError("Type DELETE exactly"); return; }
+    const vis = minVisible();
     setBulkBusy(true);
     setBulkError(null);
     try {
@@ -117,7 +119,7 @@ export default function AdminReportsPage() {
       setBulkText("");
       load();
       setPage(1);
-    } finally { setBulkBusy(false); }
+    } finally { await vis(); setBulkBusy(false); }
   };
 
   const selectedCount = selected.size;

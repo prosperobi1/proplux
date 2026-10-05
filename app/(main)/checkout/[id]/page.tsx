@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { minVisible } from "@/lib/ui";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { AlertTriangle, ArrowLeft, Check, CheckCircle2, Clock, Loader2, ShoppingCart } from "lucide-react";
@@ -53,6 +54,8 @@ export default function CheckoutPage({
   const handleConfirm = async () => {
     if (!product || submitting) return;
 
+    const vis = minVisible();
+
     setSubmitting(true);
     try {
       const res = await fetch("/api/orders", {
@@ -71,18 +74,21 @@ export default function CheckoutPage({
       // Already own it? Open the existing delivery — no new charge, so no
       // "purchase successful" banner (and never claim success without an id).
       if (data?.alreadyExists && data.order?.id) {
+        await vis();
         router.push(`/orders?open=${data.order.id}&owned=1`);
         router.refresh();
         return;
       }
       // Land on Orders with the delivery open + "purchase successful" banner
       const amt = typeof data.totalPrice === "number" ? `&amt=${data.totalPrice}` : "";
+      await vis();
       router.push(data.id ? `/orders?open=${data.id}&paid=1${amt}` : "/orders");
       router.refresh();
     } catch (err) {
       console.error(err);
       alert("Something went wrong.");
     } finally {
+      await vis();
       setSubmitting(false);
     }
   };

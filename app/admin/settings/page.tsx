@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { minVisible } from "@/lib/ui";
 import { Loader2, Save, Globe, DollarSign, Mail, FileText, Bell, ToggleLeft, X, CheckCircle2, Eye, EyeOff } from "lucide-react";
 import { LocalUpload } from "../../components/LocalUpload";
 
@@ -49,6 +50,7 @@ export default function AdminSettingsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!settings) return;
+    const vis = minVisible();
     setSaving(true);
     setError(null);
     try {
@@ -69,6 +71,7 @@ export default function AdminSettingsPage() {
     } catch (err) {
       setError(String(err));
     } finally {
+      await vis();
       setSaving(false);
     }
   };
@@ -78,6 +81,7 @@ export default function AdminSettingsPage() {
       setTestResult({ ok: false, msg: "Enter the email address to test first." });
       return;
     }
+    const vis = minVisible();
     setTesting(true);
     setTestResult(null);
     try {
@@ -96,6 +100,7 @@ export default function AdminSettingsPage() {
     } catch (err) {
       setTestResult({ ok: false, msg: String(err) });
     } finally {
+      await vis();
       setTesting(false);
     }
   };

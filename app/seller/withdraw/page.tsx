@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { minVisible } from "@/lib/ui";
 import { AlertCircle, Loader2 } from "lucide-react";
 
 export default function WithdrawPage() {
@@ -48,6 +49,7 @@ export default function WithdrawPage() {
     e.preventDefault();
     setError("");
     setSuccess("");
+    const vis = minVisible();
     setWithdrawing(true);
 
     const res = await fetch("/api/seller/withdrawals", {
@@ -60,6 +62,7 @@ export default function WithdrawPage() {
 
     if (!res.ok) {
       setError(data.error || "Failed to submit request");
+      await vis();
       setWithdrawing(false);
       return;
     }
@@ -67,6 +70,7 @@ export default function WithdrawPage() {
     setSuccess("Withdrawal request submitted. Pending admin approval.");
     setAmount("");
     setWallet("");
+    await vis();
     setWithdrawing(false);
     load();
     setTimeout(() => setSuccess(""), 4000);

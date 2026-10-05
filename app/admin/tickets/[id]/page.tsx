@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { minVisible } from "@/lib/ui";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { Loader2, ArrowLeft, Send, Lock } from "lucide-react";
@@ -40,6 +41,7 @@ export default function AdminTicketView() {
   const handleReply = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!reply.trim()) return;
+    const vis = minVisible();
     setSending(true);
     await fetch(`/api/admin/tickets/${id}`, {
       method: "POST",
@@ -47,6 +49,7 @@ export default function AdminTicketView() {
       body: JSON.stringify({ content: reply }),
     });
     setReply("");
+    await vis();
     setSending(false);
     load();
   };

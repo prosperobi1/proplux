@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
+import { minVisible } from "@/lib/ui";
 import { Loader2, Trash2, DollarSign, X, Pencil, Shield, Search, ChevronLeft, ChevronRight, AlertTriangle } from "lucide-react";
 
 type UserRow = {
@@ -141,6 +142,7 @@ export default function AdminUsersPage() {
       alert("Enter a valid positive amount");
       return;
     }
+    const vis = minVisible();
     setCreditBusy(true);
     try {
       const res = await fetch(`/api/admin/users/${userId}/balance`, {
@@ -155,7 +157,7 @@ export default function AdminUsersPage() {
       }
       closeCredit();
       await loadUsers();
-    } finally { setCreditBusy(false); }
+    } finally { await vis(); setCreditBusy(false); }
   };
 
   const openEdit = (u: UserRow) => {
@@ -173,6 +175,7 @@ export default function AdminUsersPage() {
 
   const saveEdit = async () => {
     if (!editUser) return;
+    const vis = minVisible();
     setEditBusy(true);
     setEditError(null);
     try {
@@ -191,7 +194,7 @@ export default function AdminUsersPage() {
       closeEdit();
       await loadUsers();
     } catch (err) { setEditError(String(err)); }
-    finally { setEditBusy(false); }
+    finally { await vis(); setEditBusy(false); }
   };
 
   const openBulkDelete = () => {
@@ -211,6 +214,7 @@ export default function AdminUsersPage() {
       setBulkError("Type DELETE exactly to confirm");
       return;
     }
+    const vis = minVisible();
     setBulkBusy(true);
     setBulkError(null);
     try {
@@ -228,7 +232,7 @@ export default function AdminUsersPage() {
       closeBulkDelete();
       await loadUsers();
       setPage(1);
-    } finally { setBulkBusy(false); }
+    } finally { await vis(); setBulkBusy(false); }
   };
 
   const selectedCount = selected.size;

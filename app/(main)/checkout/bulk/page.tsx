@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
+import { minVisible } from "@/lib/ui";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { AlertTriangle, ArrowLeft, Check, CheckCircle2, Clock, Loader2, ShoppingCart } from "lucide-react";
@@ -59,6 +60,8 @@ function BulkCheckoutContent() {
   const handleConfirm = async () => {
     if (submitting || products.length === 0) return;
 
+    const vis = minVisible();
+
     setSubmitting(true);
     try {
       const res = await fetch("/api/orders/bulk", {
@@ -76,12 +79,14 @@ function BulkCheckoutContent() {
 
       // Bulk response has count + total (no ids) — Orders list with success banner
       const amt = typeof data.total === "number" ? `&amt=${data.total}` : "";
+      await vis();
       router.push(`/orders?paid=${data.count ?? 1}${amt}`);
       router.refresh();
     } catch (err) {
       console.error(err);
       alert("Something went wrong.");
     } finally {
+      await vis();
       setSubmitting(false);
     }
   };

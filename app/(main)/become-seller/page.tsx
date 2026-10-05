@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { minVisible } from "@/lib/ui";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, Clock, AlertTriangle, XCircle, Loader2 } from "lucide-react";
@@ -40,6 +41,7 @@ export default function BecomeSellerPage() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    const vis = minVisible();
     setSubmitting(true);
     try {
       const res = await fetch("/api/seller-request", {
@@ -57,12 +59,14 @@ export default function BecomeSellerPage() {
       load();
       router.refresh();
     } finally {
+      await vis();
       setSubmitting(false);
     }
   };
 
   const sendReply = async () => {
     if (!request || !reply.trim()) return;
+    const vis = minVisible();
     setReplying(true);
     try {
       await fetch("/api/seller-request/" + request.id, {
@@ -73,6 +77,7 @@ export default function BecomeSellerPage() {
       setReply("");
       load();
     } finally {
+      await vis();
       setReplying(false);
     }
   };

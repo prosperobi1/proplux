@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { minVisible } from "@/lib/ui";
 import { useParams } from "next/navigation";
 import { Loader2, Plus, Trash2, KeyRound, FileText, Package, Check, Pencil, X, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { LocalUpload } from "../../../../components/LocalUpload";
@@ -104,16 +105,19 @@ export default function SellerToolPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const vis = minVisible();
     setSaving(true);
     setResponse("");
 
     if (deliveryType === "file" && !fileUrl) {
       setResponse("Please upload a file or paste a download link for File delivery");
+      await vis();
       setSaving(false);
       return;
     }
     if (deliveryType === "file" && fileUrl && !isValidFileUrl(fileUrl)) {
       setResponse("Invalid link — use an http(s) URL (e.g. https://mega.nz/...)");
+      await vis();
       setSaving(false);
       return;
     }
@@ -123,12 +127,14 @@ export default function SellerToolPage() {
           ? `Content too large (max ${MAX_TEXT_CONTENT} characters)`
           : "Please paste the delivery content for Text List"
       );
+      await vis();
       setSaving(false);
       return;
     }
 
     if (fields.length > 0 && deliveryType === "credentials" && !hasHiddenFields) {
       setResponse("This category has no hidden fields — switch to Text List delivery, or ask the admin to add hidden fields.");
+      await vis();
       setSaving(false);
       return;
     }
@@ -154,6 +160,7 @@ export default function SellerToolPage() {
       }),
     });
     const data = await res.json();
+    await vis();
     setSaving(false);
 
     if (res.ok) {

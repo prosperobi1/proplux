@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { minVisible } from "@/lib/ui";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Loader2, ArrowLeft, Plus, Trash2, ChevronUp, ChevronDown, Save, Eye, EyeOff } from "lucide-react";
@@ -104,6 +105,8 @@ export default function CategoryFieldsPage() {
       return;
     }
 
+    const vis = minVisible();
+
     setSaving(true);
     try {
       const res = await fetch(`/api/admin/categories/${id}/fields`, {
@@ -116,6 +119,7 @@ export default function CategoryFieldsPage() {
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } finally {
+      await vis();
       setSaving(false);
     }
   };
