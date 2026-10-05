@@ -254,6 +254,8 @@ export default function AdminToolsPage() {
         </button>
         {categories.map((c) => {
           const count = products.filter((p) => p.categorySlug === c.slug).length;
+          // Hide empty categories to keep the tab row scannable (except the active one)
+          if (count === 0 && categoryFilter !== c.slug) return null;
           return (
             <button
               key={c.id}
@@ -307,15 +309,19 @@ export default function AdminToolsPage() {
                   <td className="px-4 py-3 text-zinc-400">{p.seller}</td>
                   <td className="px-4 py-3 font-semibold text-green-500">${p.price.toFixed(2)}</td>
                   <td className="px-4 py-3">
-                    {p.sold ? (
-                      <span className="rounded-full bg-red-950 px-2 py-0.5 text-[10px] font-bold uppercase text-red-500">
-                        SOLD
-                      </span>
-                    ) : (
+                    <div className="flex flex-wrap items-center gap-1">
                       <span className="rounded-full bg-zinc-800 px-2 py-0.5 text-[10px] font-semibold uppercase text-zinc-400">
                         {p.deliveryType || "credentials"}
                       </span>
-                    )}
+                      {p.sold && (
+                        <span
+                          title={p.soldAt ? `Sold ${new Date(p.soldAt).toLocaleString()}` : "Sold"}
+                          className="cursor-help rounded-full bg-red-950 px-2 py-0.5 text-[10px] font-bold uppercase text-red-500"
+                        >
+                          SOLD
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-xs text-zinc-400">{p.check}</td>
                   <td className="px-4 py-3 text-xs text-zinc-500">
@@ -445,7 +451,20 @@ export default function AdminToolsPage() {
                     <dt className="text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
                       {labelFor(viewing.categorySlug, key)}
                     </dt>
-                    <dd className="break-words font-mono text-xs text-zinc-200">{String(value)}</dd>
+                    <dd className="break-words font-mono text-xs text-zinc-200">
+                      {/^https?:\/\/\S+$/i.test(String(value)) ? (
+                        <a
+                          href={String(value)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-blue-400 underline decoration-zinc-600 underline-offset-2 hover:text-blue-300"
+                        >
+                          {String(value)}
+                        </a>
+                      ) : (
+                        String(value)
+                      )}
+                    </dd>
                   </div>
                 ))}
               </dl>
