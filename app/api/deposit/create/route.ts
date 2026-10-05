@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { createPayment } from "@/lib/nowpayments";
+import { COIN_MIN_USD, COIN_LABEL } from "@/lib/deposit";
 
 const ALLOWED_COINS = ["btc", "eth", "usdttrc20", "usdterc20"];
 
@@ -42,6 +43,13 @@ export async function POST(req: Request) {
   if (!ALLOWED_COINS.includes(payCurrency)) {
     return NextResponse.json({ error: "Unsupported coin" }, { status: 400 });
   }
+  const coinMin = COIN_MIN_USD[payCurrency];
+  if (amount < coinMin) {
+    return NextResponse.json(
+      { error: `Minimum deposit for ${COIN_LABEL[payCurrency]} is $${coinMin}` },
+      { status: 400 }
+    );
+  }
 
   const userId = (session.user as any).id;
   const orderId = `dep_${userId}_${Date.now()}`;
@@ -76,6 +84,15 @@ export async function POST(req: Request) {
     });
   } catch (err: any) {
     console.error("nowpayments create failed:", err);
-    return NextResponse.json({ error: err?.message || "Failed to create payment" }, { status: 500 });
+    const msg = String(err?.message || "Failed to create payment");
+    // Provider minimums can drift with the BTC/ETH price — surface it as an
+    // actionable 400, not a generic 500.
+    if (msg.includes("less than minimal")) {
+      return NextResponse.json(
+        { error: `Amount too low for ${COIN_LABEL[payCurrency] || payCurrency} right now — try a slightly larger deposit.` },
+        { status: 400 }
+      );
+    }
+    return NextResponse.json({ error: msg || "Failed to create payment" }, { status: 500 });
   }
 }

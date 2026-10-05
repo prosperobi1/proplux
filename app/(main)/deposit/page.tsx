@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { minVisible } from "@/lib/ui";
 import Link from "next/link";
 import { ArrowLeft, Bitcoin, Copy, Check, CheckCircle2, Clock, Loader2 } from "lucide-react";
+import { COIN_MIN_USD } from "@/lib/deposit";
 import QRCode from "react-qr-code";
 
 type Me = { id: string; username: string; balance: number };
@@ -59,8 +60,14 @@ export default function DepositPage() {
   const createInvoice = async () => {
     setError(null);
     const amt = Number(amount);
-    if (!Number.isFinite(amt) || amt < 10) {
-      setError("Minimum deposit is $" + (minDeposit || 10));
+    const effMin = Math.max(minDeposit || 10, COIN_MIN_USD[coin] ?? 0);
+    if (!Number.isFinite(amt) || amt < effMin) {
+      const label = COINS.find((c) => c.value === coin)?.label || coin;
+      setError(
+        effMin > (minDeposit || 10)
+          ? `Minimum deposit for ${label} is $${effMin}`
+          : "Minimum deposit is $" + effMin
+      );
       return;
     }
     const vis = minVisible();
@@ -201,6 +208,10 @@ export default function DepositPage() {
                 <option key={c.value} value={c.value}>{c.label}</option>
               ))}
             </select>
+            <p className="mt-1.5 text-xs text-zinc-500">
+              Minimum for {COINS.find((c) => c.value === coin)?.label || coin}: $
+              {Math.max(minDeposit || 10, COIN_MIN_USD[coin] ?? 0)}
+            </p>
           </div>
 
           {error && (
