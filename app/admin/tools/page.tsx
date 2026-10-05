@@ -52,6 +52,7 @@ export default function AdminToolsPage() {
   const [loading, setLoading] = useState(true);
   const [categoryFilter, setCategoryFilter] = useState("ALL");
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
   const [viewing, setViewing] = useState<Product | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [edit, setEdit] = useState<EditForm | null>(null);
@@ -223,6 +224,14 @@ export default function AdminToolsPage() {
     );
   });
 
+  // Client-side pagination over the filtered list. Clamping is derived (not an
+  // effect) so shrinking the list — search, filter, delete — never leaves an
+  // empty page on screen.
+  const PER_PAGE = 20;
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
+  const safePage = Math.min(page, totalPages);
+  const pageRows = filtered.slice((safePage - 1) * PER_PAGE, safePage * PER_PAGE);
+
   const inputCls =
     "w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-white placeholder-zinc-600 focus:border-red-500 focus:outline-none";
 
@@ -245,7 +254,7 @@ export default function AdminToolsPage() {
 
       <div className="flex flex-wrap gap-2">
         <button
-          onClick={() => setCategoryFilter("ALL")}
+          onClick={() => { setCategoryFilter("ALL"); setPage(1); }}
           className={`rounded-md px-3 py-1.5 text-xs font-semibold ${
             categoryFilter === "ALL" ? "bg-red-600 text-white" : "bg-zinc-900 text-zinc-400 hover:bg-zinc-800"
           }`}
@@ -259,7 +268,7 @@ export default function AdminToolsPage() {
           return (
             <button
               key={c.id}
-              onClick={() => setCategoryFilter(c.slug)}
+              onClick={() => { setCategoryFilter(c.slug); setPage(1); }}
               className={`rounded-md px-3 py-1.5 text-xs font-semibold ${
                 categoryFilter === c.slug ? "bg-red-600 text-white" : "bg-zinc-900 text-zinc-400 hover:bg-zinc-800"
               }`}
@@ -273,7 +282,7 @@ export default function AdminToolsPage() {
       <input
         type="text"
         value={search}
-        onChange={(e) => setSearch(e.target.value)}
+        onChange={(e) => { setSearch(e.target.value); setPage(1); }}
         placeholder="Search by product ID, seller, country, file URL, content, price..."
         className="w-full max-w-sm rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-white placeholder-zinc-600 focus:border-red-500 focus:outline-none"
       />
@@ -300,7 +309,7 @@ export default function AdminToolsPage() {
             ) : filtered.length === 0 ? (
               <tr><td colSpan={10} className="px-4 py-6 text-center text-zinc-500">No products in this category.</td></tr>
             ) : (
-              filtered.map((p) => (
+              pageRows.map((p) => (
                 <tr key={p.id} className="hover:bg-zinc-900/50">
                   <td className="px-4 py-3 font-mono text-xs text-zinc-500" title={p.id}>{p.id.slice(-6)}</td>
                   <td className="px-4 py-3 text-zinc-300">{p.country}</td>
@@ -356,6 +365,34 @@ export default function AdminToolsPage() {
           </tbody>
         </table>
       </div>
+
+      {!loading && filtered.length > PER_PAGE && (
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-xs text-zinc-500">
+            Showing {(safePage - 1) * PER_PAGE + 1}–{Math.min(safePage * PER_PAGE, filtered.length)} of{" "}
+            {filtered.length}
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setPage(safePage - 1)}
+              disabled={safePage <= 1}
+              className="rounded-md bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-zinc-300 hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              ← Prev
+            </button>
+            <span className="text-xs text-zinc-400">
+              Page {safePage} of {totalPages}
+            </span>
+            <button
+              onClick={() => setPage(safePage + 1)}
+              disabled={safePage >= totalPages}
+              className="rounded-md bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-zinc-300 hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Next →
+            </button>
+          </div>
+        </div>
+      )}
 
       {viewing && (
         <div
