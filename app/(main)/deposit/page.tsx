@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowLeft, Bitcoin, Copy, Check, CheckCircle2, Clock } from "lucide-react";
+import { ArrowLeft, Bitcoin, Copy, Check, CheckCircle2, Clock, Loader2 } from "lucide-react";
 import QRCode from "react-qr-code";
 
 type Me = { id: string; username: string; balance: number };
@@ -108,7 +108,12 @@ export default function DepositPage() {
     return () => clearInterval(iv);
   }, [payment]);
 
-  if (loading) return <div className="p-8 text-zinc-500">Loading...</div>;
+  if (loading)
+    return (
+      <div className="flex items-center justify-center gap-2 p-8 text-zinc-500">
+        <Loader2 className="h-4 w-4 animate-spin" /> Loading…
+      </div>
+    );
 
   const balance = me?.balance ?? 0;
 
@@ -202,10 +207,14 @@ export default function DepositPage() {
           <button
             onClick={createInvoice}
             disabled={creating}
-            className="w-full rounded-md py-3 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+            className="flex w-full items-center justify-center gap-2 rounded-md py-3 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
             style={{ backgroundColor: "var(--brand-color, #dc2626)" }}
           >
-            {creating ? "Creating payment..." : "Pay $" + (amount || "0") + " with crypto"}
+            {creating ? (
+              <><Loader2 className="h-4 w-4 animate-spin" /> Creating payment…</>
+            ) : (
+              "Pay $" + (amount || "0") + " with crypto"
+            )}
           </button>
         </div>
       ) : (
@@ -249,7 +258,9 @@ export default function DepositPage() {
                 <QRCode value={payment.payAddress} size={180} bgColor="#ffffff" fgColor="#000000" />
               </div>
               {polling && (
-                <p className="mt-4 animate-pulse text-center text-xs text-zinc-500">Waiting for payment confirmation...</p>
+                <p className="mt-4 flex items-center justify-center gap-2 text-center text-xs text-zinc-500">
+                  <Loader2 className="h-3 w-3 animate-spin" /> Waiting for payment confirmation…
+                </p>
               )}
             </div>
           </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 
 export default function WithdrawPage() {
   type Withdrawal = {
@@ -20,6 +20,7 @@ export default function WithdrawPage() {
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [withdrawing, setWithdrawing] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
@@ -47,6 +48,7 @@ export default function WithdrawPage() {
     e.preventDefault();
     setError("");
     setSuccess("");
+    setWithdrawing(true);
 
     const res = await fetch("/api/seller/withdrawals", {
       method: "POST",
@@ -58,12 +60,14 @@ export default function WithdrawPage() {
 
     if (!res.ok) {
       setError(data.error || "Failed to submit request");
+      setWithdrawing(false);
       return;
     }
 
     setSuccess("Withdrawal request submitted. Pending admin approval.");
     setAmount("");
     setWallet("");
+    setWithdrawing(false);
     load();
     setTimeout(() => setSuccess(""), 4000);
   };
@@ -118,8 +122,12 @@ export default function WithdrawPage() {
           <input type="number" step="0.01" min={minWithdrawal} max={available} value={amount} onChange={(e) => setAmount(e.target.value)} placeholder={available.toFixed(2)} required disabled={!canWithdraw} className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-white placeholder-zinc-600 focus:border-red-500 focus:outline-none disabled:opacity-50" />
         </div>
 
-        <button type="submit" disabled={!canWithdraw} className="rounded-md bg-red-600 px-6 py-3 text-sm font-semibold text-white hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-50">
-          Request Withdrawal
+        <button type="submit" disabled={!canWithdraw || withdrawing} className="flex items-center gap-2 rounded-md bg-red-600 px-6 py-3 text-sm font-semibold text-white hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-50">
+          {withdrawing ? (
+            <><Loader2 className="h-4 w-4 animate-spin" /> Submitting…</>
+          ) : (
+            "Request Withdrawal"
+          )}
         </button>
       </form>
 

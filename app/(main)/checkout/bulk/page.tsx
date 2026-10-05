@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { AlertTriangle, ArrowLeft, Check, CheckCircle2, Clock, ShoppingCart } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Check, CheckCircle2, Clock, Loader2, ShoppingCart } from "lucide-react";
 
 type Product = {
   id: string;
@@ -234,7 +234,7 @@ function BulkCheckoutContent() {
             className="flex flex-1 items-center justify-center gap-2 rounded-md bg-red-600 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {submitting ? (
-              "Processing..."
+              <><Loader2 className="h-4 w-4 animate-spin" /> Processing…</>
             ) : (
               <>
                 Confirm {products.length} {products.length === 1 ? "Purchase" : "Purchases"}

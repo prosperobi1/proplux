@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
+import { Loader2 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { LogoMark } from "../components/Branding";
@@ -105,10 +106,14 @@ function ResetPasswordContent() {
             <button
               type="submit"
               disabled={loading || !token}
-              className="w-full rounded-md py-3 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+              className="flex w-full items-center justify-center gap-2 rounded-md py-3 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
               style={{ backgroundColor: "var(--brand-color, #dc2626)" }}
             >
-              {loading ? "Updating..." : "Update Password"}
+              {loading ? (
+                <><Loader2 className="h-4 w-4 animate-spin" /> Updating…</>
+              ) : (
+                "Update Password"
+              )}
             </button>
           </form>
         )}

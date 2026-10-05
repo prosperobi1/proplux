@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { LogoMark } from "../components/Branding";
@@ -11,11 +12,13 @@ export default function RegisterPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setSubmitting(true);
 
     const res = await fetch("/api/register", {
       method: "POST",
@@ -28,6 +31,7 @@ export default function RegisterPage() {
     } else {
       const data = await res.json();
       setError(data.error || "Registration failed");
+      setSubmitting(false);
     }
   };
 
@@ -81,9 +85,14 @@ export default function RegisterPage() {
           </div>
           <button
             type="submit"
-            className="w-full rounded-md py-3 text-sm font-semibold text-white hover:opacity-90" style={{ backgroundColor: "var(--brand-color, #dc2626)" }}
+            disabled={submitting}
+            className="flex w-full items-center justify-center gap-2 rounded-md py-3 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50" style={{ backgroundColor: "var(--brand-color, #dc2626)" }}
           >
-            Create Account
+            {submitting ? (
+              <><Loader2 className="h-4 w-4 animate-spin" /> Creating Account…</>
+            ) : (
+              "Create Account"
+            )}
           </button>
         </form>
 

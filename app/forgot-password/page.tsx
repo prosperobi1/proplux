@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import { LogoMark } from "../components/Branding";
 import { AuthBackdrop } from "../components/AuthBackdrop";
@@ -73,10 +74,14 @@ export default function ForgotPasswordPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-md py-3 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+              className="flex w-full items-center justify-center gap-2 rounded-md py-3 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
               style={{ backgroundColor: "var(--brand-color, #dc2626)" }}
             >
-              {loading ? "Sending..." : "Send Reset Link"}
+              {loading ? (
+                <><Loader2 className="h-4 w-4 animate-spin" /> Sending…</>
+              ) : (
+                "Send Reset Link"
+              )}
             </button>
           </form>
         )}

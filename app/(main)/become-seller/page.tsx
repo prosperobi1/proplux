@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, Clock, AlertTriangle, XCircle } from "lucide-react";
+import { CheckCircle2, Clock, AlertTriangle, XCircle, Loader2 } from "lucide-react";
 
 type Request = {
   id: string;
@@ -172,9 +172,13 @@ export default function BecomeSellerPage() {
               <button
                 onClick={sendReply}
                 disabled={replying || !reply.trim()}
-                className="min-h-9 rounded-md bg-red-600 px-4 py-2 text-xs font-semibold text-white hover:bg-red-500 disabled:opacity-50"
+                className="flex min-h-9 items-center gap-1.5 rounded-md bg-red-600 px-4 py-2 text-xs font-semibold text-white hover:bg-red-500 disabled:opacity-50"
               >
-                {replying ? "Sending..." : "Send Reply"}
+                {replying ? (
+                  <><Loader2 className="h-3 w-3 animate-spin" /> Sending…</>
+                ) : (
+                  "Send Reply"
+                )}
               </button>
             </div>
           )}
@@ -212,10 +216,14 @@ export default function BecomeSellerPage() {
           <button
             type="submit"
             disabled={submitting || !agree}
-            className="rounded-md py-3 px-6 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+            className="flex items-center justify-center gap-2 rounded-md py-3 px-6 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
             style={{ backgroundColor: "var(--brand-color, #dc2626)" }}
           >
-            {submitting ? "Submitting..." : "Submit Seller Request"}
+            {submitting ? (
+              <><Loader2 className="h-4 w-4 animate-spin" /> Submitting…</>
+            ) : (
+              "Submit Seller Request"
+            )}
           </button>
         </form>
       )}

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
+import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { LogoMark } from "../components/Branding";
@@ -11,11 +12,13 @@ export default function LoginPage() {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setSubmitting(true);
 
     const result = await signIn("credentials", {
       identifier,
@@ -25,6 +28,7 @@ export default function LoginPage() {
 
     if (result?.error) {
       setError("Invalid email/username or password");
+      setSubmitting(false);
     } else {
       router.push("/dashboard");
       router.refresh();
@@ -81,9 +85,14 @@ export default function LoginPage() {
           </div>
           <button
             type="submit"
-            className="w-full rounded-md py-3 text-sm font-semibold text-white hover:opacity-90" style={{ backgroundColor: "var(--brand-color, #dc2626)" }}
+            disabled={submitting}
+            className="flex w-full items-center justify-center gap-2 rounded-md py-3 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50" style={{ backgroundColor: "var(--brand-color, #dc2626)" }}
           >
-            Sign In
+            {submitting ? (
+              <><Loader2 className="h-4 w-4 animate-spin" /> Signing In…</>
+            ) : (
+              "Sign In"
+            )}
           </button>
         </form>
 
