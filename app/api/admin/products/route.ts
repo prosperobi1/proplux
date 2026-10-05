@@ -28,8 +28,14 @@ export async function GET(req: Request) {
       seller: { select: { username: true } },
       orders: {
         where: { status: { in: ["Pending Confirmation", "Completed"] } },
-        select: { id: true, buyerId: true, createdAt: true },
+        select: { id: true, createdAt: true, buyer: { select: { username: true } } },
+        orderBy: { createdAt: "desc" },
         take: 1,
+      },
+      _count: {
+        select: {
+          orders: { where: { status: { in: ["Pending Confirmation", "Completed"] } } },
+        },
       },
     },
   });
@@ -50,6 +56,8 @@ export async function GET(req: Request) {
     sellOnce: sellOnceMap.get(p.categorySlug || "") ?? false,
     sold: p.orders.length > 0,
     soldAt: p.orders[0]?.createdAt || null,
+    buyer: p.orders[0]?.buyer.username || null,
+    orderCount: p._count.orders,
     metadata: p.metadata ? decryptAllFields(JSON.parse(p.metadata)) : {},
   })));
 }

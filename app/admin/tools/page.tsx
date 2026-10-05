@@ -1,7 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, Package, Trash2, Eye, X } from "lucide-react";
+import { Loader2, Package, Trash2, Eye, X, Pencil, KeyRound, FileText, Check } from "lucide-react";
+import { minVisible } from "@/lib/ui";
+import { isValidFileUrl, MAX_TEXT_CONTENT } from "@/lib/delivery";
+import { LocalUpload } from "../../components/LocalUpload";
+
+type FieldDef = {
+  name: string;
+  label: string;
+  type?: string;
+  required?: boolean;
+  options?: string[];
+  placeholder?: string;
+  visible?: boolean;
+};
 
 type Product = {
   id: string;
@@ -14,6 +27,9 @@ type Product = {
   addedOn: string;
   seller: string;
   sold: boolean;
+  soldAt?: string | null;
+  buyer?: string | null;
+  orderCount?: number;
   deliveryType: string;
   fileUrl?: string | null;
   textContent?: string | null;
@@ -22,6 +38,14 @@ type Product = {
 
 type Category = { id: string; slug: string; name: string; fields?: string };
 
+type EditForm = {
+  price: string;
+  deliveryType: "credentials" | "text" | "file";
+  fileUrl: string;
+  textContent: string;
+  meta: Record<string, string>;
+};
+
 export default function AdminToolsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -29,6 +53,10 @@ export default function AdminToolsPage() {
   const [categoryFilter, setCategoryFilter] = useState("ALL");
   const [search, setSearch] = useState("");
   const [viewing, setViewing] = useState<Product | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [edit, setEdit] = useState<EditForm | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [editErr, setEditErr] = useState("");
 
   useEffect(() => {
     Promise.all([
@@ -45,16 +73,24 @@ export default function AdminToolsPage() {
 
   const deleteProduct = async (p: Product) => {
     if (!confirm(`Delete listing …${p.id.slice(-6)} (seller: ${p.seller})? This cannot be undone.`)) return;
+    const vis = minVisible();
+    setDeletingId(p.id);
     try {
       const r = await fetch(`/api/seller/products/${p.id}`, { method: "DELETE" });
       const d = await r.json().catch(() => ({}));
       if (!r.ok) {
+        await vis();
         alert(d.error || "Could not delete this listing.");
         return;
       }
+      await vis();
       setProducts((prev) => prev.filter((x) => x.id !== p.id));
+      if (viewing?.id === p.id) setViewing(null);
     } catch {
+      await vis();
       alert("Network error — could not delete this listing.");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -70,18 +106,125 @@ export default function AdminToolsPage() {
       return key;
     }
   };
+  const fieldDefsFor = (slug: string | null): FieldDef[] => {
+    const cat = categories.find((c) => c.slug === slug);
+    if (!cat?.fields) return [];
+    try {
+      return JSON.parse(cat.fields) as FieldDef[];
+    } catch {
+      return [];
+    }
+  };
+
+  const startEdit = () => {
+    if (!viewing) return;
+    const meta: Record<string, string> = {};
+    fieldDefsFor(viewing.categorySlug).forEach((f) => {
+      if (f.name === "price") return; // product price has its own input; never metadata
+      const v = viewing.metadata?.[f.name];
+      meta[f.name] =
+        v !== undefined && v !== null
+          ? String(v)
+          : f.type === "select" && f.options
+            ? f.options[0]
+            : "";
+    });
+    setEdit({
+      price: String(viewing.price),
+      deliveryType: (viewing.deliveryType as EditForm["deliveryType"]) || "credentials",
+      fileUrl: viewing.fileUrl || "",
+      textContent: viewing.textContent || "",
+      meta,
+    });
+    setEditErr("");
+  };
+
+  const saveEdit = async () => {
+    if (!viewing || !edit) return;
+    const price = Number(edit.price);
+    if (!Number.isFinite(price) || price <= 0) {
+      setEditErr("Enter a valid price.");
+      return;
+    }
+    if (edit.deliveryType === "file" && !isValidFileUrl(edit.fileUrl)) {
+      setEditErr("Delivery link must be an http(s) URL or an uploaded file path.");
+      return;
+    }
+    if (edit.deliveryType === "text" && !edit.textContent.trim()) {
+      setEditErr("Text delivery needs content — paste the list.");
+      return;
+    }
+    if (edit.textContent.length > MAX_TEXT_CONTENT) {
+      setEditErr(`Content too large (max ${MAX_TEXT_CONTENT} characters).`);
+      return;
+    }
+    const vis = minVisible();
+    setSaving(true);
+    setEditErr("");
+    try {
+      const res = await fetch(`/api/seller/products/${viewing.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          price,
+          deliveryType: edit.deliveryType,
+          fileUrl: edit.fileUrl,
+          textContent: edit.textContent,
+          metadata: edit.meta,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      await vis();
+      setSaving(false);
+      if (!res.ok) {
+        setEditErr(data.error || "Failed to save changes.");
+        return;
+      }
+      // PATCH returns the row with ENCRYPTED metadata — keep the plaintext we
+      // hold instead, then refresh from the API for full server truth.
+      const updated: Product = {
+        ...viewing,
+        price,
+        country: String(edit.meta.country ?? edit.meta.location ?? viewing.country),
+        deliveryType: edit.deliveryType,
+        fileUrl: edit.fileUrl || null,
+        textContent: edit.textContent || null,
+        metadata: { ...viewing.metadata, ...edit.meta },
+      };
+      setProducts((prev) => prev.map((x) => (x.id === updated.id ? { ...x, ...updated } : x)));
+      setViewing(updated);
+      setEdit(null);
+      fetch("/api/admin/products")
+        .then((r) => r.json())
+        .then((p) => Array.isArray(p) && setProducts(p))
+        .catch(() => {});
+    } catch {
+      await vis();
+      setSaving(false);
+      setEditErr("Network error — try again.");
+    }
+  };
+
   const filtered = products.filter((p) => {
     if (categoryFilter !== "ALL" && p.categorySlug !== categoryFilter) return false;
     if (!q) return true;
-    // Matches a reported product ID (full or the last-6 code shown in listings)
+    // Matches a reported product ID (full or the last-6 code shown in listings),
+    // seller/country text, a pasted delivery URL, delivery content, or price
     return (
       p.id.toLowerCase().includes(q) ||
       p.seller.toLowerCase().includes(q) ||
       p.country.toLowerCase().includes(q) ||
       p.tld.toLowerCase().includes(q) ||
-      p.hosting.toLowerCase().includes(q)
+      p.hosting.toLowerCase().includes(q) ||
+      (p.fileUrl || "").toLowerCase().includes(q) ||
+      (p.textContent || "").toLowerCase().includes(q) ||
+      p.price.toFixed(2).includes(q) ||
+      String(p.price).includes(q)
     );
   });
+
+  const inputCls =
+    "w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-white placeholder-zinc-600 focus:border-red-500 focus:outline-none";
 
   return (
     <div className="space-y-6">
@@ -129,7 +272,7 @@ export default function AdminToolsPage() {
         type="text"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        placeholder="Search by product ID, seller, country..."
+        placeholder="Search by product ID, seller, country, file URL, content, price..."
         className="w-full max-w-sm rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-white placeholder-zinc-600 focus:border-red-500 focus:outline-none"
       />
 
@@ -189,11 +332,15 @@ export default function AdminToolsPage() {
                       </button>
                       <button
                         onClick={() => deleteProduct(p)}
-                        disabled={p.sold}
+                        disabled={p.sold || deletingId === p.id}
                         title={p.sold ? "Can't delete — this listing has orders" : "Delete listing"}
                         className="flex min-h-9 min-w-9 items-center justify-center rounded bg-zinc-800 p-1.5 hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-40"
                       >
-                        <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                        {deletingId === p.id ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin text-red-500" />
+                        ) : (
+                          <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                        )}
                       </button>
                     </div>
                   </td>
@@ -210,13 +357,13 @@ export default function AdminToolsPage() {
           onClick={() => setViewing(null)}
         >
           <div
-            className="max-h-[80vh] w-full max-w-lg overflow-y-auto rounded-lg border border-zinc-700 bg-zinc-900 p-5"
+            className={`max-h-[80vh] w-full ${edit ? "max-w-2xl" : "max-w-lg"} overflow-y-auto rounded-lg border border-zinc-700 bg-zinc-900 p-5`}
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 className="font-semibold text-white">
-                  Listing <span className="font-mono">…{viewing.id.slice(-6)}</span>
+                  {edit ? "Editing" : "Listing"} <span className="font-mono">…{viewing.id.slice(-6)}</span>
                 </h2>
                 <p className="mt-0.5 text-xs text-zinc-500">
                   {viewing.categorySlug || "—"} · seller {viewing.seller} · added{" "}
@@ -226,7 +373,7 @@ export default function AdminToolsPage() {
                   {viewing.id}
                 </p>
               </div>
-              <button onClick={() => setViewing(null)} title="Close" className="rounded p-1 hover:bg-zinc-800">
+              <button onClick={() => { setViewing(null); setEdit(null); setEditErr(""); }} title="Close" className="rounded p-1 hover:bg-zinc-800">
                 <X className="h-4 w-4 text-zinc-400" />
               </button>
             </div>
@@ -237,16 +384,34 @@ export default function AdminToolsPage() {
               <span className="rounded bg-zinc-800 px-2 py-1 text-zinc-300">Check: {viewing.check}</span>
             </div>
 
-            {viewing.deliveryType === "file" && viewing.fileUrl && (
-              <a
-                href={viewing.fileUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-3 inline-block rounded bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-500"
-              >
-                Open listing file ↗
-              </a>
+            {viewing.sold && viewing.buyer && (
+              <p className="mt-2 text-xs text-zinc-400">
+                Sold to <span className="font-mono text-zinc-200">{viewing.buyer}</span>
+                {viewing.soldAt && <> · {new Date(viewing.soldAt).toLocaleString()}</>}
+                {(viewing.orderCount || 0) > 1 && <> · {viewing.orderCount} orders</>}
+              </p>
             )}
+
+            {!edit && (
+              <>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                onClick={startEdit}
+                className="inline-flex items-center gap-1.5 rounded bg-zinc-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-zinc-600"
+              >
+                <Pencil className="h-3.5 w-3.5" /> Edit listing
+              </button>
+              {viewing.deliveryType === "file" && viewing.fileUrl && (
+                <a
+                  href={viewing.fileUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center rounded bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-500"
+                >
+                  Open listing file ↗
+                </a>
+              )}
+            </div>
 
             {viewing.deliveryType === "text" && (
               <div className="mt-3">
@@ -284,6 +449,169 @@ export default function AdminToolsPage() {
                   </div>
                 ))}
               </dl>
+            )}
+              </>
+            )}
+
+            {edit && (
+              <div className="mt-4 space-y-4">
+                <div className="grid grid-cols-3 gap-2">
+                  {([
+                    ["credentials", "Credentials", KeyRound],
+                    ["text", "Text List", FileText],
+                    ["file", "File / Link", Package],
+                  ] as const).map(([val, lbl, Icon]) => (
+                    <button
+                      key={val}
+                      type="button"
+                      onClick={() => setEdit({ ...edit, deliveryType: val })}
+                      className={`rounded-lg border p-3 text-left transition ${
+                        edit.deliveryType === val
+                          ? "border-red-500 bg-red-950/30"
+                          : "border-zinc-800 bg-zinc-950 hover:border-zinc-700"
+                      }`}
+                    >
+                      <Icon className={`h-4 w-4 ${edit.deliveryType === val ? "text-red-500" : "text-zinc-500"}`} />
+                      <span className="mt-1 block text-xs font-semibold text-zinc-200">{lbl}</span>
+                    </button>
+                  ))}
+                </div>
+
+                {edit.deliveryType === "text" && (
+                  <div>
+                    <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
+                      Delivery content
+                    </label>
+                    <textarea
+                      rows={6}
+                      value={edit.textContent}
+                      onChange={(e) => setEdit({ ...edit, textContent: e.target.value })}
+                      placeholder={"One entry per line…"}
+                      className={inputCls}
+                    />
+                    {edit.textContent.trim() && (
+                      <p className="mt-1 text-xs text-zinc-500">
+                        {edit.textContent.trim().split("\n").length} line
+                        {edit.textContent.trim().split("\n").length === 1 ? "" : "s"} · {edit.textContent.length} chars
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {edit.deliveryType === "file" && (
+                  <div>
+                    <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
+                      Delivery link
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={edit.fileUrl}
+                        onChange={(e) => setEdit({ ...edit, fileUrl: e.target.value })}
+                        placeholder="https://mega.nz/file/..."
+                        className={inputCls + " flex-1"}
+                      />
+                      <LocalUpload
+                        kind="product"
+                        onUploaded={(url) => setEdit({ ...edit, fileUrl: url })}
+                        label="Upload"
+                      />
+                    </div>
+                    <p className="mt-1 text-[11px] text-zinc-600">
+                      Paste an external link (MEGA/Drive/…) or upload a file (≤64MB) stored in the project.
+                    </p>
+                  </div>
+                )}
+
+                <div>
+                  <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
+                    Price (USD)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    value={edit.price}
+                    onChange={(e) => setEdit({ ...edit, price: e.target.value })}
+                    className={inputCls}
+                  />
+                </div>
+
+                {fieldDefsFor(viewing.categorySlug).filter((f) => f.name !== "price").length > 0 && (
+                  <div>
+                    <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
+                      Listing fields
+                    </p>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      {fieldDefsFor(viewing.categorySlug)
+                        .filter((f) => f.name !== "price")
+                        .map((f) => (
+                        <div key={f.name}>
+                          <label className="mb-1 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
+                            {f.label}
+                            {f.required && <span className="text-red-500">*</span>}
+                            {f.visible === false && (
+                              <span className="rounded bg-zinc-800 px-1 py-0.5 text-[9px] font-medium normal-case text-zinc-400">
+                                hidden
+                              </span>
+                            )}
+                          </label>
+                          {f.type === "select" && f.options ? (
+                            <select
+                              value={edit.meta[f.name] || ""}
+                              onChange={(e) => setEdit({ ...edit, meta: { ...edit.meta, [f.name]: e.target.value } })}
+                              className={inputCls}
+                            >
+                              {!f.options.includes(edit.meta[f.name] || "") && <option value="">—</option>}
+                              {f.options.map((o) => (
+                                <option key={o} value={o}>
+                                  {o}
+                                </option>
+                              ))}
+                            </select>
+                          ) : f.type === "textarea" ? (
+                            <textarea
+                              rows={3}
+                              value={edit.meta[f.name] || ""}
+                              onChange={(e) => setEdit({ ...edit, meta: { ...edit.meta, [f.name]: e.target.value } })}
+                              className={inputCls}
+                            />
+                          ) : (
+                            <input
+                              type={f.type === "number" ? "number" : "text"}
+                              value={edit.meta[f.name] || ""}
+                              onChange={(e) => setEdit({ ...edit, meta: { ...edit.meta, [f.name]: e.target.value } })}
+                              className={inputCls}
+                            />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {editErr && <p className="text-xs font-medium text-red-400">{editErr}</p>}
+
+                <div className="flex justify-end gap-2 border-t border-zinc-800 pt-3">
+                  <button
+                    type="button"
+                    onClick={() => { setEdit(null); setEditErr(""); }}
+                    disabled={saving}
+                    className="rounded-md bg-zinc-800 px-4 py-2 text-xs font-semibold text-zinc-300 hover:bg-zinc-700 disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={saveEdit}
+                    disabled={saving}
+                    className="inline-flex items-center gap-1.5 rounded-md bg-red-600 px-4 py-2 text-xs font-semibold text-white hover:bg-red-500 disabled:opacity-50"
+                  >
+                    {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+                    Save changes
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         </div>
