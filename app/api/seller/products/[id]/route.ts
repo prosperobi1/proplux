@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { encryptHiddenFields } from "@/lib/encrypt";
-import { isValidFileUrl, isValidTextContent, MAX_TEXT_CONTENT, categoryHasHiddenFields, CREDENTIALS_NO_HIDDEN_ERROR } from "@/lib/delivery";
+import { isValidFileUrl, isValidTextContent, MAX_TEXT_CONTENT, categoryHasHiddenFields, CREDENTIALS_NO_HIDDEN_ERROR, missingRequiredFields } from "@/lib/delivery";
 
 // DELETE — existing
 export async function DELETE(
@@ -87,6 +87,15 @@ export async function PATCH(
     // Preserve existing encrypted values where the client didn't send new ones
     const existing = product.metadata ? JSON.parse(product.metadata) : {};
     const merged = { ...existing, ...metadata };
+
+    const missing = missingRequiredFields(merged, fieldDefs);
+    if (missing.length > 0) {
+      return NextResponse.json(
+        { error: `Required field${missing.length > 1 ? "s" : ""} missing: ${missing.join(", ")}` },
+        { status: 400 }
+      );
+    }
+
     const encrypted = encryptHiddenFields(merged, fieldDefs);
     data.metadata = JSON.stringify(encrypted);
     data.country = metadata?.country || metadata?.location || product.country;

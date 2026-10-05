@@ -89,3 +89,21 @@ export function categoryHasHiddenFields(fields: unknown): boolean {
 
 export const CREDENTIALS_NO_HIDDEN_ERROR =
   "This category has no hidden fields — credentials delivery would send nothing new. Use Text List delivery, or add hidden fields to the category in Admin → Categories.";
+
+/**
+ * Names of required category fields that are missing/blank in metadata.
+ * `price` is skipped — it lives in its own column and is validated there.
+ */
+export function missingRequiredFields(
+  metadata: Record<string, unknown> | null | undefined,
+  fieldDefs: Array<{ name: string; required?: boolean }>
+): string[] {
+  const meta = metadata || {};
+  const missing: string[] = [];
+  for (const f of fieldDefs) {
+    if (!f.required || f.name === "price") continue;
+    const v = meta[f.name];
+    if (v === undefined || v === null || String(v).trim() === "") missing.push(f.name);
+  }
+  return missing;
+}

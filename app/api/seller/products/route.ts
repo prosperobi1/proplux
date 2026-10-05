@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { encryptHiddenFields, decryptAllFields } from "@/lib/encrypt";
-import { isValidFileUrl, isValidTextContent, MAX_TEXT_CONTENT, categoryHasHiddenFields, CREDENTIALS_NO_HIDDEN_ERROR } from "@/lib/delivery";
+import { isValidFileUrl, isValidTextContent, MAX_TEXT_CONTENT, categoryHasHiddenFields, CREDENTIALS_NO_HIDDEN_ERROR, missingRequiredFields } from "@/lib/delivery";
 
 export async function GET(req: Request) {
   try {
@@ -97,6 +97,14 @@ export async function POST(req: Request) {
     const effectiveDt = deliveryType === "file" || deliveryType === "text" ? deliveryType : "credentials";
     if (effectiveDt === "credentials" && !categoryHasHiddenFields(fieldDefs)) {
       return NextResponse.json({ error: CREDENTIALS_NO_HIDDEN_ERROR }, { status: 400 });
+    }
+
+    const missing = missingRequiredFields(meta, fieldDefs);
+    if (missing.length > 0) {
+      return NextResponse.json(
+        { error: `Required field${missing.length > 1 ? "s" : ""} missing: ${missing.join(", ")}` },
+        { status: 400 }
+      );
     }
 
     const encryptedMeta = encryptHiddenFields(meta, fieldDefs);

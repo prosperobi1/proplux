@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { isValidFileUrl, isValidTextContent, categoryHasHiddenFields, CREDENTIALS_NO_HIDDEN_ERROR } from "@/lib/delivery";
+import { isValidFileUrl, isValidTextContent, categoryHasHiddenFields, CREDENTIALS_NO_HIDDEN_ERROR, missingRequiredFields } from "@/lib/delivery";
 
 type Row = Record<string, string>;
 
@@ -25,16 +25,23 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Max 500 rows per batch" }, { status: 400 });
   }
 
+  const category = await prisma.category.findUnique({
+    where: { slug: categorySlug },
+    select: { fields: true },
+  });
+  let fieldDefs: Array<{ name: string; visible?: boolean; required?: boolean }> = [];
+  if (category?.fields) {
+    try {
+      fieldDefs = JSON.parse(category.fields);
+    } catch {
+      fieldDefs = [];
+    }
+  }
+
   const dt = ["credentials", "text", "file"].includes(deliveryType) ? deliveryType : "credentials";
 
-  if (dt === "credentials") {
-    const category = await prisma.category.findUnique({
-      where: { slug: categorySlug },
-      select: { fields: true },
-    });
-    if (!categoryHasHiddenFields(category?.fields ?? null)) {
-      return NextResponse.json({ error: CREDENTIALS_NO_HIDDEN_ERROR }, { status: 400 });
-    }
+  if (dt === "credentials" && !categoryHasHiddenFields(fieldDefs)) {
+    return NextResponse.json({ error: CREDENTIALS_NO_HIDDEN_ERROR }, { status: 400 });
   }
 
   if (dt === "file" && !fileUrl) {
@@ -60,6 +67,15 @@ export async function POST(req: Request) {
     }
     const metadata = { ...raw };
     delete metadata.price;
+
+    const missing = missingRequiredFields(metadata, fieldDefs);
+    if (missing.length > 0) {
+      return NextResponse.json(
+        { error: `Required field${missing.length > 1 ? "s" : ""} missing in row ${JSON.stringify(raw)}: ${missing.join(", ")}` },
+        { status: 400 }
+      );
+    }
+
     toCreate.push({
       country: raw.country || raw.location || "Unknown",
       tld: "",

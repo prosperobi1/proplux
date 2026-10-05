@@ -198,6 +198,7 @@ export async function GET() {
         id: o.id,
         status: o.status,
         totalPrice: o.totalPrice,
+        quantity: o.quantity,
         createdAt: o.createdAt,
         reported: reportedOrderIds.has(o.id),
         rating: ratingMap.get(o.id) ?? null,
