@@ -11,6 +11,7 @@ A modern multi-vendor marketplace built with Next.js 16, TypeScript, Prisma, and
 - Withdrawals — sellers request payouts, admins approve/reject/mark paid
 - Reports — buyers can report bad orders within a configurable window
 - Support tickets — buyers and sellers open tickets, admins reply
+- Forgot/reset password — emailed reset link (SMTP), choose a new password
 - Notifications bell — unread ticket replies in buyer, seller and admin panels; click to open the thread
 - Admin panel — users, orders, categories, settings, financials, news
 - Branding — uploadable logo, site name, primary color, all admin-configurable (logo stored locally in ./uploads)
@@ -38,7 +39,9 @@ A modern multi-vendor marketplace built with Next.js 16, TypeScript, Prisma, and
 Then edit .env:
 
 - Set AUTH_SECRET to a random string: openssl rand -base64 32
+- Set ENCRYPTION_KEY (encrypts hidden credential fields at rest): openssl rand -base64 32 — keep the same value across deploys, or existing credentials become unreadable
 - Uploads are stored in the project (./uploads) — no third-party upload token needed
+- Production: also set AUTH_URL and NEXT_PUBLIC_APP_URL to your public https URL (payment callbacks depend on it)
 
 3. Set up the database
 
@@ -113,20 +116,17 @@ All admin-configurable from /admin/settings:
 
 - Site name, description, logo, primary color
 - Commission % (default 65)
-- Minimum withdrawal (default $50)
+- Minimum withdrawal (default $10)
 - Report window in hours (default 16)
-- Crypto wallet addresses (placeholders until real payments)
 - Feature toggles (marketplace, tickets, maintenance mode)
+- Crypto payments — NOWPayments keys (API key, IPN secret, sandbox) configured in **Admin → Payments**, stored in the DB — not in .env
 
 ## Not Yet Implemented
 
-- Real crypto payments — deposit page is a placeholder. Integrate NOWPayments, Coinbase Commerce, or BTCPay Server.
-- Email — SMTP configurable in **Admin → Settings → Email (SMTP)** (host, port, encryption, credentials, from address) with a built-in "Send test email" button. Falls back to Resend (`RESEND_API_KEY`) when SMTP is off.
-- Forgot password — link exists, backend doesn't.
-- Product images — products are text/metadata only.
+- Product images — products are text/metadata only (proof/sample images are pasted URLs)
+
+Previously listed here and now done: crypto payments (NOWPayments in Admin → Payments), SMTP email (Admin → Settings → Email), forgot/reset password (backend at /api/auth/forgot-password + /api/auth/reset-password).
 
 ## License
-
-See THIRD-PARTY-NOTICES.md for dependency attributions.
 
 This is a commercial template. You may use it to build and deploy your own marketplace. You may not redistribute the source code as a competing template.

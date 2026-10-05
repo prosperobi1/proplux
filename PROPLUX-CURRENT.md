@@ -1,7 +1,7 @@
 # Proplux — Current State (handoff for next chat)
 
-**Date:** 2026-09-20
-**Stack:** Next.js 16 (App Router), TypeScript, Tailwind, Prisma + SQLite, NextAuth (JWT), UploadThing, Resend, NOWPayments
+**Date:** 2026-10-05
+**Stack:** Next.js 16 (App Router), TypeScript, Tailwind, Prisma + SQLite, NextAuth (JWT), local uploads (./uploads), SMTP email (+ Resend fallback), NOWPayments
 
 ## Roles
 BUYER / SELLER / ADMIN
@@ -9,7 +9,7 @@ BUYER / SELLER / ADMIN
 ## What's built and working
 
 ### Auth
-- Login, register, forgot password (email via Resend)
+- Login, register, forgot password (email via SMTP, Resend fallback)
 - Ban enforcement (banned users can't log in)
 - Role management from admin
 
@@ -114,7 +114,7 @@ Dashboard, Users, Seller Requests, Category Groups, Categories, Site Settings, P
 - Search + pagination + bulk delete
 
 ### Site settings (`/admin/settings`)
-- Site name, description, logo (UploadThing), primary color
+- Site name, description, logo (uploaded to ./uploads; default at public/brand/logo.svg), primary color
 - Commission %, min deposit, min withdrawal, report window
 - Admin alert email
 - Feature toggles (marketplace, tickets, maintenance mode)
@@ -165,20 +165,17 @@ User, Session, Product, Order, Category, CategoryGroup, Setting, Ticket, TicketM
 - `app/components/SampleModal.tsx` — sample leads + copy all
 
 ## What's NOT done
-1. **Field-level encryption** for `Product.metadata` (credentials stored in plaintext — security risk)
-2. **Deploy** (still local)
-3. **Sample review** in seller request (optional — thread already handles it)
-4. **File delivery options** (Upload vs paste link for files — currently only UploadThing + URL field)
-5. **SMTP checker** (buyer tests SMTP before buying — differentiator, needs hosting that allows outbound SMTP)
-6. **Postgres migration** (required for Vercel)
-7. **Packaging** (README, .env.example, THIRD-PARTY-NOTICES for script sale)
+1. **Deploy** (still local)
+2. **Sample review** in seller request (optional — thread already handles it)
+3. **Postgres migration** (required for Vercel)
+4. **Packaging** (README + .env.example polish for script sale)
+
+Done since this list was written: field-level encryption (`app/lib/encrypt.ts` — hidden credential fields encrypted at rest), file delivery (local upload ≤64MB or pasted external link, plus Text List content), SMTP checker (SMTP/RDP check buttons on product pages).
 
 ## Known issues
-- UploadThing/Effect-TS version warnings in dev log (harmless)
 - Hardcoded wallet address on old pay page (pay page was replaced; check `/checkout/[id]/pay` state)
 - `commissionPercent` setting may not exist in DB (falls back to 65)
 
 ## Priority for next session
-1. Field-level encryption (security)
-2. Deploy (Vercel + Postgres OR cPanel)
-3. Optional: sample review, file delivery, SMTP checker
+1. Deploy (Vercel + Postgres OR cPanel)
+2. Optional: sample review
