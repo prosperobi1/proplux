@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSession, signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Loader2, ArrowRight, Megaphone, Store } from "lucide-react";
+import { Loader2, ArrowRight, Megaphone } from "lucide-react";
 
 type Order = {
   id: string;
@@ -62,7 +62,7 @@ export default function DashboardPage() {
         setMe(meData && !meData.error ? meData : null);
         setNews(Array.isArray(newsData) ? newsData.slice(0, 3) : []);
         if (Array.isArray(ticketsData)) {
-          setOpenTickets(ticketsData.filter((t: any) => t.status === "OPEN").length);
+          setOpenTickets(ticketsData.filter((t: { status?: string }) => t.status === "OPEN").length);
         }
         setLoading(false);
       })
@@ -89,7 +89,24 @@ export default function DashboardPage() {
           <div>
             <h2 className="text-lg font-semibold text-red-500">Hello {username}</h2>
             <p className="mt-1 text-sm text-zinc-400">
-              Here you can manage your orders, check your balance, and contact support.
+              If you have any Question, Problem, Suggestion or Request, please feel free to{" "}
+              <Link
+                href="/tickets"
+                className="font-semibold text-red-500 underline-offset-2 hover:text-red-400 hover:underline"
+              >
+                Open Ticket
+              </Link>
+              .
+            </p>
+            <p className="mt-1 text-sm text-zinc-400">
+              If you want to report an order, just go to{" "}
+              <Link
+                href="/orders"
+                className="font-semibold text-red-500 underline-offset-2 hover:text-red-400 hover:underline"
+              >
+                Orders
+              </Link>{" "}
+              then click on the <strong className="text-zinc-200">Report #ID</strong> button.
             </p>
           </div>
           {me?.role === "BUYER" && (

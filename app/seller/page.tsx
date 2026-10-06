@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import Link from "next/link";
 import { MessageSquare, Star } from "lucide-react";
 
 type Stats = {
@@ -51,7 +52,14 @@ export default function SellerMainPage() {
       <div className="rounded-lg border border-red-900/50 bg-red-950/10 p-6">
         <h1 className="text-lg font-semibold text-red-500">Hello {username}</h1>
         <p className="mt-2 text-sm text-zinc-400">
-          If you have any Question, Suggestion or Request please feel free to open a ticket.
+          If you have any Question, Suggestion or Request, please feel free to{" "}
+          <Link
+            href="/tickets"
+            className="font-semibold text-red-500 underline-offset-2 hover:text-red-400 hover:underline"
+          >
+            Open Ticket
+          </Link>
+          .
         </p>
         <div className="mt-4 text-sm">
           <p className="font-semibold text-white">Your information: {username}</p>

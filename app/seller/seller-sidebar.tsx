@@ -9,9 +9,18 @@ import {
   LogOut, Menu, X, Package, Monitor, Terminal, Server, Mail,
   AtSign, Users, AlertTriangle, BookOpen, Landmark, CreditCard,
   Sparkles, Send, Shield, Zap, Globe, Cloud, Database, Smartphone,
-  Key, Lock, Fingerprint, Wallet, Bitcoin,
+  Key, Lock, Fingerprint, Wallet, Bitcoin, MessageSquare,
 } from "lucide-react";
 import { NotificationsBell } from "../components/NotificationsBell";
+
+type SidebarCategory = {
+  id: string;
+  name: string;
+  slug: string;
+  icon: string | null;
+  order: number;
+  group: { id: string; name: string; order: number } | null;
+};
 
 const ICON_MAP = {
   Package, Monitor, Terminal, Server, Mail, AtSign, Users, AlertTriangle,
@@ -22,18 +31,21 @@ const ICON_MAP = {
 export function SellerSidebar({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
-  const [categories, setCategories] = useState<any[]>([]);
+  // Close the mobile menu when the route changes (state adjusted during
+  // render rather than an effect — react.dev/you-might-not-need-an-effect).
+  const [lastPath, setLastPath] = useState(pathname);
+  if (lastPath !== pathname) {
+    setLastPath(pathname);
+    setOpen(false);
+  }
+  const [categories, setCategories] = useState<SidebarCategory[]>([]);
   const [catCounts, setCatCounts] = useState<Record<string, number>>({});
   const [salesCount, setSalesCount] = useState(0);
   const [reportsCount, setReportsCount] = useState(0);
   const { data: session } = useSession();
   const username = session?.user?.name || "Seller";
-  const role = (session?.user as any)?.role;
+  const role = (session?.user as { role?: string })?.role;
   const close = () => setOpen(false);
-
-  useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
 
   useEffect(() => {
     fetch("/api/categories")
@@ -113,6 +125,9 @@ export function SellerSidebar({ children }: { children: React.ReactNode }) {
             <span className="flex items-center gap-3"><Flag className="h-4 w-4" /> My Reports</span>
             <span className="rounded-full bg-red-600 px-2 py-0.5 text-xs text-white">{reportsCount}</span>
           </Link>
+          <Link href="/tickets" className={`flex items-center gap-3 rounded-md px-4 py-2 ${pathname.startsWith("/tickets") ? "bg-zinc-900 text-white" : "text-zinc-300 hover:bg-zinc-900 hover:text-white"}`}>
+            <MessageSquare className="h-4 w-4" /> Tickets
+          </Link>
 
           <div className="mt-4 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-zinc-500">Tools Management</div>
 
@@ -120,7 +135,7 @@ export function SellerSidebar({ children }: { children: React.ReactNode }) {
             <p className="flex items-center gap-2 px-4 py-2 text-xs text-zinc-600"><Loader2 className="h-3 w-3 animate-spin" /> Loading tools...</p>
           ) : (
             (() => {
-              const grouped: Record<string, { order: number; items: any[] }> = {};
+              const grouped: Record<string, { order: number; items: SidebarCategory[] }> = {};
               for (const cat of categories) {
                 const gName = cat.group?.name || "OTHER";
                 const gOrder = cat.group?.order ?? 999;
@@ -128,7 +143,7 @@ export function SellerSidebar({ children }: { children: React.ReactNode }) {
                 grouped[gName].items.push(cat);
               }
               for (const g of Object.values(grouped)) {
-                g.items.sort((a: any, b: any) => (a.order ?? 0) - (b.order ?? 0));
+                g.items.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
               }
               const sortedGroups = Object.entries(grouped).sort((a, b) => a[1].order - b[1].order);
               return sortedGroups.map(([gName, gData]) => (
@@ -136,8 +151,8 @@ export function SellerSidebar({ children }: { children: React.ReactNode }) {
                   <div className="mt-3 px-4 py-1 text-[10px] font-bold uppercase tracking-widest text-red-500/70">
                     {gName}
                   </div>
-                  {gData.items.map((cat: any) => {
-                    const Icon = (ICON_MAP as Record<string, typeof Package>)[cat.icon] || Package;
+                  {gData.items.map((cat) => {
+                    const Icon = (ICON_MAP as Record<string, typeof Package>)[cat.icon ?? ""] || Package;
                     const href = "/seller/tools/" + cat.slug;
                     const active = pathname === href;
                     const count = catCounts[cat.slug] ?? 0;
