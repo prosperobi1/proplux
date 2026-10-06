@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { LogoMark } from "./Branding";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth";
+import { SidebarLayout } from "@/sidebar-layout";
 
 export async function getSiteName(): Promise<string> {
   try {
@@ -12,6 +14,67 @@ export async function getSiteName(): Promise<string> {
 }
 
 const BRAND = "var(--brand-color, #dc2626)";
+
+/** The legal document itself — shared by the public and panel shells. */
+function LegalDoc({
+  title,
+  updated,
+  children,
+}: {
+  title: string;
+  updated: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <>
+      <p className="font-mono text-xs text-zinc-500">~/legal/{title.toLowerCase().replaceAll(" ", "-")}</p>
+      <h1 className="mt-3 text-3xl font-black uppercase tracking-tight text-white md:text-4xl">
+        {title}
+      </h1>
+      <p className="mt-3 flex items-center gap-2 font-mono text-xs text-zinc-500">
+        <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: BRAND }} />
+        last updated: {updated}
+      </p>
+      <article className="mt-8 space-y-5">{children}</article>
+    </>
+  );
+}
+
+/**
+ * Auth-aware legal page: signed-in readers get the document inside the
+ * user-panel shell (they arrived from the dashboard and keep their nav
+ * context); logged-out visitors get the public marketing chrome — which is
+ * the only audience that should ever see the "Sign In" header.
+ */
+export async function LegalPage({
+  siteName,
+  title,
+  updated,
+  children,
+}: {
+  siteName: string;
+  title: string;
+  updated: string;
+  children: React.ReactNode;
+}) {
+  const session = await auth();
+  if (session?.user) {
+    return (
+      <SidebarLayout>
+        <div className="mx-auto w-full max-w-3xl">
+          <LegalDoc title={title} updated={updated}>
+            {children}
+          </LegalDoc>
+        </div>
+      </SidebarLayout>
+    );
+  }
+  return (
+    <LegalShell siteName={siteName} title={title} updated={updated}>
+      {children}
+    </LegalShell>
+  );
+}
 
 /** Shared public chrome for legal pages (terms, privacy). */
 export function LegalShell({
@@ -64,15 +127,9 @@ export function LegalShell({
       </header>
 
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-12 md:px-8 md:py-16">
-        <p className="font-mono text-xs text-zinc-500">~/legal/{title.toLowerCase().replaceAll(" ", "-")}</p>
-        <h1 className="mt-3 text-3xl font-black uppercase tracking-tight text-white md:text-4xl">
-          {title}
-        </h1>
-        <p className="mt-3 flex items-center gap-2 font-mono text-xs text-zinc-500">
-          <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: BRAND }} />
-          last updated: {updated}
-        </p>
-        <article className="mt-8 space-y-5">{children}</article>
+        <LegalDoc title={title} updated={updated}>
+          {children}
+        </LegalDoc>
       </main>
 
       <footer className="border-t border-zinc-800 py-6">

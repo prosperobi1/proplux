@@ -1,4 +1,4 @@
-import { LegalShell, Clause, getSiteName } from "../components/LegalShell";
+import { LegalPage, Clause, getSiteName } from "../components/LegalShell";
 
 export const metadata = {
   title: "Terms of Service",
@@ -9,7 +9,7 @@ export default async function TermsPage() {
   const siteName = await getSiteName();
 
   return (
-    <LegalShell siteName={siteName} title="Terms of Service" updated="October 2, 2026">
+    <LegalPage siteName={siteName} title="Terms of Service" updated="October 2, 2026">
       <p
         className="border-l-2 pl-4 font-mono text-sm text-zinc-300"
         style={{ borderColor: "var(--brand-color, #dc2626)" }}
@@ -126,6 +126,6 @@ export default async function TermsPage() {
           </li>
         </ul>
       </Clause>
-    </LegalShell>
+    </LegalPage>
   );
 }

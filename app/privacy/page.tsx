@@ -1,4 +1,4 @@
-import { LegalShell, Clause, getSiteName } from "../components/LegalShell";
+import { LegalPage, Clause, getSiteName } from "../components/LegalShell";
 
 export const metadata = {
   title: "Privacy Policy",
@@ -10,7 +10,7 @@ export default async function PrivacyPage() {
   const year = new Date().getFullYear();
 
   return (
-    <LegalShell siteName={siteName} title="Privacy Policy" updated="October 2, 2026">
+    <LegalPage siteName={siteName} title="Privacy Policy" updated="October 2, 2026">
       <p
         className="border-l-2 pl-4 font-mono text-sm text-zinc-300"
         style={{ borderColor: "var(--brand-color, #dc2626)" }}
@@ -146,6 +146,6 @@ export default async function PrivacyPage() {
           account — every request is reviewed by staff.
         </p>
       </Clause>
-    </LegalShell>
+    </LegalPage>
   );
 }
