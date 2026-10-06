@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { verifyIpnSignature } from "@/lib/nowpayments";
-import { sendEmail, emailLayout, escapeHtml } from "@/lib/email";
+import { creditDeposit } from "@/lib/deposit-credit";
 
 export async function POST(req: Request) {
   const rawBody = await req.text();
@@ -45,62 +44,18 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
   }
 
-  const marker = await prisma.setting.findUnique({ where: { key: `deposit:${payment_id}` } });
-  if (marker) return NextResponse.json({ ok: true, alreadyCredited: true });
+  if (payment_id === undefined || payment_id === null) {
+    return NextResponse.json({ error: "Missing payment_id" }, { status: 400 });
+  }
 
   try {
-    await prisma.$transaction([
-      prisma.user.update({
-        where: { id: userId },
-        data: { balance: { increment: amount } },
-      }),
-      prisma.setting.create({
-        data: { key: `deposit:${payment_id}`, value: order_id },
-      }),
-      prisma.deposit.create({
-        data: {
-          userId,
-          amount,
-          method: "nowpayments",
-          providerId: String(payment_id),
-        },
-      }),
-    ]);
-
-    // Balance credited — email the buyer (fire-and-forget, after commit).
-    (async () => {
-      try {
-        const [user, siteSet] = await Promise.all([
-          prisma.user.findUnique({
-            where: { id: userId },
-            select: { email: true, username: true, balance: true },
-          }),
-          prisma.setting.findUnique({ where: { key: "siteName" } }),
-        ]);
-        const siteName = siteSet?.value || "Proplux";
-        if (!user?.email) return;
-        await sendEmail({
-          to: user.email,
-          subject: `Deposit received: +$${amount.toFixed(2)} on ${siteName}`,
-          html: emailLayout(
-            '<p style="margin:0 0 12px 0;">Hi ' + escapeHtml(user.username) + ",</p>" +
-              '<p style="margin:0 0 12px 0;">Your deposit of <strong>$' +
-              amount.toFixed(2) +
-              "</strong> was confirmed and added to your balance.</p>" +
-              '<p style="margin:0 0 12px 0;">New balance: <strong>$' +
-              (user.balance ?? 0).toFixed(2) +
-              "</strong></p>" +
-              '<p style="margin:0;font-size:13px;color:#52525b;">Payment #' +
-              escapeHtml(String(payment_id)) +
-              "</p>",
-            siteName
-          ),
-        });
-      } catch (err) {
-        console.error("deposit email failed:", err);
-      }
-    })();
-
+    const credited = await creditDeposit({
+      userId,
+      amount,
+      paymentId: payment_id,
+      orderId: order_id,
+    });
+    if (!credited) return NextResponse.json({ ok: true, alreadyCredited: true });
     return NextResponse.json({ ok: true, credited: true, amount });
   } catch (err) {
     console.error("IPN credit failed:", err);
