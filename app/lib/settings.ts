@@ -28,8 +28,6 @@ export const WRITABLE_SETTING_KEYS = [
   "smtpPass",
   "smtpFrom",
   "smtpFromName",
-  "termsUrl",
-  "privacyUrl",
   "enableMarketplace",
   "enableTickets",
   "maintenanceMode",

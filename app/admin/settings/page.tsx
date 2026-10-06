@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { minVisible } from "@/lib/ui";
-import { Loader2, Save, Globe, DollarSign, Mail, FileText, Bell, ToggleLeft, X, CheckCircle2, Eye, EyeOff } from "lucide-react";
+import { Loader2, Save, Globe, DollarSign, Mail, Bell, ToggleLeft, X, CheckCircle2, Eye, EyeOff } from "lucide-react";
 import { LocalUpload } from "../../components/LocalUpload";
 
 type Settings = Record<string, string>;
@@ -28,8 +28,6 @@ const SETTINGS_KEYS = [
   "smtpPass",
   "smtpFrom",
   "smtpFromName",
-  "termsUrl",
-  "privacyUrl",
   "enableMarketplace",
   "enableTickets",
   "maintenanceMode",
@@ -415,17 +413,6 @@ export default function AdminSettingsPage() {
                 </p>
               )}
             </div>
-          </div>
-        </section>
-
-        {/* Legal */}
-        <section className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-4 md:p-6">
-          <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-white">
-            <FileText className="h-5 w-5 text-red-500" /> Legal
-          </h2>
-          <div className="space-y-4">
-            <Field label="Terms of Service URL" value={settings.termsUrl || ""} onChange={(v) => update("termsUrl", v)} placeholder="https://..." />
-            <Field label="Privacy Policy URL" value={settings.privacyUrl || ""} onChange={(v) => update("privacyUrl", v)} placeholder="https://..." />
           </div>
         </section>
 
