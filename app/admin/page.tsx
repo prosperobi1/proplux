@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, Clock, AlertTriangle, Users, Flame } from "lucide-react";
+import { Loader2, Clock, AlertTriangle, Users, Flame, ShoppingCart } from "lucide-react";
 
 type RecentUser = {
   id: string;
@@ -47,25 +47,31 @@ export default function AdminDashboard() {
       color: "blue" as const,
     },
     {
-      label: "Users",
+      label: "Total Users",
       value: stats?.totalUsers ?? 0,
       icon: Users,
       color: "red" as const,
     },
     {
-      label: "Sellers",
+      label: "Total Sellers",
       value: stats?.totalSellers ?? 0,
       icon: Flame,
+      color: "red" as const,
+    },
+    {
+      label: "Total Orders",
+      value: stats?.totalOrders ?? 0,
+      icon: ShoppingCart,
       color: "red" as const,
     },
   ];
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-red-500">Proplux</h1>
+      <h1 className="text-2xl font-bold text-red-500">Admin Dashboard</h1>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5 md:gap-6">
         {cards.map((card) => {
           const Icon = card.icon;
           const iconColor =
@@ -94,7 +100,7 @@ export default function AdminDashboard() {
 
       {/* Recent Users */}
       <div>
-        <h2 className="mb-3 text-lg font-bold text-red-500">Last Users</h2>
+        <h2 className="mb-3 text-lg font-bold text-red-500">Latest Users</h2>
         <div className="overflow-x-auto rounded-lg border border-zinc-800">
           <table className="w-full min-w-[500px] text-sm">
             <thead className="bg-zinc-900 text-left text-xs font-semibold uppercase text-red-500">
@@ -102,7 +108,7 @@ export default function AdminDashboard() {
                 <th className="px-3 py-2">#</th>
                 <th className="px-3 py-2">User</th>
                 <th className="px-3 py-2">Email</th>
-                <th className="px-3 py-2">Date</th>
+                <th className="px-3 py-2">Joined</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-800 bg-zinc-950">

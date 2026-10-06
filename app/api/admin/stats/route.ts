@@ -5,11 +5,18 @@ import { prisma } from "@/lib/prisma";
 export async function GET() {
   const session = await auth();
 
-  if (!session?.user || (session.user as any).role !== "ADMIN") {
+  if (!session?.user || (session.user as { role?: string }).role !== "ADMIN") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const [totalUsers, totalSellers, recentUsers, totalOrders] = await Promise.all([
+  const [
+    totalUsers,
+    totalSellers,
+    recentUsers,
+    totalOrders,
+    pendingTickets,
+    pendingReports,
+  ] = await Promise.all([
     prisma.user.count(),
     prisma.user.count({ where: { role: "SELLER" } }),
     prisma.user.findMany({
@@ -23,14 +30,16 @@ export async function GET() {
       },
     }),
     prisma.order.count(),
+    prisma.ticket.count({ where: { status: "OPEN" } }),
+    prisma.report.count({ where: { status: "PENDING" } }),
   ]);
 
   return NextResponse.json({
     totalUsers,
     totalSellers,
     totalOrders,
-    pendingTickets: 0, // we'll wire this once tickets are built
-    pendingReports: 0, // we'll wire this once reports are built
+    pendingTickets,
+    pendingReports,
     recentUsers,
   });
 }
