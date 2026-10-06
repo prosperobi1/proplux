@@ -38,15 +38,15 @@ export default function FinancialStatusPage() {
   }, []);
 
   const cards = [
-    { label: "Today", value: data?.todayDeposit ?? 0, icon: DollarSign, color: "blue" },
-    { label: "This Month", value: data?.monthDeposit ?? 0, icon: DollarSign, color: "blue" },
-    { label: "All Time", value: data?.allTimeDeposit ?? 0, icon: TrendingUp, color: "red" },
-    { label: "Crypto (NOWPayments)", value: data?.cryptoDeposit ?? 0, icon: Bitcoin, color: "blue" },
+    { label: "Deposits Today", value: data?.todayDeposit ?? 0, icon: DollarSign, color: "blue" },
+    { label: "Deposits This Month", value: data?.monthDeposit ?? 0, icon: DollarSign, color: "blue" },
+    { label: "Deposits All Time", value: data?.allTimeDeposit ?? 0, icon: TrendingUp, color: "red" },
+    { label: "Crypto Deposits", value: data?.cryptoDeposit ?? 0, icon: Bitcoin, color: "blue" },
   ];
 
   const methodLabel = (m: string) => {
     if (m === "nowpayments") return "Crypto";
-    if (m === "admin") return "Admin credit";
+    if (m === "admin") return "Admin adjustment";
     if (m === "refund") return "Refund";
     return m;
   };
@@ -85,7 +85,9 @@ export default function FinancialStatusPage() {
       </div>
 
       {/* Breakdown by method */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div>
+        <h2 className="mb-3 text-lg font-bold text-red-500">Breakdown by Method</h2>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -101,7 +103,7 @@ export default function FinancialStatusPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4 text-blue-400" />
-              <span className="text-sm text-zinc-400">Admin credits</span>
+              <span className="text-sm text-zinc-400">Admin adjustments</span>
             </div>
             <span className="text-lg font-bold text-blue-400">
               ${(data?.adminCredits ?? 0).toFixed(2)}
@@ -115,9 +117,10 @@ export default function FinancialStatusPage() {
               <span className="text-sm text-zinc-400">Refunds paid out</span>
             </div>
             <span className="text-lg font-bold text-red-500">
-              ${(data?.refunds ?? 0).toFixed(2)}
+              ${Math.abs(data?.refunds ?? 0).toFixed(2)}
             </span>
           </div>
+        </div>
         </div>
       </div>
 
@@ -146,7 +149,7 @@ export default function FinancialStatusPage() {
               ) : !data?.recentDeposits?.length ? (
                 <tr>
                   <td colSpan={6} className="px-3 py-6 text-center text-zinc-500">
-                    No deposits yet. Crypto payments and admin credits will appear here.
+                    No deposits yet. Crypto payments, admin adjustments and refunds will appear here.
                   </td>
                 </tr>
               ) : (
