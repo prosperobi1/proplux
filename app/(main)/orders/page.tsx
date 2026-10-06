@@ -22,7 +22,10 @@ type Order = {
     price: number;
     seller: string;
     categorySlug: string | null;
-    metadata: Record<string, any>;
+    deliveryType: string;
+    fileUrl: string | null;
+    textContent: string | null;
+    metadata: Record<string, unknown>;
   };
 };
 
@@ -43,7 +46,7 @@ const REASONS = [
   "Other",
 ];
 
-function metadataSummary(meta: Record<string, any>): string {
+function metadataSummary(meta: Record<string, unknown>): string {
   if (!meta) return "—";
   const keys = ["country", "ip", "host", "email", "login", "user"];
   const parts: string[] = [];
@@ -88,7 +91,7 @@ function StarRow({
 }
 
 
-function DeliveryContent({ product }: { product: any }) {
+function DeliveryContent({ product }: { product: Order["product"] }) {
   const [shown, setShown] = useState<Set<string>>(new Set());
   const type = product.deliveryType || "credentials";
   const meta = product.metadata || {};
@@ -106,7 +109,7 @@ function DeliveryContent({ product }: { product: any }) {
   const copy = (v: string) => navigator.clipboard.writeText(v);
 
   const downloadTxt = () => {
-    const content = product.textContent || Object.entries(meta).map(([k, v]) => k + ": " + v).join("\n");
+    const content = product.textContent || Object.entries(meta).map(([k, v]) => k + ": " + String(v)).join("\n");
     const blob = new Blob([content], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -210,6 +213,9 @@ export default function MyOrdersPage() {
     owned?: boolean;
   } | null>(null);
   const [reportWindowHours, setReportWindowHours] = useState(16);
+  // Snapshot of "now" taken each time orders load — the report-window check
+  // runs during render, which must stay pure (no Date.now() in render).
+  const [loadedAt, setLoadedAt] = useState(0);
 
   const [reportFor, setReportFor] = useState<string | null>(null);
   const [reason, setReason] = useState(REASONS[0]);
@@ -233,6 +239,7 @@ export default function MyOrdersPage() {
         const list = Array.isArray(o) ? o : [];
         setOrders(list);
         setReports(Array.isArray(r) ? r : []);
+        setLoadedAt(Date.now());
         if (s && typeof s.reportWindowHours === "number") {
           setReportWindowHours(s.reportWindowHours);
         }
@@ -267,7 +274,7 @@ export default function MyOrdersPage() {
 
   const canReport = (status: string, createdAt: string) => {
     if (status !== "Pending Confirmation" && status !== "Completed") return false;
-    const ageMs = Date.now() - new Date(createdAt).getTime();
+    const ageMs = loadedAt - new Date(createdAt).getTime();
     const windowMs = reportWindowHours * 60 * 60 * 1000;
     return ageMs <= windowMs;
   };
@@ -383,7 +390,7 @@ export default function MyOrdersPage() {
         <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
         <p>
           You can only report a bad tool within <strong>{reportWindowHours} hours</strong> by
-          clicking on <strong>Report #ID</strong>. Otherwise we can&apos;t give you a refund or
+          clicking on the <strong>Report</strong> button. Otherwise we can&apos;t give you a refund or
           replacement!
         </p>
       </div>
@@ -490,7 +497,7 @@ export default function MyOrdersPage() {
                                 onClick={() => (isOpen ? closeReport() : openReport(o.id))}
                                 className="flex min-h-9 items-center gap-1 rounded bg-zinc-800 px-2 py-1 text-xs font-semibold text-red-400 hover:bg-zinc-700"
                               >
-                                <Flag className="h-3 w-3" /> Report #{o.id.slice(-6)}
+                                <Flag className="h-3 w-3" /> Report
                               </button>
                             ) : (
                               <span

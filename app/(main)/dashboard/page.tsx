@@ -106,7 +106,17 @@ export default function DashboardPage() {
               >
                 Orders
               </Link>{" "}
-              then click on the <strong className="text-zinc-200">Report #ID</strong> button.
+              then click on the <strong className="text-zinc-200">Report</strong> button.
+            </p>
+            <p className="mt-1 text-sm text-zinc-400">
+              Don&apos;t forget to read the{" "}
+              <Link
+                href="/terms"
+                className="inline-flex items-center rounded bg-red-600 px-3 py-1 align-middle text-xs font-semibold text-white hover:bg-red-500"
+              >
+                Terms of Service
+              </Link>{" "}
+              before using Proplux.
             </p>
           </div>
           {me?.role === "BUYER" && (
