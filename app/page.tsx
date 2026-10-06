@@ -131,13 +131,13 @@ export default async function Home() {
       <main className="flex-1">
         {/* hero */}
         <section className="relative overflow-hidden border-b border-zinc-800 bg-black">
-          <MatrixRain className="absolute inset-0 h-full w-full opacity-70" />
+          <MatrixRain className="absolute inset-0 h-full w-full opacity-85" />
           <div className="scanlines pointer-events-none absolute inset-0 opacity-30" />
           <div
             className="pointer-events-none absolute inset-0"
             style={{
               background:
-                "radial-gradient(ellipse at center, transparent 42%, rgba(0,0,0,0.6) 100%)",
+                "radial-gradient(ellipse at center, transparent 42%, rgba(0,0,0,0.5) 100%)",
             }}
           />
 

@@ -48,11 +48,13 @@ export function MatrixRain({ className = "" }: { className?: string }) {
     if (!ctx) return;
 
     const [br, bg, bb] = brandRgb();
-    const dim = `rgba(${br},${bg},${bb},0.5)`;
+    // Base glyphs sit at 0.72 so the rain reads clearly through the page's
+    // opacity layer and vignette; heads paint at full alpha for contrast.
+    const dim = `rgba(${br},${bg},${bb},0.72)`;
     const bright = `rgba(${Math.min(br + 90, 255)},${Math.min(bg + 90, 255)},${Math.min(
       bb + 90,
       255
-    )},0.9)`;
+    )},1)`;
 
     let columns = 0;
     let drops: number[] = [];
@@ -87,14 +89,15 @@ export function MatrixRain({ className = "" }: { className?: string }) {
 
     const frame = (t: number) => {
       raf = requestAnimationFrame(frame);
-      if (t - last < 66) return; // ~15fps is plenty for rain
+      if (t - last < 50) return; // ~20fps — smooth falling without burning CPU
       last = t;
-      ctx.fillStyle = "rgba(0,0,0,0.09)";
+      // Light per-frame fade: trails persist long enough to read as streaks.
+      ctx.fillStyle = "rgba(0,0,0,0.055)";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.font = SIZE + "px monospace";
       for (let i = 0; i < columns; i++) {
         const glyph = GLYPHS[(Math.random() * GLYPHS.length) | 0];
-        ctx.fillStyle = Math.random() > 0.975 ? bright : dim;
+        ctx.fillStyle = Math.random() > 0.94 ? bright : dim;
         ctx.fillText(glyph, i * SIZE, drops[i] * SIZE);
         if (drops[i] * SIZE > canvas.height && Math.random() > 0.975) drops[i] = 0;
         drops[i]++;
