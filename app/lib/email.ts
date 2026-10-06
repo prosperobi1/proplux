@@ -85,6 +85,14 @@ function errorMessage(err: unknown): string {
   return String(err);
 }
 
+/** One concise line per successful send — the only way to answer "did that alert actually go out?" from logs. */
+function logSent(args: SendArgs, r: SendResult): void {
+  if (!r.ok) return;
+  console.log(
+    `[email] sent to ${args.to} via ${r.via ?? "?"}${r.slow ? " (slow, handed off)" : ""} — "${args.subject}"`
+  );
+}
+
 async function sendViaSmtp(
   cfg: SmtpConfig,
   { to, subject, html, text }: SendArgs
@@ -188,7 +196,8 @@ export async function sendEmail(args: SendArgs): Promise<SendResult> {
   if (cfg && isSmtpReady(cfg)) {
     try {
       const r = await sendViaSmtp(cfg, args);
-      if (!r.ok) console.error("[email] SMTP send failed:", r.error || "unknown");
+      if (r.ok) logSent(args, r);
+      else console.error("[email] SMTP send failed:", r.error || "unknown");
       return r;
     } catch (err) {
       const message = errorMessage(err);
@@ -199,7 +208,8 @@ export async function sendEmail(args: SendArgs): Promise<SendResult> {
 
   try {
     const r = await sendViaResend(args);
-    if (!r.ok && !r.skipped) console.error("[email] Resend send failed:", r.error || "unknown");
+    if (r.ok) logSent(args, r);
+    else if (!r.skipped) console.error("[email] Resend send failed:", r.error || "unknown");
     return r;
   } catch (err) {
     const message = errorMessage(err);

@@ -1,6 +1,7 @@
 import { prisma } from "../../../lib/prisma";
 import { auth } from "../../../lib/auth";
 import { buildDeliverySnapshot } from "../../../lib/delivery";
+import { sendEmail, emailLayout, escapeHtml } from "../../../lib/email";
 import { NextResponse } from "next/server";
 
 const DEFAULT_COMMISSION_PERCENT = 65;
@@ -28,7 +29,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userId = (session.user as any).id;
+    const userId = (session.user as { id: string }).id;
     const body = await req.json().catch(() => ({}));
     const productIds = body?.productIds;
 
@@ -112,7 +113,7 @@ export async function POST(req: Request) {
       sellerEarnings.set(p.sellerId, (sellerEarnings.get(p.sellerId) ?? 0) + credit);
     }
 
-    const ops: any[] = [
+    const ops = [
       ...products.map((p) =>
         prisma.order.create({
           data: {
@@ -140,12 +141,83 @@ export async function POST(req: Request) {
     const result = await prisma.$transaction(ops);
     const createdOrders = result.slice(0, products.length);
 
+    // Purchase complete — email the buyer a summary and each seller their
+    // sales (the single-item order flow already does this; bulk never did).
+    (async () => {
+      try {
+        const siteSet = await prisma.setting.findUnique({ where: { key: "siteName" } });
+        const siteName = siteSet?.value || "Proplux";
+
+        const buyerRow = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { email: true, username: true, balance: true },
+        });
+        if (buyerRow?.email) {
+          const items = products
+            .map((p) => escapeHtml(`${p.country} ${p.tld || p.hosting}`))
+            .join("<br />");
+          await sendEmail({
+            to: buyerRow.email,
+            subject: `Your ${siteName} order is confirmed`,
+            html: emailLayout(
+              '<p style="margin:0 0 12px 0;">Hi ' + escapeHtml(buyerRow.username) + ",</p>" +
+                '<p style="margin:0 0 12px 0;">Your purchase of <strong>' +
+                createdOrders.length +
+                (createdOrders.length === 1 ? " item" : " items") +
+                "</strong> is confirmed:</p>" +
+                '<p style="margin:0 0 12px 0;">' + items + "</p>" +
+                '<p style="margin:0 0 12px 0;">Total: <strong>$' +
+                totalPrice.toFixed(2) +
+                "</strong><br />New balance: <strong>$" +
+                (buyerRow.balance ?? 0).toFixed(2) +
+                "</strong></p>" +
+                '<p style="margin:0;font-size:13px;color:#52525b;">View details in your orders page.</p>',
+              siteName
+            ),
+          });
+        }
+
+        const sellers = await prisma.user.findMany({
+          where: { id: { in: Array.from(sellerEarnings.keys()) } },
+          select: { id: true, email: true, username: true },
+        });
+        for (const s of sellers) {
+          if (!s.email) continue;
+          const mine = products.filter((p) => p.sellerId === s.id);
+          const earn = sellerEarnings.get(s.id) ?? 0;
+          const items = mine
+            .map((p) => escapeHtml(`${p.country} ${p.tld || p.hosting}`))
+            .join("<br />");
+          await sendEmail({
+            to: s.email,
+            subject: `You made a sale on ${siteName}`,
+            html: emailLayout(
+              '<p style="margin:0 0 12px 0;">Hi ' + escapeHtml(s.username) + ",</p>" +
+                '<p style="margin:0 0 12px 0;">You sold <strong>' +
+                mine.length +
+                (mine.length === 1 ? " item" : " items") +
+                "</strong> in one order:</p>" +
+                '<p style="margin:0 0 12px 0;">' + items + "</p>" +
+                '<p style="margin:0 0 12px 0;">Your earnings (' +
+                commissionPercent +
+                '%): <strong>$' +
+                earn.toFixed(2) +
+                "</strong></p>",
+              siteName
+            ),
+          });
+        }
+      } catch (err) {
+        console.error("bulk order emails failed:", err);
+      }
+    })();
+
     return NextResponse.json(
       { ok: true, count: createdOrders.length, total: totalPrice },
       { status: 201 }
     );
-  } catch (error: any) {
-    if (error?.code === "P2025") {
+  } catch (error) {
+    if ((error as { code?: string } | null)?.code === "P2025") {
       return NextResponse.json(
         { error: "Insufficient balance" },
         { status: 400 }
