@@ -37,8 +37,17 @@ export async function POST(req: Request) {
   const amount = Number(body?.amount);
   const payCurrency = typeof body?.coin === "string" ? body.coin.toLowerCase() : "btc";
 
-  if (!Number.isFinite(amount) || amount < 10 || amount > 100000) {
-    return NextResponse.json({ error: "Amount must be between $10 and $100,000" }, { status: 400 });
+  // Server-side floor from the admin's "Minimum Deposit" setting — the old
+  // hardcoded $10 let API clients bypass a raised minimum (the UI enforced
+  // it, the API didn't). The per-coin NOWPayments minimum still applies on top.
+  const minRow = await prisma.setting.findUnique({ where: { key: "minDeposit" } });
+  const parsedMin = Number(minRow?.value);
+  const minFloor = Number.isFinite(parsedMin) && parsedMin > 0 ? parsedMin : 10;
+  if (!Number.isFinite(amount) || amount < minFloor || amount > 100000) {
+    return NextResponse.json(
+      { error: `Amount must be between $${minFloor} and $100,000` },
+      { status: 400 }
+    );
   }
   if (!ALLOWED_COINS.includes(payCurrency)) {
     return NextResponse.json({ error: "Unsupported coin" }, { status: 400 });
@@ -51,7 +60,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const userId = (session.user as any).id;
+  const userId = (session.user as { id: string }).id;
   const orderId = `dep_${userId}_${Date.now()}`;
   const ipnCallbackUrl = buildIpnCallbackUrl(req);
   if (!ipnCallbackUrl) {
@@ -82,9 +91,9 @@ export async function POST(req: Request) {
       expiresAt: payment.expiration_estimate_date || null,
       status: payment.payment_status,
     });
-  } catch (err: any) {
+  } catch (err) {
     console.error("nowpayments create failed:", err);
-    const msg = String(err?.message || "Failed to create payment");
+    const msg = err instanceof Error && err.message ? err.message : "Failed to create payment";
     // Provider minimums can drift with the BTC/ETH price — surface it as an
     // actionable 400, not a generic 500.
     if (msg.includes("less than minimal")) {

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sendEmail, emailLayout, getSmtpConfig } from "@/lib/email";
+import { isWritableSettingKey } from "@/lib/settings";
 
 function isValidEmail(value: unknown): value is string {
   return typeof value === "string" && /^\S+@\S+\.\S+$/.test(value.trim());
@@ -27,10 +28,12 @@ export async function POST(req: Request) {
     if (settings && typeof settings === "object" && !Array.isArray(settings)) {
       for (const [key, value] of Object.entries(settings as Record<string, unknown>)) {
         if (typeof key !== "string" || !key || value === undefined || value === null) continue;
+        if (!isWritableSettingKey(key)) continue; // stray/internal keys are never persisted
+        if (typeof value !== "string") continue;
         await prisma.setting.upsert({
           where: { key },
-          update: { value: String(value) },
-          create: { key, value: String(value) },
+          update: { value },
+          create: { key, value },
         });
       }
     }

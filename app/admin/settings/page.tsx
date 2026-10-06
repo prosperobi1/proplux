@@ -7,6 +7,34 @@ import { LocalUpload } from "../../components/LocalUpload";
 
 type Settings = Record<string, string>;
 
+// Keys this page owns — a save here must never rewrite the Payments page's
+// keys (or anything else). Server enforces the same list on write.
+const SETTINGS_KEYS = [
+  "siteName",
+  "siteDescription",
+  "logoUrl",
+  "primaryColor",
+  "commissionPercent",
+  "minWithdrawal",
+  "minDeposit",
+  "reportWindowHours",
+  "supportEmail",
+  "adminAlertEmail",
+  "smtpEnabled",
+  "smtpHost",
+  "smtpPort",
+  "smtpSecurity",
+  "smtpUser",
+  "smtpPass",
+  "smtpFrom",
+  "smtpFromName",
+  "termsUrl",
+  "privacyUrl",
+  "enableMarketplace",
+  "enableTickets",
+  "maintenanceMode",
+];
+
 export default function AdminSettingsPage() {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [loading, setLoading] = useState(true);
@@ -50,6 +78,13 @@ export default function AdminSettingsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!settings) return;
+    // An invalid hex here would poison --brand-color and silently break
+    // button/link colors site-wide — reject it before saving anything.
+    const pc = (settings.primaryColor || "").trim();
+    if (pc && !/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(pc)) {
+      setError("Primary Color must be a hex color like #dc2626.");
+      return;
+    }
     const vis = minVisible();
     setSaving(true);
     setError(null);
@@ -57,7 +92,9 @@ export default function AdminSettingsPage() {
       const res = await fetch("/api/admin/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(settings),
+        body: JSON.stringify(
+          Object.fromEntries(SETTINGS_KEYS.filter((k) => k in settings).map((k) => [k, settings[k]]))
+        ),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -105,7 +142,15 @@ export default function AdminSettingsPage() {
     }
   };
 
-  if (loading) return <p className="flex items-center justify-center gap-2 p-8 text-zinc-500"><Loader2 className="h-4 w-4 animate-spin" /> Loading settings...</p>;  if (!settings) return (
+  if (loading)
+    return (
+      <p className="flex items-center justify-center gap-2 p-8 text-zinc-500">
+        <Loader2 className="h-4 w-4 animate-spin" /> Loading settings...
+      </p>
+    );
+
+  if (!settings)
+    return (
     <div className="rounded-lg border border-red-900/50 bg-red-950/20 p-6 text-red-500">
       Failed to load settings. Make sure you are logged in as ADMIN.
     </div>
