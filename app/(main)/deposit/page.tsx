@@ -40,11 +40,10 @@ export default function DepositPage() {
   const [error, setError] = useState<string | null>(null);
   const [payment, setPayment] = useState<Payment | null>(null);
   const [copied, setCopied] = useState(false);
-  const [polling, setPolling] = useState(false);
+  // True while an invoice is on screen — derived, so no setState in effects.
+  const polling = payment !== null;
 
-  const loadMe = () =>
-    fetch("/api/settings/public").then((r) => r.json()).then((d) => { if (typeof d?.minDeposit === "number") setMinDeposit(d.minDeposit); }).catch(() => {});
-
+  const loadMe = () => {
     fetch("/api/settings/public").then((r) => r.json()).then((d) => { if (typeof d?.minDeposit === "number") setMinDeposit(d.minDeposit); }).catch(() => {});
 
     fetch("/api/me")
@@ -54,6 +53,7 @@ export default function DepositPage() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
+  };
 
   useEffect(() => { loadMe(); }, []);
 
@@ -101,14 +101,12 @@ export default function DepositPage() {
 
   useEffect(() => {
     if (!payment) return;
-    setPolling(true);
     const iv = setInterval(async () => {
       try {
         const res = await fetch(`/api/deposit/status?paymentId=${payment.paymentId}`);
         const d = await res.json();
         if (d?.status === "finished" || d?.status === "confirmed") {
           clearInterval(iv);
-          setPolling(false);
           setPaid({ amount: payment.priceAmount, currency: payment.payCurrency.toUpperCase() });
           setPayment(null);
           loadMe();
