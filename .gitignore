@@ -43,3 +43,7 @@ next-env.d.ts
 
 # local upload storage (seller files + brand logo)
 /uploads/
+
+# runtime database (live SQLite file — git must never rewrite it: a
+# stash/checkout unlink+recreate orphans the dev server's open handle)
+/prisma/dev.db
