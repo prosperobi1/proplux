@@ -324,18 +324,21 @@ export default function DepositPage() {
         <ArrowLeft className="h-3.5 w-3.5" /> Back to Dashboard
       </Link>
 
-      <div className="rounded-lg border border-red-900/50 bg-red-950/20 p-6">
-        <h2 className="flex items-center gap-2 text-lg font-semibold text-red-500">
-          <Bitcoin className="h-5 w-5" /> Deposit Funds
-        </h2>
-        <p className="mt-2 text-sm text-zinc-400">
-          Pay with crypto. Your balance is credited automatically once the network confirms your payment.
-        </p>
-      </div>
-
-      <div className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-6">
-        <p className="text-xs font-semibold uppercase text-zinc-500">Current Balance</p>
-        <p className="mt-2 text-3xl font-bold text-green-500">${balance.toFixed(2)}</p>
+      <div className="flex items-start justify-between gap-4 rounded-lg border border-red-900/50 bg-red-950/20 p-6">
+        <div className="min-w-0">
+          <h2 className="flex items-center gap-2 text-lg font-semibold text-red-500">
+            <Bitcoin className="h-5 w-5" /> Deposit Funds
+          </h2>
+          <p className="mt-1 text-sm text-zinc-400">
+            Pay with crypto. Your balance is credited automatically once the network confirms your payment.
+          </p>
+        </div>
+        <div className="shrink-0 text-right">
+          <p className="text-xs font-semibold uppercase text-zinc-500">Balance</p>
+          <p className="mt-1 whitespace-nowrap text-xl font-bold text-green-500 sm:text-2xl">
+            ${balance.toFixed(2)}
+          </p>
+        </div>
       </div>
 
       {paid ? (
@@ -372,54 +375,66 @@ export default function DepositPage() {
             </div>
           )}
 
-          <div>
-            <label className="mb-2 block text-xs font-semibold uppercase text-zinc-500">Choose amount (USD)</label>
-            <input
-              type="number"
-              min={effMin}
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-3 text-lg text-white focus:border-red-500 focus:outline-none"
-            />
-            <div className="mt-3 flex flex-wrap gap-2">
-              {QUICK_AMOUNTS.map((q) => (
-                <button
-                  key={q}
-                  onClick={() => setAmount(String(q))}
-                  className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-zinc-800"
-                >
-                  ${q}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <label className="mb-2 block text-xs font-semibold uppercase text-zinc-500">Pay with</label>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {COINS.map((c) => {
-                const selected = coin === c.value;
-                return (
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+            <div>
+              <label
+                htmlFor="dep-amount"
+                className="mb-2 block text-xs font-semibold uppercase text-zinc-500"
+              >
+                Amount (USD)
+              </label>
+              <div className="flex items-center rounded-md border border-zinc-700 bg-zinc-950 focus-within:border-red-500">
+                <span className="pl-3 text-lg text-zinc-500">$</span>
+                <input
+                  id="dep-amount"
+                  type="number"
+                  min={effMin}
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  className="w-full bg-transparent px-2 py-3 text-lg text-white focus:outline-none"
+                />
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {QUICK_AMOUNTS.map((q) => (
                   <button
-                    key={c.value}
+                    key={q}
                     type="button"
-                    onClick={() => setCoin(c.value)}
-                    aria-pressed={selected}
-                    className={`flex flex-col items-center gap-1.5 rounded-lg border bg-zinc-900 p-4 transition-colors ${
-                      selected ? "border-transparent bg-red-950/30" : "border-zinc-700 hover:border-zinc-500"
-                    }`}
-                    style={selected ? { borderColor: "var(--brand-color, #dc2626)" } : undefined}
+                    onClick={() => setAmount(String(q))}
+                    className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-zinc-800"
                   >
-                    <Image src={c.logo} width={36} height={36} alt="" unoptimized className="h-9 w-9" />
-                    <span className="text-sm font-bold text-white">{c.symbol}</span>
-                    <span className="text-center text-[11px] leading-tight text-zinc-500">{c.detail}</span>
+                    ${q}
                   </button>
-                );
-              })}
+                ))}
+              </div>
+              <p className="mt-2 text-xs text-zinc-500">
+                Minimum for {COINS.find((c) => c.value === coin)?.label || coin}: ${effMin}
+              </p>
             </div>
-            <p className="mt-2 text-xs text-zinc-500">
-              Minimum for {COINS.find((c) => c.value === coin)?.label || coin}: ${effMin}
-            </p>
+
+            <div>
+              <label className="mb-2 block text-xs font-semibold uppercase text-zinc-500">Pay with</label>
+              <div className="grid grid-cols-2 gap-3">
+                {COINS.map((c) => {
+                  const selected = coin === c.value;
+                  return (
+                    <button
+                      key={c.value}
+                      type="button"
+                      onClick={() => setCoin(c.value)}
+                      aria-pressed={selected}
+                      className={`flex flex-col items-center gap-1.5 rounded-lg border bg-zinc-900 p-4 transition-colors ${
+                        selected ? "border-transparent bg-red-950/30" : "border-zinc-700 hover:border-zinc-500"
+                      }`}
+                      style={selected ? { borderColor: "var(--brand-color, #dc2626)" } : undefined}
+                    >
+                      <Image src={c.logo} width={36} height={36} alt="" unoptimized className="h-9 w-9" />
+                      <span className="text-sm font-bold text-white">{c.symbol}</span>
+                      <span className="text-center text-[11px] leading-tight text-zinc-500">{c.detail}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
 
           {error && (
