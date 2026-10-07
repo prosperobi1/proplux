@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { minVisible } from "@/lib/ui";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowLeft, Bitcoin, Copy, Check, CheckCircle2, Clock, Loader2, DollarSign, AlertTriangle, ScrollText, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Bitcoin, Copy, Check, CheckCircle2, Loader2 } from "lucide-react";
 import { COIN_MIN_USD, MAX_DEPOSIT_USD } from "@/lib/deposit";
 import QRCode from "react-qr-code";
 
@@ -53,15 +53,15 @@ const STORE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
 const STATUS_TEXT: Record<string, string> = {
   waiting: "Waiting for your payment…",
-  confirming: "Payment detected — waiting for network confirmations…",
-  confirmed: "Confirmed — finalizing…",
+  confirming: "Payment detected, waiting for confirmations…",
+  confirmed: "Confirmed, finalizing…",
   sending: "Sending to your balance…",
-  partially_paid: "Partial payment received — send the remaining amount to finish",
+  partially_paid: "Partial payment received. Send the remaining amount to finish.",
 };
 
 const FAILURE_TEXT: Record<string, string> = {
   expired:
-    "This invoice expired before payment was confirmed. Create a new one — if you already sent funds, they will still be credited automatically once confirmed.",
+    "This invoice expired before payment was confirmed. Create a new one. Funds you already sent will still be credited once confirmed.",
   failed: "This payment attempt failed. Create a new invoice and try again.",
 };
 
@@ -135,7 +135,7 @@ export default function DepositPage() {
         // Stale/foreign invoice — drop it quietly on restore.
         clearStore();
         closeInvoice();
-        if (!restoring) setError("This invoice could not be found — create a new one.");
+        if (!restoring) setError("This invoice could not be found. Create a new one.");
         return;
       }
       const d = await res.json().catch(() => ({}));
@@ -379,9 +379,9 @@ export default function DepositPage() {
             <div>
               <label
                 htmlFor="dep-amount"
-                className="mb-2 block text-xs font-semibold uppercase text-zinc-500"
+                className="sr-only"
               >
-                Amount (USD)
+                Amount in USD
               </label>
               <div className="flex items-center rounded-md border border-zinc-700 bg-zinc-950 focus-within:border-red-500">
                 <span className="pl-3 text-lg text-zinc-500">$</span>
@@ -406,13 +406,10 @@ export default function DepositPage() {
                   </button>
                 ))}
               </div>
-              <p className="mt-2 text-xs text-zinc-500">
-                Minimum for {COINS.find((c) => c.value === coin)?.label || coin}: ${effMin}
-              </p>
+              <p className="mt-2 text-xs text-zinc-500">Minimum ${effMin}</p>
             </div>
 
             <div>
-              <label className="mb-2 block text-xs font-semibold uppercase text-zinc-500">Pay with</label>
               <div className="grid grid-cols-2 gap-3">
                 {COINS.map((c) => {
                   const selected = coin === c.value;
@@ -457,27 +454,26 @@ export default function DepositPage() {
       ) : (
         <>
           <div className="rounded-lg border border-yellow-900/50 bg-yellow-950/20 p-4">
-            <p className="flex items-center gap-2 text-sm text-yellow-500">
-              <Clock className="h-4 w-4 shrink-0" />
+            <p className="text-sm text-yellow-500">
               Send exactly <strong>{payment.payAmount} {payment.payCurrency.toUpperCase()}</strong> to the address below.
             </p>
-            <p className="mt-1.5 flex items-center gap-2 pl-6 text-xs text-yellow-600">
+            <p className="mt-1.5 flex items-center gap-2 text-xs text-yellow-600">
               {invCoin && (
                 <Image src={invCoin.logo} width={16} height={16} alt="" unoptimized className="h-4 w-4 shrink-0" />
               )}
               {invCoin?.warn ? (
                 <span>
-                  Send only via the <strong>{invCoin.warn}</strong> — funds sent on another network may be lost.
+                  Send only via the <strong>{invCoin.warn}</strong>. Funds sent on another network may be lost.
                 </span>
               ) : (
                 <span>{invCoin?.detail || "On-chain payment"}</span>
               )}
             </p>
             {secondsLeft !== null && (
-              <p className="mt-1.5 pl-6 text-xs text-yellow-600">
+              <p className="mt-1.5 text-xs text-yellow-600">
                 {secondsLeft > 0
                   ? `Invoice expires in ${Math.floor(secondsLeft / 60)}:${String(secondsLeft % 60).padStart(2, "0")}`
-                  : "Invoice expiry reached — still watching for your payment…"}
+                  : "Invoice expired, still watching for your payment…"}
               </p>
             )}
           </div>
@@ -543,44 +539,30 @@ export default function DepositPage() {
       {/* Rules: every number here comes from the same settings/constants the
           create API enforces, so this card can't promise what it won't accept. */}
       <div className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-6">
-        <h3 className="flex items-center gap-2 text-sm font-semibold uppercase text-zinc-400">
-          <ScrollText className="h-4 w-4" /> Deposit Rules
-        </h3>
+        <h3 className="text-sm font-semibold uppercase text-zinc-400">Deposit Rules</h3>
 
-        <ul className="mt-4 space-y-3 text-sm text-zinc-300">
-          <li className="flex gap-3">
-            <Clock className="mt-0.5 h-4 w-4 shrink-0 text-zinc-500" />
-            <span>
-              All payments are accepted automatically — crediting usually takes{" "}
-              <strong className="text-white">3 minutes up to 1 hour</strong>, depending on
-              your sender service and network congestion.
-            </span>
-          </li>
-          <li className="flex gap-3">
-            <DollarSign className="mt-0.5 h-4 w-4 shrink-0 text-zinc-500" />
-            <span>
-              Min/Max deposit:{" "}
-              <strong className="text-white">
-                ${(minDeposit || 10).toLocaleString("en-US")} – $
-                {MAX_DEPOSIT_USD.toLocaleString("en-US")}
-              </strong>{" "}
-              per payment.
-            </span>
-          </li>
-          <li className="flex gap-3">
-            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-yellow-500" />
-            <span className="text-yellow-500">
-              Make sure you send <strong>exactly the amount shown on the invoice</strong> —
-              a different amount may cause your payment to be rejected.
-            </span>
-          </li>
-        </ul>
+        <div className="mt-4 space-y-2.5 text-sm text-zinc-300">
+          <p>
+            All payments are accepted automatically. Crediting usually takes{" "}
+            <strong className="text-white">3 min up to 1 hr</strong>, depending on your
+            sender service and network conditions.
+          </p>
+          <p>
+            Min/Max deposit:{" "}
+            <strong className="text-white">
+              ${(minDeposit || 10).toLocaleString("en-US")} – $
+              {MAX_DEPOSIT_USD.toLocaleString("en-US")}
+            </strong>{" "}
+            per payment.
+          </p>
+          <p className="text-yellow-500">
+            Send exactly the amount shown on the invoice, otherwise your payment may be
+            rejected.
+          </p>
+        </div>
 
         <div className="mt-5 border-t border-zinc-800 pt-4">
-          <p className="flex items-center gap-2 text-xs font-semibold uppercase text-zinc-500">
-            <ShieldCheck className="h-3.5 w-3.5" /> Available payment methods — secure way
-            to fund your account
-          </p>
+          <p className="text-xs font-semibold uppercase text-zinc-500">Payment methods</p>
           <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
             {COINS.map((c) => (
               <div
