@@ -85,7 +85,7 @@ export default function DepositPage() {
   const [paid, setPaid] = useState<{ amount: number; currency: string } | null>(null);
   const [minDeposit, setMinDeposit] = useState(10);
   const [autoEnabled, setAutoEnabled] = useState<boolean | null>(null);
-  const [amount, setAmount] = useState("50");
+  const [amount, setAmount] = useState("");
   const [coin, setCoin] = useState("btc");
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -373,51 +373,44 @@ export default function DepositPage() {
             </div>
           )}
 
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-            <div>
-              <label
-                htmlFor="dep-amount"
-                className="sr-only"
-              >
-                Amount in USD
-              </label>
-              <div className="flex items-center rounded-md border border-zinc-700 bg-zinc-950 focus-within:border-red-500">
-                <span className="pl-3 text-lg text-zinc-500">$</span>
-                <input
-                  id="dep-amount"
-                  type="number"
-                  min={effMin}
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  className="w-full bg-transparent px-2 py-3 text-lg text-white focus:outline-none"
-                />
-              </div>
-              <p className="mt-2 text-xs text-zinc-500">Minimum ${effMin}</p>
+          <div>
+            <label htmlFor="dep-amount" className="sr-only">
+              Amount in USD
+            </label>
+            <div className="flex items-center rounded-md border border-zinc-700 bg-zinc-950 focus-within:border-red-500">
+              <span className="pl-3 text-lg text-zinc-500">$</span>
+              <input
+                id="dep-amount"
+                type="number"
+                min={effMin}
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="w-full bg-transparent px-2 py-3 text-lg text-white focus:outline-none"
+              />
             </div>
+            <p className="mt-2 text-xs text-zinc-500">Minimum ${effMin}</p>
+          </div>
 
-            <div>
-              <div className="grid grid-cols-2 gap-3">
-                {COINS.map((c) => {
-                  const selected = coin === c.value;
-                  return (
-                    <button
-                      key={c.value}
-                      type="button"
-                      onClick={() => setCoin(c.value)}
-                      aria-pressed={selected}
-                      className={`flex flex-col items-center gap-1.5 rounded-lg border bg-zinc-900 p-4 transition-colors ${
-                        selected ? "border-transparent bg-red-950/30" : "border-zinc-700 hover:border-zinc-500"
-                      }`}
-                      style={selected ? { borderColor: "var(--brand-color, #dc2626)" } : undefined}
-                    >
-                      <Image src={c.logo} width={36} height={36} alt="" unoptimized className="h-9 w-9" />
-                      <span className="text-sm font-bold text-white">{c.symbol}</span>
-                      <span className="text-center text-[11px] leading-tight text-zinc-500">{c.detail}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+            {COINS.map((c) => {
+              const selected = coin === c.value;
+              return (
+                <button
+                  key={c.value}
+                  type="button"
+                  onClick={() => setCoin(c.value)}
+                  aria-pressed={selected}
+                  className={`flex flex-col items-center gap-1.5 rounded-lg border bg-zinc-900 p-4 transition-colors ${
+                    selected ? "border-transparent bg-red-950/30" : "border-zinc-700 hover:border-zinc-500"
+                  }`}
+                  style={selected ? { borderColor: "var(--brand-color, #dc2626)" } : undefined}
+                >
+                  <Image src={c.logo} width={36} height={36} alt="" unoptimized className="h-9 w-9" />
+                  <span className="text-sm font-bold text-white">{c.symbol}</span>
+                  <span className="text-center text-[11px] leading-tight text-zinc-500">{c.detail}</span>
+                </button>
+              );
+            })}
           </div>
 
           {error && (
@@ -551,19 +544,12 @@ export default function DepositPage() {
 
         <div className="mt-5 border-t border-zinc-800 pt-4">
           <p className="text-xs font-semibold uppercase text-zinc-500">Payment methods</p>
-          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="mt-2.5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-zinc-300">
             {COINS.map((c) => (
-              <div
-                key={c.value}
-                className="flex flex-col items-center gap-1 rounded-lg border border-zinc-800 bg-zinc-950/50 p-3 text-center"
-              >
-                <Image src={c.logo} width={28} height={28} alt="" unoptimized className="h-7 w-7" />
-                <span className="text-xs font-bold text-white">{c.symbol}</span>
-                <span className="text-[10px] leading-tight text-zinc-500">{c.detail}</span>
-                <span className="mt-0.5 text-[11px] font-semibold text-zinc-400">
-                  Min ${Math.max(minDeposit || 10, COIN_MIN_USD[c.value] ?? 0).toLocaleString("en-US")}
-                </span>
-              </div>
+              <span key={c.value} className="flex items-center gap-2">
+                <Image src={c.logo} width={18} height={18} alt="" unoptimized className="h-[18px] w-[18px]" />
+                {c.label}
+              </span>
             ))}
           </div>
         </div>
