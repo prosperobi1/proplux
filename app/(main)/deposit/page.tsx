@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { minVisible } from "@/lib/ui";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowLeft, Bitcoin, Copy, Check, CheckCircle2, Clock, Loader2 } from "lucide-react";
 import { COIN_MIN_USD } from "@/lib/deposit";
 import QRCode from "react-qr-code";
@@ -20,11 +21,21 @@ type Payment = {
   status: string;
 };
 
-const COINS = [
-  { value: "btc", label: "Bitcoin (BTC)" },
-  { value: "eth", label: "Ethereum (ETH)" },
-  { value: "usdttrc20", label: "USDT (TRC20)" },
-  { value: "usdterc20", label: "USDT (ERC20)" },
+type CoinOpt = {
+  value: string;
+  label: string;
+  symbol: string;
+  detail: string;
+  logo: string;
+  /** Repeated on the invoice for coins where the wrong network = lost funds. */
+  warn?: string;
+};
+
+const COINS: CoinOpt[] = [
+  { value: "btc", label: "Bitcoin (BTC)", symbol: "BTC", detail: "Bitcoin network", logo: "/coins/bitcoin.svg" },
+  { value: "eth", label: "Ethereum (ETH)", symbol: "ETH", detail: "Ethereum network", logo: "/coins/ethereum.svg" },
+  { value: "usdttrc20", label: "USDT (TRC20)", symbol: "USDT", detail: "TRC20 · TRON", logo: "/coins/tether.svg", warn: "TRON (TRC20) network" },
+  { value: "usdterc20", label: "USDT (ERC20)", symbol: "USDT", detail: "ERC20 · Ethereum", logo: "/coins/tether.svg", warn: "Ethereum (ERC20) network" },
 ];
 
 const QUICK_AMOUNTS = [50, 100, 250, 500];
@@ -305,6 +316,7 @@ export default function DepositPage() {
 
   const balance = me?.balance ?? 0;
   const effMin = Math.max(minDeposit || 10, COIN_MIN_USD[coin] ?? 0);
+  const invCoin = payment ? COINS.find((c) => c.value === payment.payCurrency) : null;
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -384,16 +396,28 @@ export default function DepositPage() {
 
           <div>
             <label className="mb-2 block text-xs font-semibold uppercase text-zinc-500">Pay with</label>
-            <select
-              value={coin}
-              onChange={(e) => setCoin(e.target.value)}
-              className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-3 text-sm text-white focus:border-red-500 focus:outline-none"
-            >
-              {COINS.map((c) => (
-                <option key={c.value} value={c.value}>{c.label}</option>
-              ))}
-            </select>
-            <p className="mt-1.5 text-xs text-zinc-500">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {COINS.map((c) => {
+                const selected = coin === c.value;
+                return (
+                  <button
+                    key={c.value}
+                    type="button"
+                    onClick={() => setCoin(c.value)}
+                    aria-pressed={selected}
+                    className={`flex flex-col items-center gap-1.5 rounded-lg border bg-zinc-900 p-4 transition-colors ${
+                      selected ? "border-transparent bg-red-950/30" : "border-zinc-700 hover:border-zinc-500"
+                    }`}
+                    style={selected ? { borderColor: "var(--brand-color, #dc2626)" } : undefined}
+                  >
+                    <Image src={c.logo} width={36} height={36} alt="" unoptimized className="h-9 w-9" />
+                    <span className="text-sm font-bold text-white">{c.symbol}</span>
+                    <span className="text-center text-[11px] leading-tight text-zinc-500">{c.detail}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <p className="mt-2 text-xs text-zinc-500">
               Minimum for {COINS.find((c) => c.value === coin)?.label || coin}: ${effMin}
             </p>
           </div>
@@ -419,8 +443,20 @@ export default function DepositPage() {
         <>
           <div className="rounded-lg border border-yellow-900/50 bg-yellow-950/20 p-4">
             <p className="flex items-center gap-2 text-sm text-yellow-500">
-              <Clock className="h-4 w-4" />
+              <Clock className="h-4 w-4 shrink-0" />
               Send exactly <strong>{payment.payAmount} {payment.payCurrency.toUpperCase()}</strong> to the address below.
+            </p>
+            <p className="mt-1.5 flex items-center gap-2 pl-6 text-xs text-yellow-600">
+              {invCoin && (
+                <Image src={invCoin.logo} width={16} height={16} alt="" unoptimized className="h-4 w-4 shrink-0" />
+              )}
+              {invCoin?.warn ? (
+                <span>
+                  Send only via the <strong>{invCoin.warn}</strong> — funds sent on another network may be lost.
+                </span>
+              ) : (
+                <span>{invCoin?.detail || "On-chain payment"}</span>
+              )}
             </p>
             {secondsLeft !== null && (
               <p className="mt-1.5 pl-6 text-xs text-yellow-600">
