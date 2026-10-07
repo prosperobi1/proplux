@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { createPayment } from "@/lib/nowpayments";
-import { COIN_MIN_USD, COIN_LABEL } from "@/lib/deposit";
+import { COIN_MIN_USD, COIN_LABEL, MAX_DEPOSIT_USD } from "@/lib/deposit";
 
 const ALLOWED_COINS = ["btc", "eth", "usdttrc20", "usdterc20"];
 
@@ -43,9 +43,9 @@ export async function POST(req: Request) {
   const minRow = await prisma.setting.findUnique({ where: { key: "minDeposit" } });
   const parsedMin = Number(minRow?.value);
   const minFloor = Number.isFinite(parsedMin) && parsedMin > 0 ? parsedMin : 10;
-  if (!Number.isFinite(amount) || amount < minFloor || amount > 100000) {
+  if (!Number.isFinite(amount) || amount < minFloor || amount > MAX_DEPOSIT_USD) {
     return NextResponse.json(
-      { error: `Amount must be between $${minFloor} and $100,000` },
+      { error: `Amount must be between $${minFloor} and $${MAX_DEPOSIT_USD.toLocaleString("en-US")}` },
       { status: 400 }
     );
   }

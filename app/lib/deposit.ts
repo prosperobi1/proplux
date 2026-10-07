@@ -21,3 +21,10 @@ export const COIN_LABEL: Record<string, string> = {
   usdttrc20: "USDT (TRC20)",
   usdterc20: "USDT (ERC20)",
 };
+
+/**
+ * Hard cap per deposit invoice, enforced by POST /api/deposit/create and
+ * displayed on the deposit page's Rules card — one source so the promise
+ * and the enforcement can't drift apart.
+ */
+export const MAX_DEPOSIT_USD = 100000;

@@ -4,8 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { minVisible } from "@/lib/ui";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowLeft, Bitcoin, Copy, Check, CheckCircle2, Clock, Loader2 } from "lucide-react";
-import { COIN_MIN_USD } from "@/lib/deposit";
+import { ArrowLeft, Bitcoin, Copy, Check, CheckCircle2, Clock, Loader2, DollarSign, AlertTriangle, ScrollText, ShieldCheck } from "lucide-react";
+import { COIN_MIN_USD, MAX_DEPOSIT_USD } from "@/lib/deposit";
 import QRCode from "react-qr-code";
 
 type Me = { id: string; username: string; balance: number };
@@ -524,6 +524,65 @@ export default function DepositPage() {
           </div>
         </>
       )}
+
+      {/* Rules: every number here comes from the same settings/constants the
+          create API enforces, so this card can't promise what it won't accept. */}
+      <div className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-6">
+        <h3 className="flex items-center gap-2 text-sm font-semibold uppercase text-zinc-400">
+          <ScrollText className="h-4 w-4" /> Deposit Rules
+        </h3>
+
+        <ul className="mt-4 space-y-3 text-sm text-zinc-300">
+          <li className="flex gap-3">
+            <Clock className="mt-0.5 h-4 w-4 shrink-0 text-zinc-500" />
+            <span>
+              All payments are accepted automatically — crediting usually takes{" "}
+              <strong className="text-white">3 minutes up to 1 hour</strong>, depending on
+              your sender service and network congestion.
+            </span>
+          </li>
+          <li className="flex gap-3">
+            <DollarSign className="mt-0.5 h-4 w-4 shrink-0 text-zinc-500" />
+            <span>
+              Min/Max deposit:{" "}
+              <strong className="text-white">
+                ${(minDeposit || 10).toLocaleString("en-US")} – $
+                {MAX_DEPOSIT_USD.toLocaleString("en-US")}
+              </strong>{" "}
+              per payment.
+            </span>
+          </li>
+          <li className="flex gap-3">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-yellow-500" />
+            <span className="text-yellow-500">
+              Make sure you send <strong>exactly the amount shown on the invoice</strong> —
+              a different amount may cause your payment to be rejected.
+            </span>
+          </li>
+        </ul>
+
+        <div className="mt-5 border-t border-zinc-800 pt-4">
+          <p className="flex items-center gap-2 text-xs font-semibold uppercase text-zinc-500">
+            <ShieldCheck className="h-3.5 w-3.5" /> Available payment methods — secure way
+            to fund your account
+          </p>
+          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {COINS.map((c) => (
+              <div
+                key={c.value}
+                className="flex flex-col items-center gap-1 rounded-lg border border-zinc-800 bg-zinc-950/50 p-3 text-center"
+              >
+                <Image src={c.logo} width={28} height={28} alt="" unoptimized className="h-7 w-7" />
+                <span className="text-xs font-bold text-white">{c.symbol}</span>
+                <span className="text-[10px] leading-tight text-zinc-500">{c.detail}</span>
+                <span className="mt-0.5 text-[11px] font-semibold text-zinc-400">
+                  Min ${Math.max(minDeposit || 10, COIN_MIN_USD[c.value] ?? 0).toLocaleString("en-US")}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
