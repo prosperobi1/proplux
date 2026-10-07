@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { minVisible } from "@/lib/ui";
 import Link from "next/link";
 import { ArrowLeft, Bitcoin, Copy, Check, CheckCircle2, Clock, Loader2 } from "lucide-react";
@@ -16,7 +16,7 @@ type Payment = {
   payCurrency: string;
   priceAmount: number;
   orderId: string;
-  expiresAt: string | null;
+  expiresAt: string | number | null;
   status: string;
 };
 
@@ -29,33 +29,187 @@ const COINS = [
 
 const QUICK_AMOUNTS = [50, 100, 250, 500];
 
+/**
+ * A pending invoice survives a refresh: without this, F5 threw away the
+ * payment address (and the success screen) with no way back — and in local
+ * dev the NOWPayments IPN can't reach the server at all, so a payment made
+ * while the view was gone could sit uncredited until the next status poll.
+ * The server has no "my pending invoices" list, so the client keeps it.
+ */
+const STORE_KEY = "proplux.pendingDeposit";
+type StoredInvoice = { userId?: string; savedAt: number; payment: Payment };
+const STORE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+
+const STATUS_TEXT: Record<string, string> = {
+  waiting: "Waiting for your payment…",
+  confirming: "Payment detected — waiting for network confirmations…",
+  confirmed: "Confirmed — finalizing…",
+  sending: "Sending to your balance…",
+  partially_paid: "Partial payment received — send the remaining amount to finish",
+};
+
+const FAILURE_TEXT: Record<string, string> = {
+  expired:
+    "This invoice expired before payment was confirmed. Create a new one — if you already sent funds, they will still be credited automatically once confirmed.",
+  failed: "This payment attempt failed. Create a new invoice and try again.",
+};
+
+/** NOWPayments hands out the expiration as ISO, unix seconds or unix ms
+ *  depending on the endpoint — normalize to epoch ms, or null if unusable. */
+function toDeadline(v: unknown): number | null {
+  if (typeof v === "number" && Number.isFinite(v)) return v < 1e12 ? v * 1000 : v;
+  if (typeof v === "string" && v) {
+    const parsed = Date.parse(v);
+    if (Number.isFinite(parsed)) return parsed;
+    const n = Number(v);
+    if (Number.isFinite(n) && n > 0) return n < 1e12 ? n * 1000 : n;
+  }
+  return null;
+}
+
+// Module scope so no Date.now() runs during render (react-hooks/purity).
+const nowMs = () => Date.now();
+const isFresh = (savedAt: number) => nowMs() - savedAt <= STORE_MAX_AGE_MS;
+
 export default function DepositPage() {
   const [me, setMe] = useState<Me | null>(null);
   const [paid, setPaid] = useState<{ amount: number; currency: string } | null>(null);
   const [minDeposit, setMinDeposit] = useState(10);
+  const [autoEnabled, setAutoEnabled] = useState<boolean | null>(null);
   const [amount, setAmount] = useState("50");
   const [coin, setCoin] = useState("btc");
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [payment, setPayment] = useState<Payment | null>(null);
   const [copied, setCopied] = useState(false);
-  // True while an invoice is on screen — derived, so no setState in effects.
-  const polling = payment !== null;
+  // Provider status and deadline live OUTSIDE `payment`: updating them must
+  // not retrigger the poll effect (its dep is the invoice identity only).
+  const [providerStatus, setProviderStatus] = useState<string | null>(null);
+  const [deadline, setDeadline] = useState<number | null>(null);
+  const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
+  // Restore at most once per mount (refresh-button reloads must not yank the
+  // user back into an invoice they already backed out of).
+  const restoredRef = useRef(false);
+
+  const saveStore = (p: Payment) => {
+    try {
+      const payload: StoredInvoice = { userId: me?.id, savedAt: nowMs(), payment: p };
+      localStorage.setItem(STORE_KEY, JSON.stringify(payload));
+    } catch {}
+  };
+  const clearStore = () => {
+    try {
+      localStorage.removeItem(STORE_KEY);
+    } catch {}
+  };
+
+  const closeInvoice = () => {
+    setPayment(null);
+    setDeadline(null);
+    setSecondsLeft(null);
+    setProviderStatus(null);
+  };
+
+  /** Reconcile with the provider: credit on final, surface failure states,
+   *  otherwise just keep the latest status text. Called by the 15s poll and
+   *  immediately once when a stored invoice is restored. */
+  const checkStatus = async (p: Payment, restoring = false) => {
+    try {
+      const res = await fetch(
+        `/api/deposit/status?paymentId=${encodeURIComponent(String(p.paymentId))}`
+      );
+      if (res.status === 404) {
+        // Stale/foreign invoice — drop it quietly on restore.
+        clearStore();
+        closeInvoice();
+        if (!restoring) setError("This invoice could not be found — create a new one.");
+        return;
+      }
+      const d = await res.json().catch(() => ({}));
+      const s = typeof d?.status === "string" ? d.status : "";
+
+      if (s === "finished" || s === "confirmed") {
+        clearStore();
+        setPaid({ amount: p.priceAmount, currency: p.payCurrency.toUpperCase() });
+        closeInvoice();
+        loadMe();
+        return;
+      }
+      if (s === "expired" || s === "failed") {
+        clearStore();
+        closeInvoice();
+        setError(FAILURE_TEXT[s]);
+        return;
+      }
+      if (s) setProviderStatus(s);
+    } catch {
+      // Network blip — the next tick retries.
+    }
+  };
+
+  const restorePending = (userId: string) => {
+    if (restoredRef.current) return;
+    restoredRef.current = true;
+    try {
+      const raw = localStorage.getItem(STORE_KEY);
+      if (!raw) return;
+      const saved = JSON.parse(raw) as StoredInvoice;
+      const p = saved?.payment;
+      if (!p?.paymentId) {
+        clearStore();
+        return;
+      }
+      if (saved.userId && saved.userId !== userId) {
+        clearStore(); // another account used this browser
+        return;
+      }
+      if (!isFresh(saved.savedAt)) {
+        clearStore();
+        return;
+      }
+      openInvoice(p, true);
+    } catch {
+      clearStore();
+    }
+  };
 
   const loadMe = () => {
-    fetch("/api/settings/public").then((r) => r.json()).then((d) => { if (typeof d?.minDeposit === "number") setMinDeposit(d.minDeposit); }).catch(() => {});
-
-    fetch("/api/me")
+    fetch("/api/settings/public")
       .then((r) => r.json())
       .then((d) => {
-        if (d && !d.error) setMe(d);
+        if (typeof d?.minDeposit === "number") setMinDeposit(d.minDeposit);
+        if (typeof d?.paymentAutoEnabled === "boolean") setAutoEnabled(d.paymentAutoEnabled);
+      })
+      .catch(() => {});
+
+    return fetch("/api/me")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d && !d.error) {
+          setMe(d);
+          restorePending(d.id);
+        }
         setLoading(false);
       })
       .catch(() => setLoading(false));
   };
 
-  useEffect(() => { loadMe(); }, []);
+  useEffect(() => {
+    loadMe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const openInvoice = (p: Payment, checkNow = false) => {
+    const dl = toDeadline(p.expiresAt);
+    setPayment(p);
+    setDeadline(dl);
+    setSecondsLeft(dl !== null ? Math.max(0, Math.ceil((dl - nowMs()) / 1000)) : null);
+    setProviderStatus(p.status || "waiting");
+    setError(null);
+    if (checkNow) void checkStatus(p, true);
+  };
 
   const createInvoice = async () => {
     setError(null);
@@ -83,12 +237,34 @@ export default function DepositPage() {
         setError(data?.error || "Failed to create payment");
         return;
       }
-      setPayment(data);
+      const p: Payment = {
+        paymentId: String(data.paymentId),
+        payAddress: String(data.payAddress || ""),
+        payAmount: Number(data.payAmount) || 0,
+        payCurrency: String(data.payCurrency || coin),
+        priceAmount: Number(data.priceAmount) || amt,
+        orderId: String(data.orderId || ""),
+        expiresAt: data.expiresAt ?? null,
+        status: String(data.status || "waiting"),
+      };
+      saveStore(p);
+      openInvoice(p);
     } catch (err) {
       setError(String(err));
     } finally {
       await vis();
       setCreating(false);
+    }
+  };
+
+  const refreshBalance = async () => {
+    const vis = minVisible();
+    setRefreshing(true);
+    try {
+      await loadMe();
+    } finally {
+      await vis();
+      setRefreshing(false);
     }
   };
 
@@ -99,22 +275,26 @@ export default function DepositPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  // 15s reconciliation poll while an invoice is on screen.
   useEffect(() => {
     if (!payment) return;
-    const iv = setInterval(async () => {
-      try {
-        const res = await fetch(`/api/deposit/status?paymentId=${payment.paymentId}`);
-        const d = await res.json();
-        if (d?.status === "finished" || d?.status === "confirmed") {
-          clearInterval(iv);
-          setPaid({ amount: payment.priceAmount, currency: payment.payCurrency.toUpperCase() });
-          setPayment(null);
-          loadMe();
-        }
-      } catch {}
+    const iv = setInterval(() => {
+      void checkStatus(payment);
     }, 15000);
     return () => clearInterval(iv);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [payment]);
+
+  // Countdown ticker — only while the invoice has a deadline. Recomputed
+  // from the deadline inside the interval callback (async context), so the
+  // display never drifts and no impure call happens during render.
+  useEffect(() => {
+    if (!deadline) return;
+    const iv = setInterval(() => {
+      setSecondsLeft(Math.max(0, Math.ceil((deadline - nowMs()) / 1000)));
+    }, 1000);
+    return () => clearInterval(iv);
+  }, [deadline]);
 
   if (loading)
     return (
@@ -124,6 +304,7 @@ export default function DepositPage() {
     );
 
   const balance = me?.balance ?? 0;
+  const effMin = Math.max(minDeposit || 10, COIN_MIN_USD[coin] ?? 0);
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -173,11 +354,17 @@ export default function DepositPage() {
         </div>
       ) : !payment ? (
         <div className="space-y-5 rounded-lg border border-zinc-800 bg-zinc-900/30 p-6">
+          {autoEnabled === false && (
+            <div className="rounded-md border border-yellow-900/60 bg-yellow-950/30 p-3 text-sm text-yellow-500">
+              Crypto deposits are currently disabled. Please try again later or open a ticket.
+            </div>
+          )}
+
           <div>
             <label className="mb-2 block text-xs font-semibold uppercase text-zinc-500">Choose amount (USD)</label>
             <input
               type="number"
-              min={10}
+              min={effMin}
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-3 text-lg text-white focus:border-red-500 focus:outline-none"
@@ -207,8 +394,7 @@ export default function DepositPage() {
               ))}
             </select>
             <p className="mt-1.5 text-xs text-zinc-500">
-              Minimum for {COINS.find((c) => c.value === coin)?.label || coin}: $
-              {Math.max(minDeposit || 10, COIN_MIN_USD[coin] ?? 0)}
+              Minimum for {COINS.find((c) => c.value === coin)?.label || coin}: ${effMin}
             </p>
           </div>
 
@@ -218,7 +404,7 @@ export default function DepositPage() {
 
           <button
             onClick={createInvoice}
-            disabled={creating}
+            disabled={creating || autoEnabled === false}
             className="flex w-full items-center justify-center gap-2 rounded-md py-3 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
             style={{ backgroundColor: "var(--brand-color, #dc2626)" }}
           >
@@ -236,6 +422,13 @@ export default function DepositPage() {
               <Clock className="h-4 w-4" />
               Send exactly <strong>{payment.payAmount} {payment.payCurrency.toUpperCase()}</strong> to the address below.
             </p>
+            {secondsLeft !== null && (
+              <p className="mt-1.5 pl-6 text-xs text-yellow-600">
+                {secondsLeft > 0
+                  ? `Invoice expires in ${Math.floor(secondsLeft / 60)}:${String(secondsLeft % 60).padStart(2, "0")}`
+                  : "Invoice expiry reached — still watching for your payment…"}
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -269,27 +462,28 @@ export default function DepositPage() {
               <div className="rounded-lg bg-white p-4">
                 <QRCode value={payment.payAddress} size={180} bgColor="#ffffff" fgColor="#000000" />
               </div>
-              {polling && (
-                <p className="mt-4 flex items-center justify-center gap-2 text-center text-xs text-zinc-500">
-                  <Loader2 className="h-3 w-3 animate-spin" /> Waiting for payment confirmation…
-                </p>
-              )}
+              <p className="mt-4 flex items-center justify-center gap-2 text-center text-xs text-zinc-500">
+                <Loader2 className="h-3 w-3 animate-spin" />{" "}
+                {STATUS_TEXT[providerStatus ?? "waiting"] ?? STATUS_TEXT.waiting}
+              </p>
             </div>
           </div>
 
           <div className="flex gap-4">
             <button
-              onClick={() => setPayment(null)}
+              onClick={closeInvoice}
               className="flex-1 rounded-md border border-zinc-700 bg-zinc-900 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-zinc-800"
             >
-              Cancel
+              Back
             </button>
             <button
-              onClick={loadMe}
-              className="flex-1 rounded-md px-4 py-3 text-center text-sm font-semibold text-white hover:opacity-90"
+              onClick={refreshBalance}
+              disabled={refreshing}
+              className="flex flex-1 items-center justify-center gap-2 rounded-md px-4 py-3 text-center text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
               style={{ backgroundColor: "var(--brand-color, #dc2626)" }}
             >
-              Refresh Balance
+              {refreshing && <Loader2 className="h-4 w-4 animate-spin" />}
+              {refreshing ? "Refreshing…" : "Refresh Balance"}
             </button>
           </div>
         </>

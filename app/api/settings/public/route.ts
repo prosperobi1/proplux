@@ -4,7 +4,11 @@ import { prisma } from "@/lib/prisma";
 export async function GET() {
   try {
     const settings = await prisma.setting.findMany({
-      where: { key: { in: ["siteName", "logoUrl", "reportWindowHours"] } },
+      where: {
+        key: {
+          in: ["siteName", "logoUrl", "reportWindowHours", "minDeposit", "paymentAutoEnabled"],
+        },
+      },
       select: { key: true, value: true },
     });
 
@@ -12,17 +16,25 @@ export async function GET() {
     for (const s of settings) map[s.key] = s.value;
 
     const hours = parseInt(map.reportWindowHours ?? "", 10);
+    const min = Number(map.minDeposit ?? "");
 
     return NextResponse.json({
       siteName: map.siteName || "Proplux",
       logoUrl: map.logoUrl || "",
       reportWindowHours: Number.isFinite(hours) && hours > 0 ? hours : 16,
+      // Consumed by /deposit: the UI must show the SAME floor the create
+      // API enforces (its fallback is 10 when the row is missing).
+      minDeposit: Number.isFinite(min) && min > 0 ? min : 10,
+      // Matches the create route: without a row, deposits are disabled.
+      paymentAutoEnabled: map.paymentAutoEnabled === "true",
     });
   } catch {
     return NextResponse.json({
       siteName: "Proplux",
       logoUrl: "",
       reportWindowHours: 16,
+      minDeposit: 10,
+      paymentAutoEnabled: false,
     });
   }
 }
