@@ -38,8 +38,6 @@ const COINS: CoinOpt[] = [
   { value: "usdterc20", label: "USDT (ERC20)", symbol: "USDT", detail: "ERC20 · Ethereum", logo: "/coins/tether.svg", warn: "Ethereum (ERC20) network" },
 ];
 
-const QUICK_AMOUNTS = [50, 100, 250, 500];
-
 /**
  * A pending invoice survives a refresh: without this, F5 threw away the
  * payment address (and the success screen) with no way back — and in local
@@ -394,18 +392,6 @@ export default function DepositPage() {
                   className="w-full bg-transparent px-2 py-3 text-lg text-white focus:outline-none"
                 />
               </div>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {QUICK_AMOUNTS.map((q) => (
-                  <button
-                    key={q}
-                    type="button"
-                    onClick={() => setAmount(String(q))}
-                    className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-zinc-800"
-                  >
-                    ${q}
-                  </button>
-                ))}
-              </div>
               <p className="mt-2 text-xs text-zinc-500">Minimum ${effMin}</p>
             </div>
 
@@ -446,8 +432,10 @@ export default function DepositPage() {
           >
             {creating ? (
               <><Loader2 className="h-4 w-4 animate-spin" /> Creating payment…</>
+            ) : amount && Number(amount) > 0 ? (
+              "Pay $" + amount + " with crypto"
             ) : (
-              "Pay $" + (amount || "0") + " with crypto"
+              "Deposit with crypto"
             )}
           </button>
         </div>
