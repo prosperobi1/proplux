@@ -27,11 +27,20 @@ export default function AdminOrdersPage() {
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [busyId, setBusyId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
+  // Reset to page 1 whenever the search/status filters change — adjusted
+  // during render instead of an effect (react.dev/you-might-not-need-an-effect).
+  const filterKey = search + "\u0000" + statusFilter;
+  const [lastFilterKey, setLastFilterKey] = useState(filterKey);
+  if (lastFilterKey !== filterKey) {
+    setLastFilterKey(filterKey);
+    setPage(1);
+  }
   const PER_PAGE = 20;
   const router = useRouter();
 
+  // Note: no sync setState here — `loading` starts true from useState and
+  // the fetch callbacks flip it later (async), which the effect rule allows.
   const loadOrders = () => {
-    setLoading(true);
     fetch("/api/admin/orders")
       .then((res) => res.json())
       .then((data) => {
@@ -47,14 +56,18 @@ export default function AdminOrdersPage() {
 
   const handleStatusChange = async (id: string, newStatus: string) => {
     if (newStatus === "Cancelled") {
+      const target = orders.find((o) => o.id === id);
       const ok = window.confirm(
-        "Cancel this order? The seller's balance will be reduced by the credited amount."
+        target
+          ? `Cancel this order? The buyer will be refunded $${target.totalPrice.toFixed(2)} in full and the seller's credited amount will be deducted from their balance.`
+          : "Cancel this order? The buyer will be refunded in full and the seller's credited amount will be deducted from their balance."
       );
       if (!ok) return;
     }
 
     setBusyId(id);
     try {
+      setLoading(true);
       const res = await fetch(`/api/admin/orders/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -91,10 +104,6 @@ export default function AdminOrdersPage() {
   const currentPage = Math.min(page, totalPages);
   const pageStart = (currentPage - 1) * PER_PAGE;
   const paged = filtered.slice(pageStart, pageStart + PER_PAGE);
-
-  useEffect(() => {
-    setPage(1);
-  }, [search, statusFilter]);
 
   return (
     <div className="space-y-6">

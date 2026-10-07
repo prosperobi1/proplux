@@ -4,18 +4,9 @@ import { NextResponse } from "next/server";
 import { sendEmail, emailLayout } from "../../lib/email";
 import { decryptAllFields } from "../../lib/encrypt";
 import { buildDeliverySnapshot, readDeliverySnapshot } from "../../lib/delivery";
+import { getCommissionPercent } from "../../lib/commission";
 
-const DEFAULT_COMMISSION_PERCENT = 65;
 const MAX_QUANTITY = 10;
-
-async function getCommissionPercent(): Promise<number> {
-  try {
-    const setting = await prisma.setting.findUnique({ where: { key: "commissionPercent" } });
-    const parsed = parseFloat(setting?.value ?? "");
-    if (Number.isFinite(parsed) && parsed >= 0 && parsed <= 100) return parsed;
-  } catch {}
-  return DEFAULT_COMMISSION_PERCENT;
-}
 
 export async function POST(req: Request) {
   try {
@@ -24,7 +15,7 @@ export async function POST(req: Request) {
 
     const body = await req.json();
     const { productId, quantity: rawQty } = body;
-    const userId = (session.user as any).id;
+    const userId = (session.user as { id: string }).id;
 
     if (!productId || typeof productId !== "string") {
       return NextResponse.json({ error: "Missing productId" }, { status: 400 });
@@ -157,8 +148,8 @@ export async function POST(req: Request) {
     } catch {}
 
     return NextResponse.json(order, { status: 201 });
-  } catch (error: any) {
-    if (error?.code === "P2025") {
+  } catch (error) {
+    if (error instanceof Error && "code" in error && error.code === "P2025") {
       return NextResponse.json({ error: "Insufficient balance" }, { status: 400 });
     }
     return NextResponse.json({ error: "Server error", details: String(error) }, { status: 500 });
@@ -170,7 +161,7 @@ export async function GET() {
     const session = await auth();
     if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const userId = (session.user as any).id;
+    const userId = (session.user as { id: string }).id;
 
     const orders = await prisma.order.findMany({
       where: { buyerId: userId },
