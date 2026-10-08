@@ -73,7 +73,8 @@ const categories = [
     { name: "country", label: "Country", type: "country", required: true },
     { name: "accountType", label: "Account Type", type: "select", required: true, options: ["Checking", "Savings", "Business", "Crypto"] },
     { name: "balance", label: "Balance (USD)", type: "number", required: false },
-    { name: "login", label: "Login", type: "text", required: false },
+    { name: "login", label: "Login", type: "text", required: true, visible: false, preview: "***" },
+    { name: "password", label: "Password", type: "text", required: true, visible: false, preview: "***" },
     { name: "price", label: "Price (USD)", type: "number", required: true },
   ]},
   { name: "Premium/Dating/Shop", slug: "premium", icon: "Sparkles", order: 9, fields: [
