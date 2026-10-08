@@ -3,6 +3,8 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import { prisma } from "@/lib/prisma";
+import { sanitizeTelegramUrl } from "@/lib/settings";
+import { TelegramJoin } from "./components/TelegramJoin";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -30,15 +32,21 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   let primaryColor = "#dc2626";
+  let telegramUrl = "";
   try {
-    const s = await prisma.setting.findUnique({ where: { key: "primaryColor" } });
-    if (s?.value) primaryColor = s.value;
+    const [pc, tg] = await Promise.all([
+      prisma.setting.findUnique({ where: { key: "primaryColor" } }),
+      prisma.setting.findUnique({ where: { key: "telegramUrl" } }),
+    ]);
+    if (pc?.value) primaryColor = pc.value;
+    telegramUrl = sanitizeTelegramUrl(tg?.value);
   } catch {}
 
   return (
     <html lang="en" style={{ ["--brand-color" as any]: primaryColor }}>
       <body className={`${inter.className} bg-zinc-950 text-white`}>
         <Providers>{children}</Providers>
+        <TelegramJoin url={telegramUrl} />
       </body>
     </html>
   );

@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { SellerSidebar } from "./seller-sidebar";
-import { TelegramJoin } from "../components/TelegramJoin";
 
 export default async function SellerLayout({
   children,
@@ -19,10 +18,5 @@ export default async function SellerLayout({
     redirect("/dashboard");
   }
 
-  return (
-    <SellerSidebar>
-      {children}
-      <TelegramJoin />
-    </SellerSidebar>
-  );
+  return <SellerSidebar>{children}</SellerSidebar>;
 }

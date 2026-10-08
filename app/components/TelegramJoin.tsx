@@ -1,20 +1,16 @@
-import { prisma } from "@/lib/prisma";
-import { sanitizeTelegramUrl } from "@/lib/settings";
+"use client";
+
+import { usePathname } from "next/navigation";
 
 /**
- * Floating "join our Telegram channel" icon. Server-rendered so it is part
- * of the first paint on every signed-in page (no client fetch, no flash).
- * Renders nothing while the admin has not set a valid channel link.
+ * Floating "join our Telegram channel" icon. The URL arrives as a prop from
+ * the root layout, so the anchor is part of the server-rendered HTML on every
+ * page (no client fetch, no flash). Stays off the admin panel, where it adds
+ * nothing, and renders nothing while the setting is empty or invalid.
  */
-export async function TelegramJoin() {
-  let url = "";
-  try {
-    const row = await prisma.setting.findUnique({ where: { key: "telegramUrl" } });
-    url = sanitizeTelegramUrl(row?.value);
-  } catch {
-    return null;
-  }
-  if (!url) return null;
+export function TelegramJoin({ url }: { url: string }) {
+  const pathname = usePathname();
+  if (!url || pathname?.startsWith("/admin")) return null;
 
   return (
     <a

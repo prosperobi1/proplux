@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { AdminSidebar } from "./admin-sidebar";
-import { TelegramJoin } from "../components/TelegramJoin";
 
 export default async function AdminLayout({
   children,
@@ -18,10 +17,5 @@ export default async function AdminLayout({
     redirect("/dashboard");
   }
 
-  return (
-    <AdminSidebar>
-      {children}
-      <TelegramJoin />
-    </AdminSidebar>
-  );
+  return <AdminSidebar>{children}</AdminSidebar>;
 }
