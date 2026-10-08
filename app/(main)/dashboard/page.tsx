@@ -40,7 +40,6 @@ export default function DashboardPage() {
   const [me, setMe] = useState<Me | null>(null);
   const [news, setNews] = useState<NewsItem[]>([]);
   const [openTickets, setOpenTickets] = useState(0);
-  const [telegramUrl, setTelegramUrl] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -57,16 +56,14 @@ export default function DashboardPage() {
       fetch("/api/me").then((res) => res.json()),
       fetch("/api/news").then((res) => res.json()),
       fetch("/api/tickets").then((res) => res.json()),
-      fetch("/api/settings/public").then((res) => res.json()),
     ])
-      .then(([ordersData, meData, newsData, ticketsData, pubData]) => {
+      .then(([ordersData, meData, newsData, ticketsData]) => {
         setOrders(Array.isArray(ordersData) ? ordersData : []);
         setMe(meData && !meData.error ? meData : null);
         setNews(Array.isArray(newsData) ? newsData.slice(0, 3) : []);
         if (Array.isArray(ticketsData)) {
           setOpenTickets(ticketsData.filter((t: { status?: string }) => t.status === "OPEN").length);
         }
-        setTelegramUrl(typeof pubData?.telegramUrl === "string" ? pubData.telegramUrl : "");
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -176,22 +173,6 @@ export default function DashboardPage() {
             ))}
           </div>
         </div>
-      )}
-
-      {/* Join the Telegram channel; hidden until an admin sets the link */}
-      {telegramUrl && (
-        <a
-          href={telegramUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          title="Join the Telegram channel"
-          aria-label="Join the Telegram channel"
-          className="fixed bottom-5 right-5 z-30 flex h-12 w-12 items-center justify-center rounded-full bg-[#2AABEE] shadow-lg shadow-black/40 transition hover:brightness-110"
-        >
-          <svg viewBox="0 0 24 24" fill="white" className="h-6 w-6" aria-hidden="true">
-            <path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.33 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z" />
-          </svg>
-        </a>
       )}
 
     </div>

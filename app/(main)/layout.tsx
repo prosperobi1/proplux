@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { SidebarLayout } from "../sidebar-layout";
+import { TelegramJoin } from "../components/TelegramJoin";
 
 export default async function MainLayout({
   children,
@@ -11,5 +12,10 @@ export default async function MainLayout({
   if (!session?.user) {
     redirect("/login");
   }
-  return <SidebarLayout>{children}</SidebarLayout>;
+  return (
+    <SidebarLayout>
+      {children}
+      <TelegramJoin />
+    </SidebarLayout>
+  );
 }

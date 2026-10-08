@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { minVisible } from "@/lib/ui";
+import { sanitizeTelegramUrl } from "@/lib/settings";
 import { Loader2, Save, Globe, DollarSign, Mail, Bell, ToggleLeft, X, CheckCircle2, Eye, EyeOff } from "lucide-react";
 import { LocalUpload } from "../../components/LocalUpload";
 
@@ -85,7 +86,7 @@ export default function AdminSettingsPage() {
       return;
     }
     const tg = (settings.telegramUrl || "").trim();
-    if (tg && !/^https:\/\/(t\.me|telegram\.me)(\/|$)/.test(tg)) {
+    if (tg && !sanitizeTelegramUrl(tg)) {
       setError("Telegram Channel must be a link like https://t.me/yourchannel.");
       return;
     }

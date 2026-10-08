@@ -6,7 +6,7 @@ export async function GET() {
     const settings = await prisma.setting.findMany({
       where: {
         key: {
-          in: ["siteName", "logoUrl", "reportWindowHours", "minDeposit", "paymentAutoEnabled", "telegramUrl"],
+          in: ["siteName", "logoUrl", "reportWindowHours", "minDeposit", "paymentAutoEnabled"],
         },
       },
       select: { key: true, value: true },
@@ -17,7 +17,6 @@ export async function GET() {
 
     const hours = parseInt(map.reportWindowHours ?? "", 10);
     const min = Number(map.minDeposit ?? "");
-    const tg = (map.telegramUrl ?? "").trim();
 
     return NextResponse.json({
       siteName: map.siteName || "Proplux",
@@ -28,9 +27,6 @@ export async function GET() {
       minDeposit: Number.isFinite(min) && min > 0 ? min : 10,
       // Matches the create route: without a row, deposits are disabled.
       paymentAutoEnabled: map.paymentAutoEnabled === "true",
-      // Only real Telegram links reach the client; anything else is
-      // treated as "not configured" so the dashboard icon stays hidden.
-      telegramUrl: /^https:\/\/(t\.me|telegram\.me)(\/|$)/.test(tg) ? tg : "",
     });
   } catch {
     return NextResponse.json({
@@ -39,7 +35,6 @@ export async function GET() {
       reportWindowHours: 16,
       minDeposit: 10,
       paymentAutoEnabled: false,
-      telegramUrl: "",
     });
   }
 }

@@ -42,3 +42,10 @@ export const WRITABLE_SETTING_KEYS = [
 export function isWritableSettingKey(key: unknown): key is string {
   return typeof key === "string" && (WRITABLE_SETTING_KEYS as readonly string[]).includes(key);
 }
+
+/** Accepts only https://t.me/... or https://telegram.me/... links; empty otherwise. */
+export function sanitizeTelegramUrl(value: unknown): string {
+  if (typeof value !== "string") return "";
+  const v = value.trim();
+  return /^https:\/\/(t\.me|telegram\.me)(\/|$)/.test(v) ? v : "";
+}
