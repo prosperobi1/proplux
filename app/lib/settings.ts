@@ -20,6 +20,7 @@ export const WRITABLE_SETTING_KEYS = [
   "reportWindowHours",
   "supportEmail",
   "adminAlertEmail",
+  "telegramUrl",
   "smtpEnabled",
   "smtpHost",
   "smtpPort",

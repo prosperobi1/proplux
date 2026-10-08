@@ -20,6 +20,7 @@ const SETTINGS_KEYS = [
   "reportWindowHours",
   "supportEmail",
   "adminAlertEmail",
+  "telegramUrl",
   "smtpEnabled",
   "smtpHost",
   "smtpPort",
@@ -81,6 +82,11 @@ export default function AdminSettingsPage() {
     const pc = (settings.primaryColor || "").trim();
     if (pc && !/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(pc)) {
       setError("Primary Color must be a hex color like #dc2626.");
+      return;
+    }
+    const tg = (settings.telegramUrl || "").trim();
+    if (tg && !/^https:\/\/(t\.me|telegram\.me)(\/|$)/.test(tg)) {
+      setError("Telegram Channel must be a link like https://t.me/yourchannel.");
       return;
     }
     const vis = minVisible();
@@ -291,6 +297,13 @@ export default function AdminSettingsPage() {
               value={settings.adminAlertEmail || ""}
               onChange={(v) => update("adminAlertEmail", v)}
               hint="Receive notifications for new orders and withdrawal requests."
+            />
+            <Field
+              label="Telegram Channel"
+              value={settings.telegramUrl || ""}
+              onChange={(v) => update("telegramUrl", v)}
+              placeholder="https://t.me/yourchannel"
+              hint="Shows a join icon on the dashboard. Leave empty to hide it."
             />
           </div>
         </section>
