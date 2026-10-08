@@ -10,35 +10,30 @@ self.addEventListener("activate", function (event) {
   event.waitUntil(self.clients.claim());
 });
 
-function skipHeader(source) {
-  var headers = new Headers(source.headers);
-  headers.set("ngrok-skip-browser-warning", "1");
-  return headers;
-}
-
 self.addEventListener("fetch", function (event) {
   var url = new URL(event.request.url);
   if (url.hostname.indexOf("ngrok-free") === -1) return;
 
-  // Chrome refuses to rebuild navigate requests with extra headers, so
-  // page loads are re-issued against the same URL with the header added.
-  if (event.request.mode === "navigate" && event.request.method === "GET") {
-    event.respondWith(
-      fetch(event.request.url, {
-        headers: skipHeader(event.request),
-        credentials: event.request.credentials,
-      }).catch(function () {
-        return fetch(event.request);
-      })
-    );
-    return;
+  var headers = new Headers(event.request.headers);
+  headers.set("ngrok-skip-browser-warning", "1");
+
+  // Everything is re-issued by URL. Rebuilding from the original request
+  // fails for no-cors styles and scripts (extra headers rejected) and for
+  // streamed POST bodies (missing duplex).
+  var init = {
+    method: event.request.method,
+    headers: headers,
+    credentials: event.request.credentials,
+    redirect: event.request.redirect,
+  };
+  if (event.request.method !== "GET" && event.request.method !== "HEAD") {
+    init.body = event.request.body;
+    init.duplex = "half";
   }
 
   event.respondWith(
-    fetch(new Request(event.request, { headers: skipHeader(event.request), credentials: event.request.credentials })).catch(
-      function () {
-        return fetch(event.request);
-      }
-    )
+    fetch(event.request.url, init).catch(function () {
+      return fetch(event.request);
+    })
   );
 });
