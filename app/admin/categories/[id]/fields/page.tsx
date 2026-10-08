@@ -143,7 +143,7 @@ export default function CategoryFieldsPage() {
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white">{category.name} — Fields</h1>
+          <h1 className="text-2xl font-bold text-white">{category.name} · Fields</h1>
           <p className="mt-1 text-xs text-zinc-500">
             Configure what sellers fill in when listing a <strong>{category.name}</strong> product.
           </p>

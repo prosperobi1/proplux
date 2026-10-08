@@ -68,7 +68,7 @@ export async function POST(req: Request) {
         '<p style="margin:0 0 12px 0;">Hi,</p>' +
           '<p style="margin:0 0 12px 0;">This is a test email from <strong>' +
           siteName +
-          "</strong>. SMTP is configured correctly — site notifications (password resets, order alerts, ticket replies) will be delivered through this server.</p>" +
+          "</strong>. SMTP is configured correctly. Site notifications (password resets, order alerts, ticket replies) will be delivered through this server.</p>" +
           '<p style="margin:0;font-size:13px;color:#52525b;">Sent to ' + to + "</p>",
         siteName
       ),

@@ -104,7 +104,7 @@ export async function PATCH(
     data.deliveryType = deliveryType;
   }
   if (fileUrl !== undefined && fileUrl !== null && fileUrl !== "" && !isValidFileUrl(fileUrl)) {
-    return NextResponse.json({ error: "Invalid delivery link — use an http(s) URL or an uploaded file" }, { status: 400 });
+    return NextResponse.json({ error: "Invalid delivery link. Use an http(s) URL or an uploaded file" }, { status: 400 });
   }
   if (fileUrl !== undefined) {
     data.fileUrl = typeof fileUrl === "string" && fileUrl ? fileUrl : null;

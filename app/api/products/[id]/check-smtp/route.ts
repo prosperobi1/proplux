@@ -23,14 +23,14 @@ function friendly(err: unknown): string {
   const e = err as { code?: string; message?: string };
   const code = e?.code || "";
   const msg = String(e?.message || err || "Unknown error");
-  if (code === "EAUTH") return "Login failed — the email or password is wrong.";
-  if (code === "ECONNREFUSED") return "Connection refused — the host or port looks wrong.";
-  if (code === "ENOTFOUND") return "Host not found — check the host value.";
-  if (code === "ETIMEDOUT" || code === "EDNS") return "Connection timed out — the server did not answer.";
+  if (code === "EAUTH") return "Login failed. The email or password is wrong.";
+  if (code === "ECONNREFUSED") return "Connection refused. The host or port looks wrong.";
+  if (code === "ENOTFOUND") return "Host not found. Check the host value.";
+  if (code === "ETIMEDOUT" || code === "EDNS") return "Connection timed out. The server did not answer.";
   if (code === "ECONNRESET" || code === "EPIPE") return "The server dropped the connection.";
-  if (code === "ECONNECTION") return "Could not connect in time — try again.";
+  if (code === "ECONNECTION") return "Could not connect in time. Try again.";
   if (code === "EMESSAGE") return "The server rejected the message.";
-  if (/tls|ssl|certificate/i.test(msg)) return "TLS/SSL error — check the security setting.";
+  if (/tls|ssl|certificate/i.test(msg)) return "TLS/SSL error. Check the security setting.";
   return msg.length > 160 ? msg.slice(0, 157) + "..." : msg;
 }
 
@@ -44,7 +44,7 @@ export async function POST(
     return await checkSmtp(req, ctx);
   } catch {
     return NextResponse.json(
-      { ok: false, message: "Something went wrong running the check — try again." },
+      { ok: false, message: "Something went wrong running the check. Try again." },
       { status: 500 }
     );
   }
@@ -67,7 +67,7 @@ async function checkSmtp(
   const recent = (hits.get(userId) || []).filter((t) => now - t < RATE_WINDOW_MS);
   if (recent.length >= RATE_MAX) {
     return NextResponse.json(
-      { ok: false, message: "Too many checks — wait a minute and try again." },
+      { ok: false, message: "Too many checks. Wait a minute and try again." },
       { status: 429 }
     );
   }
@@ -112,7 +112,7 @@ async function checkSmtp(
   if (type !== "SMTP") {
     return NextResponse.json({
       ok: false,
-      message: `This is an ${type} account — the email test only works for SMTP.`,
+      message: `This is an ${type} account. The email test only works for SMTP.`,
     });
   }
   if (!host || !user || !pass) {
@@ -131,7 +131,7 @@ async function checkSmtp(
     const hint = /^\d{1,6}$/.test(rawPort) ? ` (${rawPort})` : "";
     return NextResponse.json({
       ok: false,
-      message: `This listing has an invalid port${hint} — use a number between 1 and 65535.`,
+      message: `This listing has an invalid port${hint}. Use a number between 1 and 65535.`,
     });
   }
   const port = parsedPort;
@@ -155,7 +155,7 @@ async function checkSmtp(
       "Hi,\n\n" +
       "This is a test email sent through the SMTP account you are about to buy on Proplux. " +
       "If you are reading this, the SMTP works.\n\n" +
-      "— Proplux",
+      "Proplux",
   }).then(
     () => ({ ok: true as const }),
     (error: unknown) => ({ ok: false as const, error })
@@ -171,13 +171,13 @@ async function checkSmtp(
   if ("timedOut" in result) {
     return NextResponse.json({
       ok: false,
-      message: "No response within 12 seconds — try again.",
+      message: "No response within 12 seconds. Try again.",
     });
   }
   if (result.ok) {
     return NextResponse.json({
       ok: true,
-      message: `Test email sent to ${to} — give it a minute and check spam too.`,
+      message: `Test email sent to ${to}. Give it a minute and check spam too.`,
     });
   }
   return NextResponse.json({ ok: false, message: friendly(result.error) });

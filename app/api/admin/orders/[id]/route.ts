@@ -216,7 +216,7 @@ export async function PATCH(
       if (buyer?.email) {
         await sendEmail({
           to: buyer.email,
-          subject: `Order #${orderRef} cancelled — $${order.totalPrice.toFixed(2)} refunded on ${siteName}`,
+          subject: `Order #${orderRef} cancelled: $${order.totalPrice.toFixed(2)} refunded on ${siteName}`,
           html: emailLayout(
             '<p style="margin:0 0 12px 0;">Hi ' + escapeHtml(buyer.username) + ",</p>" +
               '<p style="margin:0 0 12px 0;">Your order <strong>#' + orderRef +
@@ -231,7 +231,7 @@ export async function PATCH(
       if (seller?.email) {
         await sendEmail({
           to: seller.email,
-          subject: `Order #${orderRef} cancelled — $${sellerCredit.toFixed(2)} deducted on ${siteName}`,
+          subject: `Order #${orderRef} cancelled: $${sellerCredit.toFixed(2)} deducted on ${siteName}`,
           html: emailLayout(
             '<p style="margin:0 0 12px 0;">Hi ' + escapeHtml(seller.username) + ",</p>" +
               '<p style="margin:0 0 12px 0;">The sale <strong>#' + orderRef + "</strong> (<strong>" +

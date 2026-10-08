@@ -106,7 +106,7 @@ export async function PATCH(
               subject: "Your withdrawal was paid",
               body:
                 '<p style="margin:0 0 12px 0;">Hi ' + escapeHtml(seller.username) + ",</p>" +
-                '<p style="margin:0 0 12px 0;">Good news — we sent <strong>' + amount + "</strong> to " + wallet +
+                '<p style="margin:0 0 12px 0;">Good news: we sent <strong>' + amount + "</strong> to " + wallet +
                 " (" + network + "). The amount has been deducted from your balance.</p>",
             },
           };
@@ -116,7 +116,7 @@ export async function PATCH(
 
           await sendEmail({
             to: seller.email,
-            subject: chosen.subject + " — " + siteName,
+            subject: chosen.subject + " on " + siteName,
             html: emailLayout(
               chosen.body +
                 '<p style="margin:24px 0;"><a href="' + baseUrl + '/seller/withdraw" style="background:#dc2626;color:#fff;text-decoration:none;padding:12px 20px;border-radius:6px;font-weight:600;display:inline-block;">View withdrawals</a></p>' +

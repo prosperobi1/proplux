@@ -96,7 +96,7 @@ export default function SellerToolPage() {
       return;
     }
     if (deliveryType === "file" && fileUrl && !isValidFileUrl(fileUrl)) {
-      setResponse("Invalid link — use an http(s) URL (e.g. https://mega.nz/...)");
+      setResponse("Invalid link. Use an http(s) URL (e.g. https://mega.nz/...)");
       await vis();
       setSaving(false);
       return;
@@ -112,7 +112,7 @@ export default function SellerToolPage() {
       return;
     }
     if (fields.length > 0 && deliveryType === "credentials" && !hasHiddenFields) {
-      setResponse("This category has no hidden fields — switch to Text List delivery, or ask the admin to add hidden fields.");
+      setResponse("This category has no hidden fields. Switch to Text List delivery, or ask the admin to add hidden fields.");
       await vis();
       setSaving(false);
       return;
@@ -186,7 +186,7 @@ export default function SellerToolPage() {
         [p.id]: { email, status: d.ok ? "ok" : "fail", message: d.message || (d.ok ? "Working" : "Check failed.") },
       }));
     } catch {
-      setChecks((prev) => ({ ...prev, [p.id]: { email, status: "fail", message: "Network error — try again." } }));
+      setChecks((prev) => ({ ...prev, [p.id]: { email, status: "fail", message: "Network error. Try again." } }));
     }
   };
 
@@ -204,7 +204,7 @@ export default function SellerToolPage() {
         [p.id]: { status: d.ok ? "ok" : "fail", message: d.message || (d.ok ? "Online" : "Check failed.") },
       }));
     } catch {
-      setChecks((prev) => ({ ...prev, [p.id]: { status: "fail", message: "Network error — try again." } }));
+      setChecks((prev) => ({ ...prev, [p.id]: { status: "fail", message: "Network error. Try again." } }));
     }
   };
 
@@ -449,7 +449,7 @@ export default function SellerToolPage() {
 
           <section className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-5 space-y-4">
             <div>
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-red-500">Step 1 — How buyers receive this</h3>
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-red-500">Step 1: How buyers receive this</h3>
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <button type="button" onClick={() => setDeliveryType("credentials")} className={`rounded-lg border p-4 text-left transition ${deliveryType === "credentials" ? "border-red-500 bg-red-950/30" : "border-zinc-800 bg-zinc-950 hover:border-zinc-700"}`}>
@@ -470,20 +470,20 @@ export default function SellerToolPage() {
             </div>
             {fields.length > 0 && deliveryType === "credentials" && !hasHiddenFields && (
               <p className="rounded-lg border border-yellow-900/60 bg-yellow-950/20 p-3 text-xs leading-relaxed text-yellow-400">
-                ⚠ This category has no hidden fields — there&apos;s nothing secret to deliver as
+                This category has no hidden fields, so there&apos;s nothing secret to deliver as
                 Login Credentials. Switch to <strong>Text List</strong>, or ask the admin to add
                 hidden fields to this category.
               </p>
             )}
             {deliveryType === "text" && (
               <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-4">
-                <label className="mb-2 block text-xs font-semibold uppercase text-zinc-500">Delivery content — what buyers receive after purchase</label>
+                <label className="mb-2 block text-xs font-semibold uppercase text-zinc-500">Delivery content: what buyers receive after purchase</label>
                 <textarea
                   value={textContent}
                   onChange={(e) => setTextContent(e.target.value)}
                   rows={8}
                   maxLength={MAX_TEXT_CONTENT}
-                  placeholder={"Paste the full list here — one entry per line…"}
+                  placeholder={"Paste the full list here, one entry per line…"}
                   className="mt-2 w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 font-mono text-xs text-white placeholder-zinc-600 focus:border-red-500 focus:outline-none"
                 />
                 <p className="mt-1 text-[11px] text-zinc-600">Only buyers who purchased see this. Line breaks are preserved.</p>
@@ -529,7 +529,7 @@ export default function SellerToolPage() {
 
           <section className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-5 space-y-4">
             <div>
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-red-500">Step 2 — Product Details</h3>
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-red-500">Step 2: Product Details</h3>
             </div>
             {displayFields.map((field) => (
               <div key={field.name}>
@@ -543,7 +543,7 @@ export default function SellerToolPage() {
 
           <section className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-5 space-y-4">
             <div>
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-red-500">Step 3 — Pricing</h3>
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-red-500">Step 3: Pricing</h3>
               <p className="mt-1 text-xs text-zinc-500">You earn 65% of every sale.</p>
             </div>
             <div>
@@ -590,7 +590,7 @@ export default function SellerToolPage() {
           {showTestCol && (
             <p className="text-xs text-zinc-500">
               {slug === "smtps"
-                ? "Test your own SMTP: enter an email and click Check — buyers run the same test before buying."
+                ? "Test your own SMTP: enter an email and click Check. Buyers run the same test before buying."
                 : "Test your own RDP: click Check to confirm the server is online and responding (login details aren't tested)."}
             </p>
           )}
@@ -632,7 +632,7 @@ export default function SellerToolPage() {
                           <button
                             onClick={() => deleteProduct(p.id)}
                             disabled={p.sold}
-                            title={p.sold ? "Can't delete — this listing has orders" : "Delete"}
+                            title={p.sold ? "Can't delete: this listing has orders" : "Delete"}
                             className="min-h-9 rounded bg-zinc-800 p-1.5 hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-40"
                           >
                             <Trash2 className="h-3.5 w-3.5 text-red-500" />
@@ -755,7 +755,7 @@ function MassAddTab({
       if (!confirm(parsedRows.filter((r) => !r.valid).length + " rows have errors and will be skipped. Continue?")) return;
     }
     if (massDeliveryType === "file" && !massFileUrl) { setMassResponse("Upload a file or paste a download link first"); return; }
-    if (massDeliveryType === "file" && !isValidFileUrl(massFileUrl)) { setMassResponse("Invalid link — use an http(s) URL (e.g. https://mega.nz/...)"); return; }
+    if (massDeliveryType === "file" && !isValidFileUrl(massFileUrl)) { setMassResponse("Invalid link. Use an http(s) URL (e.g. https://mega.nz/...)"); return; }
     if (massDeliveryType === "text" && (massTextContent.trim().length === 0 || massTextContent.length > MAX_TEXT_CONTENT)) {
       setMassResponse(massTextContent.trim() ? `Content too large (max ${MAX_TEXT_CONTENT} characters)` : "Paste the delivery content first");
       return;
@@ -816,13 +816,13 @@ function MassAddTab({
         </div>
         {massDeliveryType === "text" && (
           <div className="rounded-lg border border-zinc-800 bg-zinc-950 p-4">
-            <label className="mb-2 block text-xs font-semibold uppercase text-zinc-500">Delivery content (shared by all rows) — buyers receive this after purchase</label>
+            <label className="mb-2 block text-xs font-semibold uppercase text-zinc-500">Delivery content (shared by all rows, buyers receive this after purchase)</label>
             <textarea
               value={massTextContent}
               onChange={(e) => setMassTextContent(e.target.value)}
               rows={8}
               maxLength={MAX_TEXT_CONTENT}
-              placeholder={"Paste the full list here — one entry per line…"}
+              placeholder={"Paste the full list here, one entry per line…"}
               className="mt-2 w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 font-mono text-xs text-white placeholder-zinc-600 focus:border-red-500 focus:outline-none"
             />
             <p className="mt-1 text-[11px] text-zinc-600">Only buyers who purchased see this. Line breaks are preserved.</p>
@@ -1037,7 +1037,7 @@ function CountryCombobox({
           )}
           {filtered.length > 100 && (
             <p className="border-t border-zinc-800 px-3 py-2 text-[10px] text-zinc-500">
-              {filtered.length - 100} more — keep typing to narrow
+              {filtered.length - 100} more, keep typing to narrow
             </p>
           )}
         </div>

@@ -89,7 +89,7 @@ export default function AdminToolsPage() {
       if (viewing?.id === p.id) setViewing(null);
     } catch {
       await vis();
-      alert("Network error — could not delete this listing.");
+      alert("Network error. Could not delete this listing.");
     } finally {
       setDeletingId(null);
     }
@@ -152,7 +152,7 @@ export default function AdminToolsPage() {
       return;
     }
     if (edit.deliveryType === "text" && !edit.textContent.trim()) {
-      setEditErr("Text delivery needs content — paste the list.");
+      setEditErr("Text delivery needs content. Paste the list.");
       return;
     }
     if (edit.textContent.length > MAX_TEXT_CONTENT) {
@@ -202,7 +202,7 @@ export default function AdminToolsPage() {
     } catch {
       await vis();
       setSaving(false);
-      setEditErr("Network error — try again.");
+      setEditErr("Network error. Try again.");
     }
   };
 
@@ -249,7 +249,7 @@ export default function AdminToolsPage() {
       <p className="text-sm text-zinc-400">
         Every product listed across every seller. Use category tabs to filter, search by the
         product ID shown on listings and in reports/tickets, or remove a bad listing with the
-        delete action — listings with order history can&apos;t be deleted.
+        delete action. Listings with order history can&apos;t be deleted.
       </p>
 
       <div className="flex flex-wrap gap-2">
@@ -348,7 +348,7 @@ export default function AdminToolsPage() {
                       <button
                         onClick={() => deleteProduct(p)}
                         disabled={p.sold || deletingId === p.id}
-                        title={p.sold ? "Can't delete — this listing has orders" : "Delete listing"}
+                        title={p.sold ? "Can't delete: this listing has orders" : "Delete listing"}
                         className="flex min-h-9 min-w-9 items-center justify-center rounded bg-zinc-800 p-1.5 hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-40"
                       >
                         {deletingId === p.id ? (

@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata = {
   description:
-    "Secure multi-vendor digital marketplace — escrow-backed transactions, instant delivery and buyer protection on every order.",
+    "Secure multi-vendor digital marketplace with escrow-backed transactions, instant delivery and buyer protection on every order.",
 };
 
 const BRAND = "var(--brand-color, #dc2626)";

@@ -127,7 +127,7 @@ export default function AdminPaymentsPage() {
       await vis();
       setTesting(false);
       if (d.ok) {
-        const proof = d.sample ? ` — 10 USD ≈ ${d.sample} ${d.currency || ""}` : "";
+        const proof = d.sample ? `, 10 USD ≈ ${d.sample} ${d.currency || ""}` : "";
         setTestResult({ ok: true, msg: `Credentials OK${proof}` });
       } else {
         setTestResult({ ok: false, msg: d.error || `Test failed (${res.status})` });
@@ -135,7 +135,7 @@ export default function AdminPaymentsPage() {
     } catch {
       await vis();
       setTesting(false);
-      setTestResult({ ok: false, msg: "Network error — try again." });
+      setTestResult({ ok: false, msg: "Network error. Try again." });
     }
   };
 
@@ -182,7 +182,7 @@ export default function AdminPaymentsPage() {
                 <Bitcoin className="h-5 w-5 text-yellow-500" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-white">Auto Payments — NOWPayments (Crypto)</h2>
+                <h2 className="text-lg font-semibold text-white">Auto Payments: NOWPayments (Crypto)</h2>
                 <p className="mt-1 text-sm text-zinc-400">
                   Buyers fund their balance with crypto. Balance is credited automatically when the network confirms payment.
                 </p>
@@ -318,7 +318,7 @@ export default function AdminPaymentsPage() {
                 {testing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4 text-yellow-500" />}
                 Test saved credentials
               </button>
-              <span className="text-[11px] text-zinc-600">Tests the stored key — Save first after changing it.</span>
+              <span className="text-[11px] text-zinc-600">Tests the stored key. Save first after changing it.</span>
               {testResult && (
                 <span className={`text-xs font-medium ${testResult.ok ? "text-green-500" : "text-red-400"}`}>
                   {testResult.ok ? `✓ ${testResult.msg}` : `✗ ${testResult.msg}`}

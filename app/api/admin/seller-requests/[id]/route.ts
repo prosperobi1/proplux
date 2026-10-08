@@ -63,7 +63,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         ? "Your seller request has been approved"
         : "Your seller request was reviewed";
       const bodyHtml = status === "APPROVED"
-        ? "<p>Hi " + request.user.username + ",</p><p>Great news — your seller request has been <strong>approved</strong>. You can now access your Seller Panel and start listing products.</p>"
+        ? "<p>Hi " + request.user.username + ",</p><p>Great news: your seller request has been <strong>approved</strong>. You can now access your Seller Panel and start listing products.</p>"
         : "<p>Hi " + request.user.username + ",</p><p>Your seller request was not approved.</p>" +
           (reviewNote ? "<p><strong>Reason:</strong> " + String(reviewNote).replace(/</g, "&lt;") + "</p>" : "");
 

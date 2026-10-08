@@ -23,7 +23,7 @@ export default async function PrivacyPage() {
         <ul className="list-disc space-y-1.5 pl-5">
           <li>
             <strong className="text-zinc-200">Account data:</strong> e-mail address,
-            username and password (stored only as a salted hash — never in plain text).
+            username and password (stored only as a salted hash, never in plain text).
           </li>
           <li>
             <strong className="text-zinc-200">Financial data:</strong> balance, deposits,
@@ -59,7 +59,7 @@ export default async function PrivacyPage() {
       <Clause n="03" title="Payments">
         <p>
           Deposits are processed by an independent third-party payment processor. We never
-          see, receive or store card or bank details — only the confirmation needed to
+          see, receive or store card or bank details, only the confirmation needed to
           credit your balance. Cryptocurrency transfers are recorded on their respective
           networks and are irreversible under the processor&apos;s rules.
         </p>
@@ -135,15 +135,15 @@ export default async function PrivacyPage() {
           and third-party marks remain the property of their respective owners.
         </p>
         <p>
-          Content purchased through the marketplace — including listings, files, tutorials
-          and scripts — remains subject to the use limitations in our Terms of Service.
+          Content purchased through the marketplace, including listings, files, tutorials
+          and scripts, remains subject to the use limitations in our Terms of Service.
         </p>
       </Clause>
 
       <Clause n="12" title="Contact">
         <p>
           Questions about this policy can be sent through the ticket system inside your
-          account — every request is reviewed by staff.
+          account. Every request is reviewed by staff.
         </p>
       </Clause>
     </LegalPage>

@@ -43,7 +43,7 @@ export default async function NotFound() {
         </h1>
 
         <p className="mt-3 text-sm text-zinc-400">
-          Route not found — this page doesn&apos;t exist or was moved.
+          Route not found. This page doesn&apos;t exist or was moved.
         </p>
 
         <div className="mt-6 flex flex-wrap justify-center gap-3">

@@ -100,9 +100,9 @@ export default function BecomeSellerPage() {
           <h2 className="mb-2 font-semibold text-red-500">Your Features</h2>
           <ul className="list-disc space-y-1 pl-5 text-sm text-zinc-300">
             <li>You get <strong>65%</strong> of your sales</li>
-            <li><strong>Withdraw to your crypto wallet any time</strong> — no delays</li>
+            <li><strong>Withdraw to your crypto wallet any time</strong>, no delays</li>
             <li>You get paid with the fastest</li>
-            <li>You can sell any tool you like with no limit and choose your price!</li>
+            <li>You can sell any tool you like with no limit and choose your price.</li>
             <li>You will have your own Panel with tons of options</li>
           </ul>
         </div>
@@ -111,7 +111,7 @@ export default function BecomeSellerPage() {
           <h2 className="mb-2 font-semibold text-red-500">Our Rules</h2>
           <ul className="list-disc space-y-1 pl-5 text-sm text-zinc-300">
             <li>All the tools have to be Fresh and not used or sold before.</li>
-            <li>Don&apos;t try XSS / SQL Injection / add (minus) price and buy it — it will not work.</li>
+            <li>Don&apos;t try XSS / SQL Injection / add (minus) price and buy it. It will not work.</li>
             <li>Do not put links of other stores (e-mails) or any ads.</li>
             <li>Don&apos;t try to contact with buyer, and if this happens, you will be banned automatically.</li>
           </ul>

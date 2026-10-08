@@ -92,7 +92,7 @@ export async function POST(
     return await checkRdp(req, ctx);
   } catch {
     return NextResponse.json(
-      { ok: false, message: "Something went wrong running the check — try again." },
+      { ok: false, message: "Something went wrong running the check. Try again." },
       { status: 500 }
     );
   }
@@ -115,7 +115,7 @@ async function checkRdp(
   const recent = (hits.get(userId) || []).filter((t) => now - t < RATE_WINDOW_MS);
   if (recent.length >= RATE_MAX) {
     return NextResponse.json(
-      { ok: false, message: "Too many checks — wait a minute and try again." },
+      { ok: false, message: "Too many checks. Wait a minute and try again." },
       { status: 429 }
     );
   }
@@ -154,7 +154,7 @@ async function checkRdp(
     const hint = /^\d{1,6}$/.test(rawPort) ? ` (${rawPort})` : "";
     return NextResponse.json({
       ok: false,
-      message: `This listing has an invalid port${hint} — use a number between 1 and 65535.`,
+      message: `This listing has an invalid port${hint}. Use a number between 1 and 65535.`,
     });
   }
   const port = parsedPort;
@@ -165,7 +165,7 @@ async function checkRdp(
   } catch {
     return NextResponse.json({
       ok: false,
-      message: "Could not run the check — verify the IP/Host value.",
+      message: "Could not run the check. Verify the IP/Host value.",
     });
   }
 
@@ -183,22 +183,22 @@ async function checkRdp(
     case "refused":
       return NextResponse.json({
         ok: false,
-        message: "Connection refused — the server looks offline or the port is blocked.",
+        message: "Connection refused. The server looks offline or the port is blocked.",
       });
     case "unreachable":
       return NextResponse.json({
         ok: false,
-        message: "Host unreachable — check the IP or try again later.",
+        message: "Host unreachable. Check the IP or try again later.",
       });
     case "nohost":
       return NextResponse.json({
         ok: false,
-        message: "Host not found — check the IP/Host value.",
+        message: "Host not found. Check the IP/Host value.",
       });
     default:
       return NextResponse.json({
         ok: false,
-        message: "Connection timed out — the server may be down or firewalled.",
+        message: "Connection timed out. The server may be down or firewalled.",
       });
   }
 }

@@ -161,7 +161,7 @@ export default function AdminCategoriesPage() {
             onChange={(e) => setGroupId(e.target.value)}
             className="rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-white"
           >
-            <option value="">— None —</option>
+            <option value="">None</option>
             {groups.map((g) => (
               <option key={g.id} value={g.id}>{g.name}</option>
             ))}
@@ -249,7 +249,7 @@ export default function AdminCategoriesPage() {
                         className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${
                           c.sellOnce ? "bg-red-950 text-red-400" : "bg-zinc-800 text-zinc-500"
                         }`}
-                        title={c.sellOnce ? "Sold once — hidden after purchase" : "Unlimited — can be sold many times"}
+                        title={c.sellOnce ? "Sold once, hidden after purchase" : "Unlimited, can be sold many times"}
                       >
                         {c.sellOnce ? "Yes" : "No"}
                       </button>
@@ -261,7 +261,7 @@ export default function AdminCategoriesPage() {
                           onChange={(e) => setEditGroupId(e.target.value)}
                           className="rounded border border-zinc-700 bg-zinc-900 px-2 py-1 text-white text-xs"
                         >
-                          <option value="">— None —</option>
+                          <option value="">None</option>
                           {groups.map((g) => (
                             <option key={g.id} value={g.id}>{g.name}</option>
                           ))}

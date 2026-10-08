@@ -182,7 +182,7 @@ function ProductsContent() {
     } catch {
       setSmtpChecks((prev) => ({
         ...prev,
-        [p.id]: { email, status: "fail", message: "Network error — try again." },
+        [p.id]: { email, status: "fail", message: "Network error. Try again." },
       }));
     }
   };
@@ -248,7 +248,7 @@ function ProductsContent() {
     } catch {
       setRdpChecks((prev) => ({
         ...prev,
-        [p.id]: { status: "fail", message: "Network error — try again." },
+        [p.id]: { status: "fail", message: "Network error. Try again." },
       }));
     }
   };
@@ -359,7 +359,7 @@ function ProductsContent() {
       {isSmtpCategory && (
         <p className="text-xs text-zinc-500">
           Test before buying: enter your email and click{" "}
-          <span className="font-semibold text-zinc-300">Check</span> — a working SMTP sends you a
+          <span className="font-semibold text-zinc-300">Check</span>. A working SMTP sends you a
           test email immediately. You can still buy either way.
         </p>
       )}
@@ -554,7 +554,7 @@ function ProductsContent() {
               </span>
               {!canAfford && (
                 <span className="text-xs text-red-400">
-                  · Insufficient balance — need ${shortfall.toFixed(2)} more
+                  · Insufficient balance: need ${shortfall.toFixed(2)} more
                 </span>
               )}
             </div>

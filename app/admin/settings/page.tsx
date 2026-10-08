@@ -303,7 +303,7 @@ export default function AdminSettingsPage() {
                 <Mail className="h-5 w-5 text-red-500" /> Email (SMTP)
               </h2>
               <p className="mt-1 text-sm text-zinc-500">
-                Site emails — password resets, order alerts, ticket replies — are sent through this SMTP server.
+                Site emails (password resets, order alerts, ticket replies) are sent through this SMTP server.
               </p>
             </div>
             <button

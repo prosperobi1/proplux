@@ -1,4 +1,4 @@
-# Proplux — Multi-Vendor Digital Marketplace
+# Proplux - Multi-Vendor Digital Marketplace
 
 A modern multi-vendor marketplace built with Next.js 16, TypeScript, Prisma, and NextAuth. Three roles: BUYER, SELLER, ADMIN.
 
@@ -50,7 +50,6 @@ Then edit .env:
 
 4. Seed initial data
 
-    npx tsx prisma/seed.ts
     npx tsx prisma/seed-categories.ts
     npx tsx prisma/seed-settings.ts
 

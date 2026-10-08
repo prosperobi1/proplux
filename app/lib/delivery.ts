@@ -88,7 +88,7 @@ export function categoryHasHiddenFields(fields: unknown): boolean {
 }
 
 export const CREDENTIALS_NO_HIDDEN_ERROR =
-  "This category has no hidden fields — credentials delivery would send nothing new. Use Text List delivery, or add hidden fields to the category in Admin → Categories.";
+  "This category has no hidden fields, so credentials delivery would send nothing new. Use Text List delivery, or add hidden fields to the category in Admin → Categories.";
 
 /**
  * Names of required category fields that are missing/blank in metadata.

@@ -370,10 +370,10 @@ export default function MyOrdersPage() {
             </p>
             <p className="mt-1 text-zinc-400">
               {success.owned
-                ? "You already own this order — no new charge. Your delivery is open."
+                ? "You already own this order. No new charge. Your delivery is open."
                 : success.count > 1
-                  ? `${success.count} orders placed${success.amount !== null ? ` — $${success.amount.toFixed(2)} deducted` : ""}. The newest are at the top of your list.`
-                  : `Payment confirmed${success.amount !== null ? ` — $${success.amount.toFixed(2)} deducted` : ""}. Your delivery is unlocked.`}
+                  ? `${success.count} orders placed${success.amount !== null ? `, $${success.amount.toFixed(2)} deducted` : ""}. The newest are at the top of your list.`
+                  : `Payment confirmed${success.amount !== null ? `, $${success.amount.toFixed(2)} deducted` : ""}. Your delivery is unlocked.`}
             </p>
           </div>
           <button
@@ -718,8 +718,8 @@ export default function MyOrdersPage() {
                 {success?.orderId && openOrder.id === success.orderId && (
                   <p className="mt-1.5 font-mono text-[11px] font-bold uppercase tracking-widest text-red-500">
                     {success.owned
-                      ? "You already own this — no new charge"
-                      : `✓ Purchase successful${success.amount !== null ? ` — $${success.amount.toFixed(2)} deducted` : ""}`}
+                      ? "You already own this, no new charge"
+                      : `✓ Purchase successful${success.amount !== null ? `, $${success.amount.toFixed(2)} deducted` : ""}`}
                   </p>
                 )}
               </div>

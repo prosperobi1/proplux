@@ -48,7 +48,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "File delivery requires an uploaded file or a download link" }, { status: 400 });
   }
   if (dt === "file" && fileUrl !== undefined && fileUrl !== null && fileUrl !== "" && !isValidFileUrl(fileUrl)) {
-    return NextResponse.json({ error: "Invalid delivery link — use an http(s) URL or an uploaded file" }, { status: 400 });
+    return NextResponse.json({ error: "Invalid delivery link. Use an http(s) URL or an uploaded file" }, { status: 400 });
   }
   if (dt === "text" && (typeof textContent !== "string" || !textContent.trim())) {
     return NextResponse.json({ error: "Text delivery requires delivery content" }, { status: 400 });

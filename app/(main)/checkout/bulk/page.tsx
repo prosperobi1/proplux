@@ -138,7 +138,7 @@ function BulkCheckoutContent() {
 
       <div className="rounded-lg border border-red-900/50 bg-red-950/20 p-6">
         <h2 className="flex items-center gap-2 text-lg font-semibold text-red-500">
-          <ShoppingCart className="h-5 w-5" /> Bulk Purchase — Confirm
+          <ShoppingCart className="h-5 w-5" /> Confirm Bulk Purchase
         </h2>
         <p className="mt-2 text-sm text-zinc-400">
           Confirming will charge your account balance and credit each seller.
@@ -150,7 +150,7 @@ function BulkCheckoutContent() {
           <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-400" />
           <div className="flex-1">
             <p className="text-sm font-semibold text-red-400">
-              Insufficient balance — you need ${shortfall.toFixed(2)} more.
+              Insufficient balance. You need ${shortfall.toFixed(2)} more.
             </p>
             <p className="mt-1 text-xs text-red-300/80">
               Your balance: ${balance.toFixed(2)} · Total: ${totalPrice.toFixed(2)}

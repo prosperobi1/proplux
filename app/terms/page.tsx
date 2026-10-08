@@ -53,7 +53,7 @@ export default async function TermsPage() {
       <Clause n="05" title="Limitation of Liability">
         <p>
           In no event shall {siteName} be liable for any direct, indirect, punitive,
-          incidental or special consequential damages whatsoever — whether arising out of or
+          incidental or special consequential damages whatsoever, whether arising out of or
           connected with the use or misuse of items bought by a buyer or sold by a seller
           through this service.
         </p>
@@ -71,7 +71,7 @@ export default async function TermsPage() {
         <ul className="list-disc space-y-1.5 pl-5">
           <li>
             You have about <strong className="text-zinc-200">16 hours</strong> to open a
-            report on an order for any problem — replacement or refund.
+            report on an order for any problem: replacement or refund.
           </li>
           <li>All tools you buy are fresh and have not been used or sold before.</li>
           <li>You can buy any tool you need, with no limit.</li>
@@ -86,15 +86,15 @@ export default async function TermsPage() {
         <ul className="list-disc space-y-1.5 pl-5">
           <li>Our service does not provide money-back from account balance.</li>
           <li>
-            Do not try XSS, SQL injection, adding or subtracting from a price to buy it —
-            it will not work, and attempts are treated as an exploit attempt.
+            Do not try XSS, SQL injection, adding or subtracting from a price to buy it.
+            It will not work, and attempts are treated as an exploit attempt.
           </li>
           <li>
-            Do not put links to other stores, e-mail addresses or any form of advertising —
-            you will be banned automatically.
+            Do not put links to other stores, e-mail addresses or any form of advertising.
+            You will be banned automatically.
           </li>
           <li>
-            Do not try to contact sellers directly — if this happens, you will be banned
+            Do not try to contact sellers directly. If this happens, you will be banned
             automatically.
           </li>
           <li>
@@ -103,7 +103,7 @@ export default async function TermsPage() {
           </li>
           <li>
             It is extremely necessary to explain your problem in the ticket system with
-            maximum detail — tickets without details cannot be investigated.
+            maximum detail. Tickets without details cannot be investigated.
           </li>
         </ul>
       </Clause>
@@ -116,10 +116,10 @@ export default async function TermsPage() {
             other suspicious activity.
           </li>
           <li>
-            Trying XSS, SQL injection, or adding / subtracting from a price to buy it —
-            such attempts will not work.
+            Trying XSS, SQL injection, or adding / subtracting from a price to buy it.
+            Such attempts will not work.
           </li>
-          <li>Trying to contact sellers outside the platform — ban is automatic.</li>
+          <li>Trying to contact sellers outside the platform. Ban is automatic.</li>
           <li>
             Any attempt to circumvent a ban, restrict another user, or abuse the report
             system.

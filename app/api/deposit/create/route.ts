@@ -65,7 +65,7 @@ export async function POST(req: Request) {
   const ipnCallbackUrl = buildIpnCallbackUrl(req);
   if (!ipnCallbackUrl) {
     return NextResponse.json(
-      { error: "Server URL not configured — set NEXT_PUBLIC_APP_URL so payments can call back" },
+      { error: "Server URL not configured. Set NEXT_PUBLIC_APP_URL so payments can call back" },
       { status: 503 }
     );
   }
@@ -98,7 +98,7 @@ export async function POST(req: Request) {
     // actionable 400, not a generic 500.
     if (msg.includes("less than minimal")) {
       return NextResponse.json(
-        { error: `Amount too low for ${COIN_LABEL[payCurrency] || payCurrency} right now — try a slightly larger deposit.` },
+        { error: `Amount too low for ${COIN_LABEL[payCurrency] || payCurrency} right now. Try a slightly larger deposit.` },
         { status: 400 }
       );
     }

@@ -10,7 +10,7 @@ export async function POST(req: Request) {
     const wait = rateLimit("register:ip:" + clientIp(req), 5, 60 * 1000);
     if (wait !== null) {
       return NextResponse.json(
-        { error: "Too many requests — wait a minute and try again." },
+        { error: "Too many requests. Wait a minute and try again." },
         { status: 429, headers: { "Retry-After": String(wait) } }
       );
     }
