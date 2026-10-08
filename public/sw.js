@@ -10,13 +10,32 @@ self.addEventListener("activate", function (event) {
   event.waitUntil(self.clients.claim());
 });
 
+function skipHeader(source) {
+  var headers = new Headers(source.headers);
+  headers.set("ngrok-skip-browser-warning", "1");
+  return headers;
+}
+
 self.addEventListener("fetch", function (event) {
   var url = new URL(event.request.url);
   if (url.hostname.indexOf("ngrok-free") === -1) return;
-  var headers = new Headers(event.request.headers);
-  headers.set("ngrok-skip-browser-warning", "1");
+
+  // Chrome refuses to rebuild navigate requests with extra headers, so
+  // page loads are re-issued against the same URL with the header added.
+  if (event.request.mode === "navigate" && event.request.method === "GET") {
+    event.respondWith(
+      fetch(event.request.url, {
+        headers: skipHeader(event.request),
+        credentials: event.request.credentials,
+      }).catch(function () {
+        return fetch(event.request);
+      })
+    );
+    return;
+  }
+
   event.respondWith(
-    fetch(new Request(event.request, { headers: headers, credentials: event.request.credentials })).catch(
+    fetch(new Request(event.request, { headers: skipHeader(event.request), credentials: event.request.credentials })).catch(
       function () {
         return fetch(event.request);
       }
