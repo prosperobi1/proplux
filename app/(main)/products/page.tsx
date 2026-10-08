@@ -540,7 +540,8 @@ function ProductsContent() {
       </div>
 
       {selectedIds.length > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-zinc-800 bg-black/95 backdrop-blur md:left-64">
+        // z-40 keeps these controls above the floating channel icon
+        <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-zinc-800 bg-black/95 backdrop-blur md:left-64">
           <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-3 md:px-8">
             <div className="flex min-w-0 flex-wrap items-center gap-3 text-sm">
               <ShoppingCart className="h-4 w-4 text-red-500" />
