@@ -141,7 +141,7 @@ export async function POST(req: Request) {
     const result = await prisma.$transaction(ops);
     const createdOrders = result.slice(0, products.length);
 
-    // Purchase complete — email the buyer a summary and each seller their
+    // Purchase complete: email the buyer a summary and each seller their
     // sales (the single-item order flow already does this; bulk never did).
     (async () => {
       try {

@@ -1,7 +1,7 @@
 /**
  * A product's fileUrl is either a file we store and serve ourselves
  * (/api/files/products/...) or an externally hosted link the seller pasted
- * (MEGA / Drive / ...). Anything else — especially javascript: URLs — is
+ * (MEGA / Drive / ...). Anything else, especially javascript: URLs, is
  * rejected. Shared by the seller/bulk/admin product APIs and the tool forms.
  */
 export function isValidFileUrl(u: unknown): u is string {
@@ -68,7 +68,7 @@ export function readDeliverySnapshot(order: {
 
 /**
  * Credentials delivery only makes sense when the category defines at least
- * one non-public field (visible !== true) — otherwise the "delivery" is
+ * one non-public field (visible !== true); otherwise the "delivery" is
  * exactly what everyone already sees on the listing. Accepts the category's
  * `fields` JSON string or an already-parsed array.
  */
@@ -92,7 +92,7 @@ export const CREDENTIALS_NO_HIDDEN_ERROR =
 
 /**
  * Names of required category fields that are missing/blank in metadata.
- * `price` is skipped — it lives in its own column and is validated there.
+ * `price` is skipped: it lives in its own column and is validated there.
  */
 export function missingRequiredFields(
   metadata: Record<string, unknown> | null | undefined,

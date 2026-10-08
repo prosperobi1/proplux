@@ -93,7 +93,7 @@ export async function POST(req: Request) {
     }
 
     // A credentials product in a category with no hidden fields would deliver
-    // nothing beyond the public listing — refuse it up front.
+    // nothing beyond the public listing, so refuse it up front.
     const effectiveDt = deliveryType === "file" || deliveryType === "text" ? deliveryType : "credentials";
     if (effectiveDt === "credentials" && !categoryHasHiddenFields(fieldDefs)) {
       return NextResponse.json({ error: CREDENTIALS_NO_HIDDEN_ERROR }, { status: 400 });

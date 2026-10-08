@@ -15,7 +15,7 @@ export async function getSiteName(): Promise<string> {
 
 const BRAND = "var(--brand-color, #dc2626)";
 
-/** The legal document itself — shared by the public and panel shells. */
+/** The legal document itself, shared by the public and panel shells. */
 function LegalDoc({
   title,
   updated,
@@ -43,7 +43,7 @@ function LegalDoc({
 /**
  * Auth-aware legal page: signed-in readers get the document inside the
  * user-panel shell (they arrived from the dashboard and keep their nav
- * context); logged-out visitors get the public marketing chrome — which is
+ * context); logged-out visitors get the public marketing chrome, which is
  * the only audience that should ever see the "Sign In" header.
  */
 export async function LegalPage({

@@ -77,7 +77,7 @@ function BulkCheckoutContent() {
         return;
       }
 
-      // Bulk response has count + total (no ids) — Orders list with success banner
+      // Bulk response has count + total (no ids): Orders list with success banner
       const amt = typeof data.total === "number" ? `&amt=${data.total}` : "";
       await vis();
       router.push(`/orders?paid=${data.count ?? 1}${amt}`);

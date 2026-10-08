@@ -7,9 +7,9 @@ import { decryptAllFields } from "@/lib/encrypt";
 /**
  * Pre-purchase RDP test: confirms the listing's RDP server is online and
  * actually speaks RDP (TCP connect + X.224 Connection Request/Confirm).
- * Credentials are not attempted — Windows auth (NLA/CredSSP) can't be safely
+ * Credentials are not attempted: Windows auth (NLA/CredSSP) can't be safely
  * verified server-side and wrong attempts can lock the account.
- * Advisory only — buying is never blocked by the result.
+ * Advisory only. Buying is never blocked by the result.
  */
 
 // 5 checks per user per minute (in-memory).
@@ -24,7 +24,7 @@ const RDP_REPLY_MS = 2000;
 const RDP_CR = Buffer.from([0x03, 0x00, 0x00, 0x0b, 0x06, 0xe0, 0x00, 0x00, 0x00, 0x00, 0x00]);
 
 type ProbeCode =
-  | "rdp"          // Connection Confirm received — real RDP service
+  | "rdp"          // Connection Confirm received: real RDP service
   | "open-no-rdp"  // TCP accepted but no/bad RDP reply
   | "refused"
   | "unreachable"
@@ -48,7 +48,7 @@ function probeRdp(host: string, port: number): Promise<ProbeCode> {
     timers.push(setTimeout(() => finish("timeout"), CONNECT_MS));
 
     socket.on("connect", () => {
-      // TCP is up — ask the service whether it speaks RDP.
+      // TCP is up, so ask the service whether it speaks RDP.
       for (const t of timers) clearTimeout(t);
       timers.length = 0;
       try {
@@ -86,7 +86,7 @@ export async function POST(
   req: Request,
   ctx: { params: Promise<{ id: string }> }
 ) {
-  // Always answer with JSON — a thrown error would surface in the UI as a
+  // Always answer with JSON: a thrown error would surface in the UI as a
   // generic "Network error" instead of a useful message.
   try {
     return await checkRdp(req, ctx);
@@ -144,7 +144,7 @@ async function checkRdp(
     });
   }
 
-  // Validate the port before probing — net.connect throws synchronously on a
+  // Validate the port before probing: net.connect throws synchronously on a
   // port outside 1–65535, which would otherwise surface as a generic client
   // "Network error". Only echo the value when it's plain digits (never echo
   // an undecrypted blob).

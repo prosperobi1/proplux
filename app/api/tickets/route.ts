@@ -33,7 +33,7 @@ export async function POST(req: Request) {
     },
   });
 
-  // New ticket — alert support so it doesn't sit unnoticed (fire-and-forget).
+  // New ticket: alert support so it doesn't sit unnoticed (fire-and-forget).
   (async () => {
     try {
       const [alertSet, siteSet, author] = await Promise.all([

@@ -89,7 +89,7 @@ export function MatrixRain({ className = "" }: { className?: string }) {
 
     const frame = (t: number) => {
       raf = requestAnimationFrame(frame);
-      if (t - last < 50) return; // ~20fps — smooth falling without burning CPU
+      if (t - last < 50) return; // ~20fps: smooth falling without burning CPU
       last = t;
       // Light per-frame fade: trails persist long enough to read as streaks.
       ctx.fillStyle = "rgba(0,0,0,0.055)";

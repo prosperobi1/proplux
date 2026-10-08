@@ -83,7 +83,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* Welcome Banner — merged with Become a Seller */}
+      {/* Welcome Banner, merged with Become a Seller */}
       <div className="rounded-lg border border-red-900/50 bg-red-950/20 p-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>

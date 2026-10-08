@@ -1,15 +1,15 @@
 import { prisma } from "@/lib/prisma";
 import { sendEmail, emailLayout, escapeHtml } from "@/lib/email";
 
-// Server-only (prisma + nodemailer) — keep this out of app/lib/deposit.ts,
+// Server-only (prisma + nodemailer): keep this out of app/lib/deposit.ts,
 // which is imported by client components for the coin tables.
 
 export type CreditDepositArgs = {
   userId: string;
   amount: number;
-  /** NOWPayments payment id — the `deposit:<id>` marker key is derived from it */
+  /** NOWPayments payment id: the `deposit:<id>` marker key is derived from it */
   paymentId: string | number;
-  /** the invoice's order_id (`dep_<userId>_<ts>`) — stored as the marker value */
+  /** the invoice's order_id (`dep_<userId>_<ts>`), stored as the marker value */
   orderId: string;
 };
 
@@ -54,13 +54,13 @@ export async function creditDeposit({
       }),
     ]);
   } catch (err) {
-    // Lost the race to a concurrent credit (marker already exists) — not an error.
+    // Lost the race to a concurrent credit (marker already exists). Not an error.
     const stillMarked = await prisma.setting.findUnique({ where: { key: markerKey } });
     if (stillMarked) return false;
     throw err;
   }
 
-  // Balance credited — email the buyer (fire-and-forget, after commit).
+  // Balance credited: email the buyer (fire-and-forget, after commit).
   (async () => {
     try {
       const [user, siteSet] = await Promise.all([

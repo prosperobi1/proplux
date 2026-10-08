@@ -32,7 +32,7 @@ export function SellerSidebar({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   // Close the mobile menu when the route changes (state adjusted during
-  // render rather than an effect — react.dev/you-might-not-need-an-effect).
+  // render rather than an effect: react.dev/you-might-not-need-an-effect).
   const [lastPath, setLastPath] = useState(pathname);
   if (lastPath !== pathname) {
     setLastPath(pathname);

@@ -15,7 +15,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Email is required" }, { status: 400 });
     }
 
-    // Every request here sends a real email — cap per IP and per address
+    // Every request here sends a real email, so cap per IP and per address
     // before touching the database (5/min each).
     const wait =
       rateLimit("forgot:ip:" + clientIp(req), 5, 60 * 1000) ??

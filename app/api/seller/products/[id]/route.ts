@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { encryptHiddenFields } from "@/lib/encrypt";
 import { isValidFileUrl, isValidTextContent, MAX_TEXT_CONTENT, categoryHasHiddenFields, CREDENTIALS_NO_HIDDEN_ERROR, missingRequiredFields } from "@/lib/delivery";
 
-// DELETE — existing
+// DELETE: existing
 export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -23,7 +23,7 @@ export async function DELETE(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  // Order history must survive — block deleting listings that were ever bought,
+  // Order history must survive: block deleting listings that were ever bought,
   // regardless of how the database treats the foreign key.
   const orderCount = await prisma.order.count({ where: { productId: id } });
   if (orderCount > 0) {
@@ -42,7 +42,7 @@ export async function DELETE(
   return NextResponse.json({ success: true });
 }
 
-// PATCH — edit product (new)
+// PATCH: edit product (new)
 export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -118,7 +118,7 @@ export async function PATCH(
       return NextResponse.json({ error: `Delivery content too large (max ${MAX_TEXT_CONTENT} characters)` }, { status: 400 });
     }
   }
-  // A text product with no content delivers nothing — enforce on every edit
+  // A text product with no content delivers nothing, so enforce on every edit
   // that leaves the product as text (also repairs legacy rows created before
   // this field existed).
   const effectiveType =

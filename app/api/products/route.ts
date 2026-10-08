@@ -84,7 +84,7 @@ export async function GET(req: Request) {
       if (isVisible) {
         visibleMeta[key] = value;
       }
-      // hidden fields: skipped — not included in visibleMeta
+      // hidden fields: skipped, not included in visibleMeta
     }
 
     return {

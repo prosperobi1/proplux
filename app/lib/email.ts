@@ -75,7 +75,7 @@ export type SendResult = {
  * Observed on this network: the FIRST smtp connection after an idle gap can stall
  * for ~2 minutes while DNS and the event loop are perfectly healthy (verified with
  * a standalone probe + process sample). Normal sends take ~1.5–2s, so anything past
- * this deadline is a stall — we stop making the caller wait and only retry if the
+ * this deadline is a stall: we stop making the caller wait and only retry if the
  * attempt ultimately fails (a retry connects on the now-warm path and takes ~1s).
  */
 const SEND_DEADLINE_MS = 15000;
@@ -85,11 +85,11 @@ function errorMessage(err: unknown): string {
   return String(err);
 }
 
-/** One concise line per successful send — the only way to answer "did that alert actually go out?" from logs. */
+/** One concise line per successful send: the only way to answer "did that alert actually go out?" from logs. */
 function logSent(args: SendArgs, r: SendResult): void {
   if (!r.ok) return;
   console.log(
-    `[email] sent to ${args.to} via ${r.via ?? "?"}${r.slow ? " (slow, handed off)" : ""} — "${args.subject}"`
+    `[email] sent to ${args.to} via ${r.via ?? "?"}${r.slow ? " (slow, handed off)" : ""}: "${args.subject}"`
   );
 }
 
@@ -144,7 +144,7 @@ async function sendViaSmtp(
   // retry only if this attempt eventually fails (avoids duplicate emails).
   send.then(undefined, async (err) => {
     console.warn(
-      `[email] SMTP stalled past ${SEND_DEADLINE_MS}ms then failed after ${Date.now() - t0}ms — retrying once on a fresh connection:`,
+      `[email] SMTP stalled past ${SEND_DEADLINE_MS}ms then failed after ${Date.now() - t0}ms, retrying once on a fresh connection:`,
       errorMessage(err)
     );
     try {
@@ -161,7 +161,7 @@ async function sendViaResend(
 ): Promise<SendResult> {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
-    console.warn("[email] no SMTP configured and RESEND_API_KEY not set — skipping send to", to);
+    console.warn("[email] no SMTP configured and RESEND_API_KEY not set, skipping send to", to);
     return {
       ok: false,
       skipped: true,
@@ -229,7 +229,7 @@ export function escapeHtml(value: unknown): string {
 
 export function emailLayout(body: string, siteName = "Proplux") {
   // Light theme on purpose: dark-mode clients (Gmail on iOS especially) drop
-  // dark background colors but keep dark text — so white background + near-black
+  // dark background colors but keep dark text, so white background + near-black
   // text stays readable in both light and dark mode. The color-scheme metas let
   // clients that support them (Apple Mail) flip the whole email to dark cleanly.
   return `

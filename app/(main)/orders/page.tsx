@@ -213,7 +213,7 @@ export default function MyOrdersPage() {
     owned?: boolean;
   } | null>(null);
   const [reportWindowHours, setReportWindowHours] = useState(16);
-  // Snapshot of "now" taken each time orders load — the report-window check
+  // Snapshot of "now" taken each time orders load. The report-window check
   // runs during render, which must stay pure (no Date.now() in render).
   const [loadedAt, setLoadedAt] = useState(0);
 

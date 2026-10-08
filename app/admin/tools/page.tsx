@@ -181,7 +181,7 @@ export default function AdminToolsPage() {
         setEditErr(data.error || "Failed to save changes.");
         return;
       }
-      // PATCH returns the row with ENCRYPTED metadata — keep the plaintext we
+      // PATCH returns the row with ENCRYPTED metadata, so keep the plaintext we
       // hold instead, then refresh from the API for full server truth.
       const updated: Product = {
         ...viewing,
@@ -225,7 +225,7 @@ export default function AdminToolsPage() {
   });
 
   // Client-side pagination over the filtered list. Clamping is derived (not an
-  // effect) so shrinking the list — search, filter, delete — never leaves an
+  // effect) so shrinking the list (search, filter, delete) never leaves an
   // empty page on screen.
   const PER_PAGE = 20;
   const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));

@@ -37,7 +37,7 @@ export async function POST(req: Request) {
   const amount = Number(body?.amount);
   const payCurrency = typeof body?.coin === "string" ? body.coin.toLowerCase() : "btc";
 
-  // Server-side floor from the admin's "Minimum Deposit" setting — the old
+  // Server-side floor from the admin's "Minimum Deposit" setting. The old
   // hardcoded $10 let API clients bypass a raised minimum (the UI enforced
   // it, the API didn't). The per-coin NOWPayments minimum still applies on top.
   const minRow = await prisma.setting.findUnique({ where: { key: "minDeposit" } });
@@ -94,7 +94,7 @@ export async function POST(req: Request) {
   } catch (err) {
     console.error("nowpayments create failed:", err);
     const msg = err instanceof Error && err.message ? err.message : "Failed to create payment";
-    // Provider minimums can drift with the BTC/ETH price — surface it as an
+    // Provider minimums can drift with the BTC/ETH price, so surface it as an
     // actionable 400, not a generic 500.
     if (msg.includes("less than minimal")) {
       return NextResponse.json(

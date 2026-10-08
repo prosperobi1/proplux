@@ -6,7 +6,7 @@ import { rateLimit, clientIp } from "../../lib/rate-limit";
 
 export async function POST(req: Request) {
   try {
-    // Signups cost a DB write plus a welcome email — cap per IP (5/min).
+    // Signups cost a DB write plus a welcome email, so cap per IP (5/min).
     const wait = rateLimit("register:ip:" + clientIp(req), 5, 60 * 1000);
     if (wait !== null) {
       return NextResponse.json(
@@ -35,7 +35,7 @@ export async function POST(req: Request) {
       data: { email, username, password: hashed, role: "BUYER" },
     });
 
-    // Welcome email — fire-and-forget so registration is never blocked by the mail server
+    // Welcome email: fire-and-forget so registration is never blocked by the mail server
     (async () => {
       try {
         const siteSetting = await prisma.setting.findUnique({ where: { key: "siteName" } });

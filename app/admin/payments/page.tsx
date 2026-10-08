@@ -18,7 +18,7 @@ type DepositRow = {
   createdAt: string;
 };
 
-// The only keys this page is allowed to write — a save here must never
+// The only keys this page is allowed to write: a save here must never
 // rewrite unrelated settings (SMTP, app name, …).
 const PAYMENT_KEYS = [
   "nowpaymentsApiKey",

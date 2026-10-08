@@ -36,7 +36,7 @@ export async function POST(req: Request) {
 
   // Mirror the buyer UI: only pending/completed orders, within the
   // admin-configured report window. This used to be enforced in the
-  // browser only — the API accepted late reports from anyone.
+  // browser only. The API accepted late reports from anyone.
   const winRow = await prisma.setting.findUnique({ where: { key: "reportWindowHours" } });
   const parsedHours = parseInt(winRow?.value ?? "", 10);
   const windowHours = Number.isFinite(parsedHours) && parsedHours > 0 ? parsedHours : 16;

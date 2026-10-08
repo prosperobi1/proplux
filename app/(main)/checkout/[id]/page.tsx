@@ -71,7 +71,7 @@ export default function CheckoutPage({
         return;
       }
 
-      // Already own it? Open the existing delivery — no new charge, so no
+      // Already own it? Open the existing delivery: no new charge, so no
       // "purchase successful" banner (and never claim success without an id).
       if (data?.alreadyExists && data.order?.id) {
         await vis();

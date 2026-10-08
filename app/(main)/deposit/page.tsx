@@ -40,7 +40,7 @@ const COINS: CoinOpt[] = [
 
 /**
  * A pending invoice survives a refresh: without this, F5 threw away the
- * payment address (and the success screen) with no way back — and in local
+ * payment address (and the success screen) with no way back, and in local
  * dev the NOWPayments IPN can't reach the server at all, so a payment made
  * while the view was gone could sit uncredited until the next status poll.
  * The server has no "my pending invoices" list, so the client keeps it.
@@ -64,7 +64,7 @@ const FAILURE_TEXT: Record<string, string> = {
 };
 
 /** NOWPayments hands out the expiration as ISO, unix seconds or unix ms
- *  depending on the endpoint — normalize to epoch ms, or null if unusable. */
+ *  depending on the endpoint; normalize to epoch ms, or null if unusable. */
 function toDeadline(v: unknown): number | null {
   if (typeof v === "number" && Number.isFinite(v)) return v < 1e12 ? v * 1000 : v;
   if (typeof v === "string" && v) {
@@ -130,7 +130,7 @@ export default function DepositPage() {
         `/api/deposit/status?paymentId=${encodeURIComponent(String(p.paymentId))}`
       );
       if (res.status === 404) {
-        // Stale/foreign invoice — drop it quietly on restore.
+        // Stale/foreign invoice: drop it quietly on restore.
         clearStore();
         closeInvoice();
         if (!restoring) setError("This invoice could not be found. Create a new one.");
@@ -154,7 +154,7 @@ export default function DepositPage() {
       }
       if (s) setProviderStatus(s);
     } catch {
-      // Network blip — the next tick retries.
+      // Network blip: the next tick retries.
     }
   };
 
@@ -294,7 +294,7 @@ export default function DepositPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [payment]);
 
-  // Countdown ticker — only while the invoice has a deadline. Recomputed
+  // Countdown ticker: only while the invoice has a deadline. Recomputed
   // from the deadline inside the interval callback (async context), so the
   // display never drifts and no impure call happens during render.
   useEffect(() => {

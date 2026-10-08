@@ -27,7 +27,7 @@ export default function AdminOrdersPage() {
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [busyId, setBusyId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
-  // Reset to page 1 whenever the search/status filters change — adjusted
+  // Reset to page 1 whenever the search/status filters change, adjusted
   // during render instead of an effect (react.dev/you-might-not-need-an-effect).
   const filterKey = search + "\u0000" + statusFilter;
   const [lastFilterKey, setLastFilterKey] = useState(filterKey);
@@ -38,7 +38,7 @@ export default function AdminOrdersPage() {
   const PER_PAGE = 20;
   const router = useRouter();
 
-  // Note: no sync setState here — `loading` starts true from useState and
+  // Note: no sync setState here: `loading` starts true from useState and
   // the fetch callbacks flip it later (async), which the effect rule allows.
   const loadOrders = () => {
     fetch("/api/admin/orders")

@@ -29,7 +29,7 @@ export async function GET(req: Request) {
     // Self-heal while we're here: the IPN webhook can be lost (local dev isn't
     // reachable from NOWPayments at all, and production webhooks can drop),
     // which used to strand paid deposits forever. This endpoint already talks
-    // to NOWPayments with the caller bound to their own invoice — so credit on
+    // to NOWPayments with the caller bound to their own invoice, so credit on
     // a final status too. creditDeposit is idempotent, so if the IPN lands as
     // well, only one of them does the work.
     if (typeof status === "string" && FINAL_STATUSES.includes(status)) {

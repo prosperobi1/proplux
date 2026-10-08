@@ -18,7 +18,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Max 100 at once" }, { status: 400 });
   }
 
-  // Only allow deleting PENDING or REJECTED withdrawals (not PAID — those affect balance history)
+  // Only allow deleting PENDING or REJECTED withdrawals (not PAID; those affect balance history)
   const allowed = await prisma.withdrawal.findMany({
     where: { id: { in: ids }, status: { in: ["PENDING", "REJECTED"] } },
     select: { id: true },

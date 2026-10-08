@@ -12,7 +12,7 @@ const LOGIN_MAX_FAILS = 5;
  *
  * Prisma's case-insensitive filter isn't available on SQLite, so when the exact
  * match misses we fall back to SQL LIKE (case-insensitive for ASCII) narrowed by
- * the email domain or the username's first letter — never a full table scan.
+ * the email domain or the username's first letter, never a full table scan.
  */
 async function findUserByIdentifier(identifier: string) {
   const exact = await prisma.user.findFirst({
@@ -85,7 +85,7 @@ const nextAuth = NextAuth({
     }
 
     // Always re-fetch role + banned from DB so admin actions (role change,
-    // ban) take effect on the very next session read — not only at next login.
+    // ban) take effect on the very next session read, not only at next login.
     if (token.id) {
       const dbUser = await prisma.user.findUnique({
         where: { id: token.id as string },
@@ -115,7 +115,7 @@ export const signIn = nextAuth.signIn;
 export const signOut = nextAuth.signOut;
 
 /**
- * The current request's session — or null when signed out AND when the
+ * The current request's session, or null when signed out AND when the
  * account is banned. authorize() only checks the ban flag at login time, so
  * this wrapper is what makes a ban stick for sessions opened before it:
  * every route handler and layout that calls auth() stops seeing the user on

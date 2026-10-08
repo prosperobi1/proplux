@@ -8,7 +8,7 @@ const DEFAULT_COMMISSION_PERCENT = 65;
  * Single source of truth for BOTH sides of an order's money movement:
  * the purchase credit and the cancellation clawback must use the same
  * rate or balances drift apart. (If the admin changes the rate between
- * purchase and cancellation, the clawback uses the current rate — the
+ * purchase and cancellation, the clawback uses the current rate; the
  * Order row doesn't snapshot the credited amount.)
  */
 export async function getCommissionPercent(): Promise<number> {

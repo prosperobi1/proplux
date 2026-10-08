@@ -64,7 +64,7 @@ export async function PATCH(
       });
     });
 
-    // Notify the seller — fire-and-forget so the status change is never blocked
+    // Notify the seller: fire-and-forget so the status change is never blocked
     if (status !== withdrawal.status && ["APPROVED", "REJECTED", "PAID"].includes(status)) {
       (async () => {
         try {

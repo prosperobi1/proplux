@@ -10,7 +10,7 @@ export async function GET(
     const { id } = await context.params;
     const product = await prisma.product.findUnique({
       where: { id },
-      // Never select the seller's full User row — it carries password, email,
+      // Never select the seller's full User row: it carries password, email,
       // balance and reset token. Only the public display name is exposed.
       include: { seller: { select: { username: true } } },
     });
@@ -24,7 +24,7 @@ export async function GET(
 
     // The file is the paid deliverable: only the listing's seller, an admin,
     // or a buyer who already purchased this product may see its URL. `metadata`
-    // is omitted entirely for the same reason — it holds the seller's secrets
+    // is omitted entirely for the same reason: it holds the seller's secrets
     // and is only served to the buyer from /api/orders after the order completes.
     let fileUrl: string | null = null;
     if (product.fileUrl) {

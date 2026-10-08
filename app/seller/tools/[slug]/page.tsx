@@ -15,7 +15,7 @@ type Product = { id: string; country: string; tld: string; hosting: string; pric
 export default function SellerToolPage() {
   const params = useParams();
   const slug = params.slug as string;
-  // Buyers get a pre-purchase Check column for these categories — sellers get
+  // Buyers get a pre-purchase Check column for these categories; sellers get
   // the same test here so they can verify their own listing before it sells.
   const showTestCol = slug === "smtps" || slug === "rdp";
   const [tab, setTab] = useState<"static" | "all" | "deleted" | "add" | "mass">("add");
@@ -67,7 +67,7 @@ export default function SellerToolPage() {
   }, [slug]);
 
   // Categories with no non-public field can't support Login Credentials
-  // delivery — there'd be nothing secret to hand over after purchase.
+  // delivery: there'd be nothing secret to hand over after purchase.
   const hasHiddenFields = fields.some((f) => f.visible !== true);
 
   const resetForm = () => {

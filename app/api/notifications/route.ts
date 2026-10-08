@@ -95,7 +95,7 @@ export async function POST(req: Request) {
       const ids = body.ids.filter((v: unknown): v is string => typeof v === "string").slice(0, 100);
       if (ids.length > 0) {
         const res = await prisma.ticketMessage.updateMany({
-          // Non-admins may only touch messages on their own tickets — without
+          // Non-admins may only touch messages on their own tickets; without
           // this filter any user could mark other users' notifications read.
           where: {
             id: { in: ids },

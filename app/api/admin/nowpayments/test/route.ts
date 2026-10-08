@@ -4,7 +4,7 @@ import { npFetch } from "@/lib/nowpayments";
 
 /**
  * Admin: validate the SAVED NOWPayments credentials against the configured
- * environment (sandbox/live). Uses the estimate endpoint — authenticated,
+ * environment (sandbox/live). Uses the estimate endpoint: authenticated,
  * side-effect free (403 without a valid API key). Never echoes the key back.
  */
 export async function POST() {

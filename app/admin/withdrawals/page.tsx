@@ -111,7 +111,7 @@ export default function AdminWithdrawalsPage() {
     } finally { setBusy(null); }
   };
 
-  // Reject asks why — the reason is stored and emailed to the seller
+  // Reject asks why: the reason is stored and emailed to the seller
   const rejectWithReason = (id: string) => {
     const reason = window.prompt("Reason for rejection (shown to the seller):", "");
     if (reason === null) return; // cancelled

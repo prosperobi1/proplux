@@ -133,7 +133,7 @@ export async function POST(req: Request) {
       }
     })();
 
-    // If the product's category is sell-once, mark it as sold (display only — filter uses orders)
+    // If the product's category is sell-once, mark it as sold (display only; filter uses orders)
     try {
       const cat = await prisma.category.findUnique({
         where: { slug: product.categorySlug || "" },

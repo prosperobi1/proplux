@@ -16,7 +16,7 @@ export async function POST(req: Request) {
   if (ids.length > 100) return NextResponse.json({ error: "Max 100 at once" }, { status: 400 });
   if (ids.includes(selfId)) return NextResponse.json({ error: "You cannot delete your own account" }, { status: 400 });
 
-  // Sellers only — refuse any non-SELLER id
+  // Sellers only: refuse any non-SELLER id
   const valid = await prisma.user.findMany({
     where: { id: { in: ids }, role: "SELLER" },
     select: { id: true },

@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sendEmail, emailLayout, escapeHtml } from "@/lib/email";
 
-// GET — returns the current user's active seller request (if any)
+// GET: returns the current user's active seller request (if any)
 export async function GET() {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -24,7 +24,7 @@ export async function GET() {
   return NextResponse.json(request || null);
 }
 
-// POST — create a new seller request
+// POST: create a new seller request
 export async function POST(req: Request) {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -59,7 +59,7 @@ export async function POST(req: Request) {
     data: { userId, message, status: "PENDING" },
   });
 
-  // New seller request — alert admin to review it (fire-and-forget).
+  // New seller request: alert admin to review it (fire-and-forget).
   (async () => {
     try {
       const [alertSet, siteSet, applicant] = await Promise.all([

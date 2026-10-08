@@ -2,7 +2,7 @@
  * Fixed-window, in-memory rate limiting.
  *
  * Counts live in this process: they reset on restart and are not shared
- * across instances — fine for a single-node deploy and for abuse damping,
+ * across instances: fine for a single-node deploy and for abuse damping,
  * not a substitute for an edge/WAF limit.
  */
 

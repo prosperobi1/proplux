@@ -69,7 +69,7 @@ export async function POST(req: Request) {
     data: { amount: requestedAmount, wallet, network, sellerId: seller.id },
   });
 
-  // Alert the admin — fire-and-forget so the request is never blocked by the mail server
+  // Alert the admin: fire-and-forget so the request is never blocked by the mail server
   (async () => {
     try {
       const [siteSet, alertSet] = await Promise.all([

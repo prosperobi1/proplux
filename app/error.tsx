@@ -9,7 +9,7 @@ const BRAND = "var(--brand-color, #dc2626)";
 /**
  * Root error boundary: renders a themed crash screen instead of Next's
  * default white error page. `reset()` re-renders the failed segment.
- * Never surfaces error.message (may contain internals) — only the digest.
+ * Never surfaces error.message (may contain internals); only the digest.
  */
 export default function SegmentError({
   error,

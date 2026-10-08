@@ -8,7 +8,7 @@ import { decryptAllFields } from "@/lib/encrypt";
  * Pre-purchase SMTP test: the buyer enters their own email address and clicks
  * "Check". The server decrypts the listing's SMTP credentials (never returned
  * to the client), connects, and sends a fixed test email to that address.
- * Advisory only — buying is never blocked by the result.
+ * Advisory only. Buying is never blocked by the result.
  */
 
 // 5 checks per user per minute (in-memory).
@@ -38,7 +38,7 @@ export async function POST(
   req: Request,
   ctx: { params: Promise<{ id: string }> }
 ) {
-  // Always answer with JSON — a thrown error would surface in the UI as a
+  // Always answer with JSON: a thrown error would surface in the UI as a
   // generic "Network error" instead of a useful message.
   try {
     return await checkSmtp(req, ctx);
@@ -104,7 +104,7 @@ async function checkSmtp(
   const user = String(meta.email || meta.user || meta.username || "").trim();
   const pass = String(meta.password || "");
   // Relay-style SMTPs (Brevo etc.) log in with an account address but must send
-  // From a verified mailbox — fall back to the login when no From is set.
+  // From a verified mailbox: fall back to the login when no From is set.
   const from = String(meta.fromEmail || meta.from || user).trim();
   const security = String(meta.security || "STARTTLS").toUpperCase();
   const type = String(meta.type || "SMTP").toUpperCase();
@@ -122,7 +122,7 @@ async function checkSmtp(
     });
   }
 
-  // Validate the port — a junk value (e.g. 99999) would throw inside nodemailer
+  // Validate the port: a junk value (e.g. 99999) would throw inside nodemailer
   // and surface as a generic client-side "Network error". Only echo the value
   // when it's plain digits (never echo an undecrypted blob).
   const rawPort = String(meta.port ?? "").trim();

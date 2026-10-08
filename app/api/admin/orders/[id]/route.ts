@@ -70,13 +70,13 @@ export async function GET(
 }
 
 /**
- * Admin order lifecycle: confirm (status only — the seller was already
+ * Admin order lifecycle: confirm (status only; the seller was already
  * credited at purchase) or cancel (full buyer refund + claw back the
  * seller's credit + un-sell sellOnce listings).
  *
  * The conditional status flip runs FIRST inside the transaction: its WHERE
  * only matches non-terminal orders, so a duplicate or concurrent PATCH
- * matches 0 rows and aborts before any money moves — that's the
+ * matches 0 rows and aborts before any money moves. That's the
  * idempotency guard.
  */
 export async function PATCH(
@@ -116,7 +116,7 @@ export async function PATCH(
   }
 
   if (newStatus === "Completed") {
-    // Money already settled at purchase — this only releases the order.
+    // Money already settled at purchase. This only releases the order.
     const upd = await prisma.order.updateMany({
       where: { id, status: { notIn: TERMINAL_STATUSES } },
       data: { status: "Completed" },
@@ -155,7 +155,7 @@ export async function PATCH(
       });
 
       // The seller's credit (and lifetime earnings) came out of this
-      // purchase — take it back. Balance may go negative: a cancellation
+      // purchase, so take it back. Balance may go negative: a cancellation
       // outranks a spent balance, and wedging the order would be worse.
       await tx.user.update({
         where: { id: order.product.sellerId },
@@ -196,7 +196,7 @@ export async function PATCH(
     return NextResponse.json({ error: "Failed to cancel order" }, { status: 500 });
   }
 
-  // Committed — tell both sides (fire-and-forget; balances re-read fresh).
+  // Committed. Tell both sides (fire-and-forget; balances re-read fresh).
   (async () => {
     try {
       const [buyer, seller, siteSet] = await Promise.all([

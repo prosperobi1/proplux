@@ -39,7 +39,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   });
   await prisma.ticket.update({ where: { id }, data: { updatedAt: new Date() } });
 
-  // Staff reply — notify the ticket owner (they'd otherwise never know).
+  // Staff reply: notify the ticket owner (they'd otherwise never know).
   (async () => {
     try {
       const siteSet = await prisma.setting.findUnique({ where: { key: "siteName" } });

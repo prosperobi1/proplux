@@ -7,7 +7,7 @@ import { LocalUpload } from "../../components/LocalUpload";
 
 type Settings = Record<string, string>;
 
-// Keys this page owns — a save here must never rewrite the Payments page's
+// Keys this page owns: a save here must never rewrite the Payments page's
 // keys (or anything else). Server enforces the same list on write.
 const SETTINGS_KEYS = [
   "siteName",
@@ -77,7 +77,7 @@ export default function AdminSettingsPage() {
     e.preventDefault();
     if (!settings) return;
     // An invalid hex here would poison --brand-color and silently break
-    // button/link colors site-wide — reject it before saving anything.
+    // button/link colors site-wide, so reject it before saving anything.
     const pc = (settings.primaryColor || "").trim();
     if (pc && !/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(pc)) {
       setError("Primary Color must be a hex color like #dc2626.");
