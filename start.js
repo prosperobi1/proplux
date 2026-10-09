@@ -1,21 +1,25 @@
-// Production entry point for cPanel's "Startup file" field and PM2 on a VPS.
-// Runs the built Next.js server on the port the host provides (PORT) or 3000.
-// Plain CommonJS: this file runs under bare Node, outside the Next.js build.
+// Production entry point: cPanel's "Startup file" field and PM2 on a VPS.
+// The built Next.js server runs inside this process, so the process the host
+// starts is the one that listens. Next loads .env from this folder the same
+// way `next start` does. PORT comes from the host and defaults to 3000.
 /* eslint-disable @typescript-eslint/no-require-imports */
-const { spawn } = require("child_process");
+process.env.NODE_ENV = "production";
 
-const port = String(process.env.PORT || 3000);
-const nextBin = require.resolve("next/dist/bin/next");
+const { createServer } = require("http");
+const next = require("next");
 
-const child = spawn(process.execPath, [nextBin, "start", "-p", port], {
-  stdio: "inherit",
-  cwd: __dirname,
-});
+const port = parseInt(process.env.PORT || "3000", 10);
+const app = next({ dev: false, dir: __dirname });
+const handle = app.getRequestHandler();
 
-for (const sig of ["SIGINT", "SIGTERM"]) {
-  process.on(sig, () => {
-    if (!child.killed) child.kill(sig);
+app
+  .prepare()
+  .then(() => {
+    createServer((req, res) => handle(req, res)).listen(port, () => {
+      console.log("> proplux ready on http://localhost:" + port);
+    });
+  })
+  .catch((err) => {
+    console.error(err);
+    process.exit(1);
   });
-}
-
-child.on("exit", (code) => process.exit(code == null ? 0 : code));

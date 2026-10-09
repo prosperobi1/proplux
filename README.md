@@ -147,7 +147,10 @@ port) in the firewall.
 
 ### 3. cPanel path (Setup Node.js App)
 
-1. Upload the project (git clone in Terminal, or an archive via File Manager)
+1. Upload the project (git clone in Terminal, or an archive via File Manager).
+   Keep the application root outside `public_html` (for example `~/proplux`):
+   anything placed in the web root can be served as plain text, including
+   `.env` and `node_modules`
 2. cPanel -> Setup Node.js App -> Create Application:
    - Node version: the newest 20.x or newer offered by your plan
    - Application root: the project folder
