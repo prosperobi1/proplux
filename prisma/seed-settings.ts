@@ -9,6 +9,9 @@ const defaults = [
   { key: "commissionPercent", value: "65" },
   { key: "minWithdrawal", value: "10" },
   { key: "minDeposit", value: "25" },
+  // Fresh installs start in sandbox mode; flip it off in Admin -> Payments
+  // only after a real-money test succeeds.
+  { key: "nowpaymentsSandbox", value: "true" },
   { key: "walletBTC", value: "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh" },
   { key: "walletETH", value: "" },
   { key: "walletUSDT", value: "" },

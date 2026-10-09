@@ -20,7 +20,7 @@ A modern multi-vendor marketplace built with Next.js 16, TypeScript, Prisma, and
 
 - Next.js 16 (App Router, Turbopack)
 - TypeScript
-- Prisma + SQLite (dev) / PostgreSQL (production)
+- Prisma + SQLite (persists on VPS/cPanel hosting; a serverless host would need PostgreSQL)
 - NextAuth (credentials, JWT)
 - Tailwind CSS
 - lucide-react for icons
@@ -89,25 +89,81 @@ prisma/
 
 ## Deployment
 
-Vercel (recommended):
+The app needs three things: a persistent disk (the SQLite database and local
+`./uploads` live on it), Node.js 20.9 or newer, and a public https URL.
+Serverless hosts (Vercel etc.) do not work as-is because their filesystem is
+read-only. Two supported paths, both running the same build:
 
-1. Push to GitHub
-2. Import on Vercel
-3. Set env vars in Vercel dashboard: DATABASE_URL (Postgres), AUTH_SECRET, AUTH_TRUST_HOST=true
-   (note: local file uploads need a persistent disk — use VPS/shared Node hosting; Vercel's filesystem is read-only)
-4. Switch Prisma datasource to postgresql in prisma/schema.prisma
-5. Run npx prisma db push against the production DB once
+- VPS behind nginx, managed by PM2
+- cPanel Node.js App, using `start.js` as the startup file
 
-cPanel (Node.js App):
+### 1. Server setup (identical for both paths)
 
-1. Upload the project
-2. In cPanel -> Setup Node.js App:
-   - Node version 20+
-   - Application root: your project folder
-   - Startup file: node_modules/.bin/next
-   - Environment variables: same as above
-3. Run npm install, npx prisma db push, npx prisma generate from the terminal
-4. Delete app/api/deposit/dev/ before going live
+1. Copy the project onto the server and run `npm install` (everything the
+   server needs is a regular dependency, including the Prisma CLI and tsx)
+2. Create `.env` from `.env.example` and set:
+   - `AUTH_SECRET`: `openssl rand -base64 32`
+   - `ENCRYPTION_KEY`: `openssl rand -base64 32`. This value must stay
+     identical across every redeploy, or stored credentials become unreadable
+   - `AUTH_URL` and `NEXT_PUBLIC_APP_URL`: your public https URL
+   - `AUTH_TRUST_HOST=true`
+   - `DATABASE_URL="file:./dev.db"` (the default, works as-is on disk)
+3. `npx prisma db push` then `npx prisma generate`
+4. `npx tsx prisma/seed-categories.ts` and `npx tsx prisma/seed-settings.ts`
+5. `npm run build`
+6. Start the server using one of the two paths below, then open the site
+7. Register your account and promote it to admin:
+   `sqlite3 prisma/dev.db "UPDATE User SET role='ADMIN' WHERE email='you@example.com';"`
+8. Configure in the admin panel: Settings (SMTP email, admin alert address,
+   telegram URL, minimum deposit, branding) and Payments (NOWPayments API key
+   and IPN secret). The sandbox flag starts ON; only turn it off after a
+   real-money test succeeds.
+
+### 2. VPS path (nginx + PM2)
+
+From the project folder, with Node 20.9+ installed (NodeSource or nvm):
+
+    npm install -g pm2
+    pm2 start start.js --name proplux
+    pm2 save
+    pm2 startup    # run the command it prints, so the app survives reboots
+
+nginx site forwarding to the app:
+
+    server {
+        listen 80;
+        server_name yourdomain.com;
+        location / {
+            proxy_pass http://127.0.0.1:3000;
+            proxy_set_header Host $host;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            client_max_body_size 70m;   # product uploads up to 64MB
+        }
+    }
+
+Then issue HTTPS with `certbot --nginx`, and open only 80/443 (plus your SSH
+port) in the firewall.
+
+### 3. cPanel path (Setup Node.js App)
+
+1. Upload the project (git clone in Terminal, or an archive via File Manager)
+2. cPanel -> Setup Node.js App -> Create Application:
+   - Node version: the newest 20.x or newer offered by your plan
+   - Application root: the project folder
+   - Application URL: your domain
+   - Startup file: `start.js`
+3. Create `.env` in the application root as described above (the form's
+   environment variables work too; the .env file keeps one source of truth)
+4. In Terminal, from the application root, run server-setup steps 3 to 5
+   (db push, seeds, build)
+5. Click Restart. cPanel assigns the port; `start.js` reads it from `$PORT`
+
+### Backups
+
+Back up these three together: `prisma/dev.db`, `./uploads/`, and `.env`.
+Losing `.env` (or changing `ENCRYPTION_KEY`) makes every stored credential
+undecryptable.
 
 ## Configuration
 
@@ -117,6 +173,7 @@ All admin-configurable from /admin/settings:
 - Commission % (default 65)
 - Minimum withdrawal (default $10)
 - Report window in hours (default 16)
+- Admin alert address (new orders, reports, withdrawals)
 - Feature toggles (marketplace, tickets, maintenance mode)
 - Crypto payments — NOWPayments keys (API key, IPN secret, sandbox) configured in **Admin → Payments**, stored in the DB — not in .env
 
