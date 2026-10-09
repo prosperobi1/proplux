@@ -130,7 +130,7 @@ export default function AdminOrderDetailPage() {
       {/* Delivered content */}
       <div className="rounded-lg border border-red-900/50 bg-red-950/20 p-4">
         <h3 className="mb-3 text-sm font-semibold uppercase text-red-500">
-          🔓 Delivered Content (what the buyer received)
+          Delivered Content (what the buyer received)
         </h3>
 
         {order.product.deliveryType === "text" && order.product.textContent ? (
