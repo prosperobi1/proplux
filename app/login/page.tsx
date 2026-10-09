@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { minVisible } from "@/lib/ui";
 import { signIn } from "next-auth/react";
 import { Loader2 } from "lucide-react";
@@ -12,15 +12,29 @@ import { AuthBackdrop } from "../components/AuthBackdrop";
 export default function LoginPage() {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
+  const rememberRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const router = useRouter();
+
+  // Restore the last choice after hydration (the server can't read cookies here)
+  useEffect(() => {
+    const m = document.cookie.match(/(?:^|;\s*)proplux_remember=([^;]*)/);
+    if (m && rememberRef.current) rememberRef.current.checked = m[1] === "1";
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     const vis = minVisible();
     setSubmitting(true);
+
+    // The auth route reads this to decide whether the session cookie gets an
+    // expiry (remember on) or dies with the browser (remember off).
+    document.cookie =
+      "proplux_remember=" +
+      (rememberRef.current?.checked ? "1" : "0") +
+      "; path=/; max-age=31536000; samesite=lax";
 
     const result = await signIn("credentials", {
       identifier,
@@ -87,6 +101,16 @@ export default function LoginPage() {
               className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-white focus:border-red-500 focus:outline-none"
             />
           </div>
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-zinc-400 hover:text-zinc-300">
+            <input
+              type="checkbox"
+              defaultChecked
+              ref={rememberRef}
+              style={{ accentColor: "var(--brand-color, #dc2626)" }}
+              className="h-4 w-4 rounded border-zinc-600 bg-zinc-950"
+            />
+            Remember me
+          </label>
           <button
             type="submit"
             disabled={submitting}
