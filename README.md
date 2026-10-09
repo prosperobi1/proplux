@@ -168,6 +168,28 @@ Back up these three together: `prisma/dev.db`, `./uploads/`, and `.env`.
 Losing `.env` (or changing `ENCRYPTION_KEY`) makes every stored credential
 undecryptable.
 
+### Older hosts (glibc below 2.29, for example RHEL 8 family)
+
+`next build` needs glibc 2.29 or newer. When the host OS is too old to
+provide it and cannot be upgraded, run the app in the included `Dockerfile`
+(Node 22 on Debian) instead of natively. The host only needs Docker:
+
+    docker build -t proplux:prod .
+    mkdir -p /opt/proplux-data/uploads && touch /opt/proplux-data/dev.db
+    sed 's/="\([^"]*\)"$/=\1/' .env > docker.env   # docker keeps quote chars, so strip them
+    docker run -d --name proplux --restart unless-stopped \
+      -p 127.0.0.1:3000:3000 --env-file ./docker.env \
+      -v /opt/proplux-data/dev.db:/srv/app/prisma/dev.db \
+      -v /opt/proplux-data/uploads:/srv/app/uploads \
+      proplux:prod
+    docker exec proplux npx prisma db push
+    docker exec proplux npx tsx prisma/seed-categories.ts
+    docker exec proplux npx tsx prisma/seed-settings.ts
+
+Then point the reverse proxy at `http://127.0.0.1:3000` as usual. The database
+file and uploads live on the host under `/opt/proplux-data/`, so they survive
+container rebuilds; back those up together with `docker.env`.
+
 ## Configuration
 
 All admin-configurable from /admin/settings:

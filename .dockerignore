@@ -1,0 +1,9 @@
+node_modules
+.next
+.env
+uploads
+prisma/dev.db
+*.log
+.git
+T
+proplux-deploy.zip
