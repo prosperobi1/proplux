@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { minVisible } from "@/lib/ui";
 import { signIn } from "next-auth/react";
 import { Loader2 } from "lucide-react";
@@ -16,12 +16,6 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const router = useRouter();
-
-  // Restore the last choice after hydration (the server can't read cookies here)
-  useEffect(() => {
-    const m = document.cookie.match(/(?:^|;\s*)proplux_remember=([^;]*)/);
-    if (m && rememberRef.current) rememberRef.current.checked = m[1] === "1";
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -104,7 +98,6 @@ export default function LoginPage() {
           <label className="flex cursor-pointer items-center gap-2 text-sm text-zinc-400 hover:text-zinc-300">
             <input
               type="checkbox"
-              defaultChecked
               ref={rememberRef}
               style={{ accentColor: "var(--brand-color, #dc2626)" }}
               className="h-4 w-4 rounded border-zinc-600 bg-zinc-950"
