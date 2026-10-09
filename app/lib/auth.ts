@@ -91,10 +91,10 @@ const nextAuth = NextAuth({
         where: { id: token.id as string },
         select: { role: true, banned: true },
       });
-      if (dbUser) {
-        token.role = dbUser.role;
-        (token as { banned?: boolean }).banned = dbUser.banned;
-      }
+      // Account deleted: kill the session instead of trusting the stale token.
+      if (!dbUser) return null;
+      token.role = dbUser.role;
+      (token as { banned?: boolean }).banned = dbUser.banned;
     }
 
     return token;
