@@ -25,7 +25,16 @@ type Category = {
   fields: FieldDef[];
 };
 
-const TYPES = ["text", "number", "textarea", "select", "country", "expiry"];
+const TYPES = [
+  "text",
+  "number",
+  "textarea",
+  "select",
+  "country",
+  "expiry",
+  "sample_text",
+  "image_urls",
+];
 
 function autoName(label: string): string {
   return label

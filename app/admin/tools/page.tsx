@@ -625,11 +625,12 @@ export default function AdminToolsPage() {
                                 </option>
                               ))}
                             </select>
-                          ) : f.type === "textarea" ? (
+                          ) : f.type === "textarea" || f.type === "image_urls" || f.type === "sample_text" ? (
                             <textarea
                               rows={3}
                               value={edit.meta[f.name] || ""}
                               onChange={(e) => setEdit({ ...edit, meta: { ...edit.meta, [f.name]: e.target.value } })}
+                              placeholder={f.type === "image_urls" ? "One image URL per line" : undefined}
                               className={inputCls}
                             />
                           ) : (
