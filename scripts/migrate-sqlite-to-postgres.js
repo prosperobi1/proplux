@@ -5,7 +5,7 @@
  * whose cuid already exists in Postgres are skipped, so a half-finished run
  * can simply be repeated.
  *
- * Usage:  PRISMA_DATABASE_URL=postgresql://... node scripts/migrate-sqlite-to-postgres.js
+ * Usage:  DATABASE_URL=postgresql://... node scripts/migrate-sqlite-to-postgres.js
  */
 const { DatabaseSync } = require("node:sqlite");
 const { PrismaClient } = require("@prisma/client");

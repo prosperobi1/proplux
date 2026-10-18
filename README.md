@@ -20,7 +20,7 @@ A modern multi-vendor marketplace built with Next.js 16, TypeScript, Prisma, and
 
 - Next.js 16 (App Router, Turbopack)
 - TypeScript
-- Prisma + PostgreSQL (Vercel + Neon; the Docker/VPS path can point at any Postgres)
+- Prisma + PostgreSQL (any host; Vercel's Postgres integration publishes DATABASE_URL)
 - NextAuth (credentials, JWT)
 - Tailwind CSS
 - lucide-react for icons
@@ -39,8 +39,8 @@ A modern multi-vendor marketplace built with Next.js 16, TypeScript, Prisma, and
 Then edit .env:
 
 - Set AUTH_SECRET to a random string: openssl rand -base64 32
-- Set ENCRYPTION_KEY (encrypts hidden credential fields at rest): openssl rand -base64 32 — keep the same value across deploys, or existing credentials become unreadable
-- Set PRISMA_DATABASE_URL to a PostgreSQL connection string. Fastest: `npx vercel env pull` after linking the project (gives you the hosted one)
+- Set ENCRYPTION_KEY (encrypts hidden credential fields at rest): openssl rand -base64 32. Keep the same value across deploys, or existing credentials become unreadable
+- Set DATABASE_URL to a PostgreSQL connection string (any PostgreSQL host; on Vercel the Storage tab creates one and publishes it for you)
 - Without BLOB_READ_WRITE_TOKEN, uploads are stored in the project (./uploads); on Vercel the token switches them to Blob storage automatically
 - Production: also set NEXT_PUBLIC_APP_URL to your public https URL (payment callbacks depend on it)
 
@@ -95,18 +95,19 @@ prisma/
 
 ## Deployment
 
-The app runs on Vercel with a hosted Postgres database (Neon, created through
-the Vercel marketplace) and Vercel Blob for uploaded files. Prisma needs no
-persistent disk anymore; Blob replaces `./uploads`.
+Any host with Node 20.9+ and a PostgreSQL database works. There are two
+supported paths: Vercel (push to deploy, files on Vercel Blob) and a normal
+server (the included Docker image, files on disk). The app code is identical
+for both; only the environment variables differ.
 
-### First deploy
+### Vercel: first deploy
 
 1. Push this repository to GitHub, then in Vercel: Add New -> Project ->
    import it. Vercel detects Next.js; no build settings needed
    (`postinstall` runs `prisma generate`, then `next build`)
 2. In the project's Storage tab, create a Postgres (Neon) database and a Blob
    store. Both attach their env vars automatically
-   (`PRISMA_DATABASE_URL`, `BLOB_READ_WRITE_TOKEN`)
+   (`DATABASE_URL`, `BLOB_READ_WRITE_TOKEN`)
 3. Add the remaining env vars in Settings -> Environment Variables:
    - `AUTH_SECRET`: `openssl rand -base64 32`
    - `ENCRYPTION_KEY`: `openssl rand -base64 32`. Keep this identical across
@@ -117,7 +118,7 @@ persistent disk anymore; Blob replaces `./uploads`.
 4. Deploy. The site loads but the database is empty until step 5
 5. From your machine, with the project checked out:
    - `npx vercel link` (once, ties the folder to the project)
-   - `npx vercel env pull` (writes .env.local with PRISMA_DATABASE_URL etc.)
+   - `npx vercel env pull` (writes .env.local with DATABASE_URL etc.)
    - `npx prisma db push` (creates tables in Postgres)
    - `node scripts/migrate-sqlite-to-postgres.js` (one-shot copy of an old
      SQLite dev.db, if you have one; re-runnable, skips existing rows)
@@ -141,19 +142,35 @@ persistent disk anymore; Blob replaces `./uploads`.
 ### Backups
 
 - Postgres: Neon's daily backups, plus `npx vercel env pull` output stored
-  somewhere safe (it holds `PRISMA_DATABASE_URL`)
+  somewhere safe (it holds `DATABASE_URL`)
 - `.env` values `AUTH_SECRET` and `ENCRYPTION_KEY`: losing them, or changing
   `ENCRYPTION_KEY`, makes every stored credential undecryptable
 - Blob store: files are kept by Vercel; nothing to copy for a test run
 
-### Self-hosting (VPS with Postgres)
+### Self-hosting (any VPS or server)
 
-The Vercel-specific parts are the Blob storage branch in
-`app/api/uploads` and `app/api/files` (both fall back to `./uploads` on disk
-when `BLOB_READ_WRITE_TOKEN` is unset). With any VPS that has Node 20.9+, a
-Postgres server, and nginx, `npm install && npx prisma db push && npm run
-build && node start.js` works the same; point nginx at 127.0.0.1:3000 with
-`client_max_body_size 70m`.
+Uploads fall back to `./uploads` on disk whenever `BLOB_READ_WRITE_TOKEN`
+is unset, so no cloud storage is needed. Two ways to run:
+
+Docker (the image ships Node 22, so the host only needs Docker):
+
+    docker build -t proplux .
+    docker run -d -p 3000:3000 --env-file .env -v proplux-uploads:/srv/app/uploads proplux
+
+Plain Node (host has Node 20.9+):
+
+    npm ci
+    npx prisma db push
+    npx tsx prisma/seed-categories.ts
+    npx tsx prisma/seed-settings.ts
+    npm run build
+    node start.js
+
+Either way, create the tables and seed once before the first visit
+(`docker run --rm --env-file .env proplux npx prisma db push` for Docker),
+register your account, promote it to admin (Quick Start step 5), then put a
+reverse proxy in front. nginx pointing at 127.0.0.1:3000 needs
+`client_max_body_size 70m`; the 1m default rejects normal uploads.
 
 ## Configuration
 

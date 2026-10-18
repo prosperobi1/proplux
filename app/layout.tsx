@@ -47,12 +47,6 @@ export default async function RootLayout({
       <body className={`${inter.className} bg-zinc-950 text-white`}>
         <Providers>{children}</Providers>
         <TelegramJoin url={telegramUrl} />
-        <script
-          dangerouslySetInnerHTML={{
-            __html:
-              'if("serviceWorker" in navigator && /ngrok-free/.test(location.hostname))navigator.serviceWorker.register("/sw.js").catch(function(){});',
-          }}
-        />
       </body>
     </html>
   );
