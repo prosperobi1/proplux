@@ -40,7 +40,7 @@ Then edit .env:
 
 - Set AUTH_SECRET to a random string: openssl rand -base64 32
 - Set ENCRYPTION_KEY (encrypts hidden credential fields at rest): openssl rand -base64 32 — keep the same value across deploys, or existing credentials become unreadable
-- Set DATABASE_URL to a PostgreSQL connection string. Fastest: `npx vercel env pull` after linking the project (gives you the hosted one)
+- Set PRISMA_DATABASE_URL to a PostgreSQL connection string. Fastest: `npx vercel env pull` after linking the project (gives you the hosted one)
 - Without BLOB_READ_WRITE_TOKEN, uploads are stored in the project (./uploads); on Vercel the token switches them to Blob storage automatically
 - Production: also set NEXT_PUBLIC_APP_URL to your public https URL (payment callbacks depend on it)
 
@@ -106,7 +106,7 @@ persistent disk anymore; Blob replaces `./uploads`.
    (`postinstall` runs `prisma generate`, then `next build`)
 2. In the project's Storage tab, create a Postgres (Neon) database and a Blob
    store. Both attach their env vars automatically
-   (`DATABASE_URL`, `BLOB_READ_WRITE_TOKEN`)
+   (`PRISMA_DATABASE_URL`, `BLOB_READ_WRITE_TOKEN`)
 3. Add the remaining env vars in Settings -> Environment Variables:
    - `AUTH_SECRET`: `openssl rand -base64 32`
    - `ENCRYPTION_KEY`: `openssl rand -base64 32`. Keep this identical across
@@ -117,7 +117,7 @@ persistent disk anymore; Blob replaces `./uploads`.
 4. Deploy. The site loads but the database is empty until step 5
 5. From your machine, with the project checked out:
    - `npx vercel link` (once, ties the folder to the project)
-   - `npx vercel env pull` (writes .env.local with DATABASE_URL etc.)
+   - `npx vercel env pull` (writes .env.local with PRISMA_DATABASE_URL etc.)
    - `npx prisma db push` (creates tables in Postgres)
    - `node scripts/migrate-sqlite-to-postgres.js` (one-shot copy of an old
      SQLite dev.db, if you have one; re-runnable, skips existing rows)
@@ -141,7 +141,7 @@ persistent disk anymore; Blob replaces `./uploads`.
 ### Backups
 
 - Postgres: Neon's daily backups, plus `npx vercel env pull` output stored
-  somewhere safe (it holds `DATABASE_URL`)
+  somewhere safe (it holds `PRISMA_DATABASE_URL`)
 - `.env` values `AUTH_SECRET` and `ENCRYPTION_KEY`: losing them, or changing
   `ENCRYPTION_KEY`, makes every stored credential undecryptable
 - Blob store: files are kept by Vercel; nothing to copy for a test run

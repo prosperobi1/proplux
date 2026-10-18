@@ -47,3 +47,6 @@ next-env.d.ts
 # runtime database (live SQLite file — git must never rewrite it: a
 # stash/checkout unlink+recreate orphans the dev server's open handle)
 /prisma/dev.db
+
+# data exports (full account/order/balance dump: never commit)
+/backups/

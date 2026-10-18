@@ -4,7 +4,9 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  // Vercel's Postgres (Neon) integration publishes this exact variable name,
+  // so the deployed app needs no copying of connection strings.
+  url      = env("PRISMA_DATABASE_URL")
 }
 
 model User {
