@@ -7,9 +7,9 @@ import { Loader2 } from "lucide-react";
 type Kind = "logo" | "product";
 
 /**
- * Local-storage upload control: picks a file, POSTs it to /api/uploads
- * (stored under ./uploads and served through /api/files) and hands the
- * resulting URL back to the caller.
+ * Upload control: picks a file, POSTs it to /api/uploads (Vercel Blob when
+ * configured, local disk otherwise) and hands the resulting URL back to the
+ * caller.
  */
 export function LocalUpload({
   kind,

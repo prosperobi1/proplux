@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { createReadStream, promises as fsp } from "fs";
 import { Readable } from "stream";
 import path from "path";
+import { get } from "@vercel/blob";
 
 const NAME_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,180}$/;
 
@@ -24,9 +25,10 @@ const TYPES: Record<string, string> = {
 };
 
 /**
- * Serves locally stored uploads. The brand logo is public; product files are
- * the paid deliverable and follow the same rule as /api/products/[id]: only
- * the listing's seller, an admin, or a buyer who purchased the product.
+ * Serves stored uploads (Vercel Blob when configured, ./uploads on disk
+ * otherwise). The brand logo is public; product files are the paid
+ * deliverable and follow the same rule as /api/products/[id]: only the
+ * listing's seller, an admin, or a buyer who purchased the product.
  */
 export async function GET(
   _req: Request,
@@ -39,12 +41,6 @@ export async function GET(
       !NAME_RE.test(name) ||
       name.includes("..")
     ) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
-    }
-
-    const dir = path.join(process.cwd(), "uploads", seg);
-    const filePath = path.resolve(dir, name);
-    if (!filePath.startsWith(dir + path.sep)) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
@@ -73,6 +69,45 @@ export async function GET(
       }
     }
 
+    const ext = name.includes(".") ? name.split(".").pop()!.toLowerCase() : "";
+    const type = TYPES[ext] || "application/octet-stream";
+
+    // Original filename is preserved after the random id prefix.
+    const m = /^[a-f0-9]+__(.+)$/.exec(name);
+    const original = m ? m[1] : name;
+
+    const disposition =
+      seg === "brand"
+        ? `inline; filename="${original}"`
+        : `attachment; filename="${original}"`;
+    const cache = seg === "brand" ? "public, max-age=3600" : "private, no-store";
+
+    if (process.env.BLOB_READ_WRITE_TOKEN) {
+      let result;
+      try {
+        result = await get(`${seg}/${name}`, { access: "public" });
+      } catch {
+        result = null;
+      }
+      if (!result || result.statusCode !== 200 || !result.stream) {
+        return NextResponse.json({ error: "Not found" }, { status: 404 });
+      }
+      return new Response(result.stream, {
+        headers: {
+          "Content-Type": type,
+          "Content-Length": String(result.blob.size),
+          "Content-Disposition": disposition,
+          "Cache-Control": cache,
+        },
+      });
+    }
+
+    const dir = path.join(process.cwd(), "uploads", seg);
+    const filePath = path.resolve(dir, name);
+    if (!filePath.startsWith(dir + path.sep)) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
     let stat;
     try {
       stat = await fsp.stat(filePath);
@@ -83,13 +118,6 @@ export async function GET(
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    const ext = name.includes(".") ? name.split(".").pop()!.toLowerCase() : "";
-    const type = TYPES[ext] || "application/octet-stream";
-
-    // Original filename is preserved after the random id prefix.
-    const m = /^[a-f0-9]+__(.+)$/.exec(name);
-    const original = m ? m[1] : name;
-
     const stream = Readable.toWeb(
       createReadStream(filePath)
     ) as unknown as ReadableStream;
@@ -97,12 +125,8 @@ export async function GET(
       headers: {
         "Content-Type": type,
         "Content-Length": String(stat.size),
-        "Content-Disposition":
-          seg === "brand"
-            ? `inline; filename="${original}"`
-            : `attachment; filename="${original}"`,
-        "Cache-Control":
-          seg === "brand" ? "public, max-age=3600" : "private, no-store",
+        "Content-Disposition": disposition,
+        "Cache-Control": cache,
       },
     });
   } catch (error) {

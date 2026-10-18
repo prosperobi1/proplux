@@ -1,7 +1,7 @@
 # Proplux — Current State (handoff for next chat)
 
 **Date:** 2026-10-05
-**Stack:** Next.js 16 (App Router), TypeScript, Tailwind, Prisma + SQLite, NextAuth (JWT), local uploads (./uploads), SMTP email (+ Resend fallback), NOWPayments
+**Stack:** Next.js 16 (App Router), TypeScript, Tailwind, Prisma + PostgreSQL (Vercel + Neon; local via `vercel env pull`), NextAuth (JWT), uploads on Vercel Blob with local ./uploads fallback, SMTP email (+ Resend fallback), NOWPayments
 
 ## Roles
 BUYER / SELLER / ADMIN

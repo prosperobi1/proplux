@@ -8,11 +8,9 @@ const LOGIN_WINDOW_MS = 60 * 1000;
 const LOGIN_MAX_FAILS = 5;
 
 /**
- * Look a user up by email OR username (any letter case).
- *
- * Prisma's case-insensitive filter isn't available on SQLite, so when the exact
- * match misses we fall back to SQL LIKE (case-insensitive for ASCII) narrowed by
- * the email domain or the username's first letter, never a full table scan.
+ * Look a user up by email OR username (any letter case). Exact match first
+ * (hits the unique indexes); only when that misses do we pay for Postgres'
+ * case-insensitive (ILIKE) lookup.
  */
 async function findUserByIdentifier(identifier: string) {
   const exact = await prisma.user.findFirst({
@@ -20,22 +18,14 @@ async function findUserByIdentifier(identifier: string) {
   });
   if (exact) return exact;
 
-  const q = identifier.toLowerCase();
-  const pool = identifier.includes("@")
-    ? await prisma.user.findMany({
-        where: { email: { endsWith: "@" + identifier.split("@").pop()!.toLowerCase() } },
-      })
-    : await prisma.user.findMany({
-        where: { username: { startsWith: identifier.charAt(0) } },
-      });
-
-  return (
-    pool.find(
-      (u) =>
-        u.email.trim().toLowerCase() === q ||
-        u.username.trim().toLowerCase() === q
-    ) ?? null
-  );
+  return prisma.user.findFirst({
+    where: {
+      OR: [
+        { email: { equals: identifier, mode: "insensitive" } },
+        { username: { equals: identifier, mode: "insensitive" } },
+      ],
+    },
+  });
 }
 
 const nextAuth = NextAuth({

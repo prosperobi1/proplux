@@ -20,7 +20,7 @@ A modern multi-vendor marketplace built with Next.js 16, TypeScript, Prisma, and
 
 - Next.js 16 (App Router, Turbopack)
 - TypeScript
-- Prisma + SQLite (persists on VPS/cPanel hosting; a serverless host would need PostgreSQL)
+- Prisma + PostgreSQL (Vercel + Neon; the Docker/VPS path can point at any Postgres)
 - NextAuth (credentials, JWT)
 - Tailwind CSS
 - lucide-react for icons
@@ -40,8 +40,9 @@ Then edit .env:
 
 - Set AUTH_SECRET to a random string: openssl rand -base64 32
 - Set ENCRYPTION_KEY (encrypts hidden credential fields at rest): openssl rand -base64 32 — keep the same value across deploys, or existing credentials become unreadable
-- Uploads are stored in the project (./uploads) — no third-party upload token needed
-- Production: also set AUTH_URL and NEXT_PUBLIC_APP_URL to your public https URL (payment callbacks depend on it)
+- Set DATABASE_URL to a PostgreSQL connection string. Fastest: `npx vercel env pull` after linking the project (gives you the hosted one)
+- Without BLOB_READ_WRITE_TOKEN, uploads are stored in the project (./uploads); on Vercel the token switches them to Blob storage automatically
+- Production: also set NEXT_PUBLIC_APP_URL to your public https URL (payment callbacks depend on it)
 
 3. Set up the database
 
@@ -53,13 +54,18 @@ Then edit .env:
     npx tsx prisma/seed-categories.ts
     npx tsx prisma/seed-settings.ts
 
+Coming from the old SQLite dev.db? Copy its data over once:
+
+    node scripts/migrate-sqlite-to-postgres.js
+
 5. Create an admin account
 
 Register a normal account via the UI, then promote it:
 
-    sqlite3 prisma/dev.db "UPDATE User SET role='ADMIN' WHERE email='you@example.com';"
+    npx prisma db push  # ensures the client exists
+    npx tsx -e "const {PrismaClient}=require('@prisma/client');const p=new PrismaClient();p.user.update({where:{email:'you@example.com'},data:{role:'ADMIN'}}).finally(()=>p.$disconnect())"
 
-Or use npx prisma studio to edit the row manually.
+Or use `npx prisma studio` to edit the row manually.
 
 6. Run the dev server
 
@@ -89,106 +95,65 @@ prisma/
 
 ## Deployment
 
-The app needs three things: a persistent disk (the SQLite database and local
-`./uploads` live on it), Node.js 20.9 or newer, and a public https URL.
-Serverless hosts (Vercel etc.) do not work as-is because their filesystem is
-read-only. Two supported paths, both running the same build:
+The app runs on Vercel with a hosted Postgres database (Neon, created through
+the Vercel marketplace) and Vercel Blob for uploaded files. Prisma needs no
+persistent disk anymore; Blob replaces `./uploads`.
 
-- VPS behind nginx, managed by PM2
-- cPanel Node.js App, using `start.js` as the startup file
+### First deploy
 
-### 1. Server setup (identical for both paths)
-
-1. Copy the project onto the server and run `npm install` (everything the
-   server needs is a regular dependency, including the Prisma CLI and tsx)
-2. Create `.env` from `.env.example` and set:
+1. Push this repository to GitHub, then in Vercel: Add New -> Project ->
+   import it. Vercel detects Next.js; no build settings needed
+   (`postinstall` runs `prisma generate`, then `next build`)
+2. In the project's Storage tab, create a Postgres (Neon) database and a Blob
+   store. Both attach their env vars automatically
+   (`DATABASE_URL`, `BLOB_READ_WRITE_TOKEN`)
+3. Add the remaining env vars in Settings -> Environment Variables:
    - `AUTH_SECRET`: `openssl rand -base64 32`
-   - `ENCRYPTION_KEY`: `openssl rand -base64 32`. This value must stay
-     identical across every redeploy, or stored credentials become unreadable
-   - `AUTH_URL` and `NEXT_PUBLIC_APP_URL`: your public https URL
+   - `ENCRYPTION_KEY`: `openssl rand -base64 32`. Keep this identical across
+     every redeploy, or stored credentials become unreadable
+   - `NEXT_PUBLIC_APP_URL`: your deployment URL (update when a domain is
+     attached; NOWPayments IPN callbacks are built from it)
    - `AUTH_TRUST_HOST=true`
-   - `DATABASE_URL="file:./dev.db"` (the default, works as-is on disk)
-3. `npx prisma db push` then `npx prisma generate`
-4. `npx tsx prisma/seed-categories.ts` and `npx tsx prisma/seed-settings.ts`
-5. `npm run build`
-6. Start the server using one of the two paths below, then open the site
-7. Register your account and promote it to admin:
-   `sqlite3 prisma/dev.db "UPDATE User SET role='ADMIN' WHERE email='you@example.com';"`
-8. Configure in the admin panel: Settings (SMTP email, admin alert address,
+4. Deploy. The site loads but the database is empty until step 5
+5. From your machine, with the project checked out:
+   - `npx vercel link` (once, ties the folder to the project)
+   - `npx vercel env pull` (writes .env.local with DATABASE_URL etc.)
+   - `npx prisma db push` (creates tables in Postgres)
+   - `node scripts/migrate-sqlite-to-postgres.js` (one-shot copy of an old
+     SQLite dev.db, if you have one; re-runnable, skips existing rows)
+   - `npx tsx prisma/seed-categories.ts` and `npx tsx prisma/seed-settings.ts`
+6. Register your account, then promote it to admin from your machine:
+   `npx vercel env pull && npx tsx -e "const {PrismaClient}=require('@prisma/client');const p=new PrismaClient();p.user.update({where:{email:'you@example.com'},data:{role:'ADMIN'}}).finally(()=>p.\$disconnect())"`
+7. Configure in the admin panel: Settings (SMTP email, admin alert address,
    telegram URL, minimum deposit, branding) and Payments (NOWPayments API key
    and IPN secret). The sandbox flag starts ON; only turn it off after a
-   real-money test succeeds.
+   real-money test succeeds
 
-### 2. VPS path (nginx + PM2)
+### Limits to know
 
-From the project folder, with Node 20.9+ installed (NodeSource or nvm):
-
-    npm install -g pm2
-    pm2 start start.js --name proplux
-    pm2 save
-    pm2 startup    # run the command it prints, so the app survives reboots
-
-nginx site forwarding to the app:
-
-    server {
-        listen 80;
-        server_name yourdomain.com;
-        location / {
-            proxy_pass http://127.0.0.1:3000;
-            proxy_set_header Host $host;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-            client_max_body_size 70m;   # product uploads up to 64MB
-        }
-    }
-
-Then issue HTTPS with `certbot --nginx`, and open only 80/443 (plus your SSH
-port) in the firewall.
-
-### 3. cPanel path (Setup Node.js App)
-
-1. Upload the project (git clone in Terminal, or an archive via File Manager).
-   Keep the application root outside `public_html` (for example `~/proplux`):
-   anything placed in the web root can be served as plain text, including
-   `.env` and `node_modules`
-2. cPanel -> Setup Node.js App -> Create Application:
-   - Node version: the newest 20.x or newer offered by your plan
-   - Application root: the project folder
-   - Application URL: your domain
-   - Startup file: `start.js`
-3. Create `.env` in the application root as described above (the form's
-   environment variables work too; the .env file keeps one source of truth)
-4. In Terminal, from the application root, run server-setup steps 3 to 5
-   (db push, seeds, build)
-5. Click Restart. cPanel assigns the port; `start.js` reads it from `$PORT`
+- Serverless request bodies cap at ~4.5MB, so product file uploads over 4MB
+  are refused with a message pointing sellers to delivery links (the app's
+  normal flow for large software). Raise this later with direct-to-Blob
+  client uploads if needed
+- Emails go through SMTP settings in the admin panel, or Resend when
+  `RESEND_API_KEY` is set
 
 ### Backups
 
-Back up these three together: `prisma/dev.db`, `./uploads/`, and `.env`.
-Losing `.env` (or changing `ENCRYPTION_KEY`) makes every stored credential
-undecryptable.
+- Postgres: Neon's daily backups, plus `npx vercel env pull` output stored
+  somewhere safe (it holds `DATABASE_URL`)
+- `.env` values `AUTH_SECRET` and `ENCRYPTION_KEY`: losing them, or changing
+  `ENCRYPTION_KEY`, makes every stored credential undecryptable
+- Blob store: files are kept by Vercel; nothing to copy for a test run
 
-### Older hosts (glibc below 2.29, for example RHEL 8 family)
+### Self-hosting (VPS with Postgres)
 
-`next build` needs glibc 2.29 or newer. When the host OS is too old to
-provide it and cannot be upgraded, run the app in the included `Dockerfile`
-(Node 22 on Debian) instead of natively. The host only needs Docker:
-
-    docker build -t proplux:prod .
-    mkdir -p /opt/proplux-data/uploads && touch /opt/proplux-data/dev.db
-    sed 's/="\([^"]*\)"$/=\1/' .env > docker.env   # docker keeps quote chars, so strip them
-    docker run -d --name proplux --restart unless-stopped \
-      -p 127.0.0.1:3000:3000 --env-file ./docker.env \
-      -v /opt/proplux-data/dev.db:/srv/app/prisma/dev.db \
-      -v /opt/proplux-data/uploads:/srv/app/uploads \
-      proplux:prod
-    docker exec proplux npx prisma db push
-    docker exec proplux npx tsx prisma/seed-categories.ts
-    docker exec proplux npx tsx prisma/seed-settings.ts
-
-Then point the reverse proxy at `http://127.0.0.1:3000` as usual. The database
-file and uploads live on the host under `/opt/proplux-data/`, so they survive
-container rebuilds; back those up together with `docker.env`.
+The Vercel-specific parts are the Blob storage branch in
+`app/api/uploads` and `app/api/files` (both fall back to `./uploads` on disk
+when `BLOB_READ_WRITE_TOKEN` is unset). With any VPS that has Node 20.9+, a
+Postgres server, and nginx, `npm install && npx prisma db push && npm run
+build && node start.js` works the same; point nginx at 127.0.0.1:3000 with
+`client_max_body_size 70m`.
 
 ## Configuration
 

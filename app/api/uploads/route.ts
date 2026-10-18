@@ -3,8 +3,13 @@ import { auth } from "@/lib/auth";
 import { promises as fs } from "fs";
 import path from "path";
 import crypto from "crypto";
+import { put } from "@vercel/blob";
 
 const MAX_BYTES = { logo: 4 * 1024 * 1024, product: 64 * 1024 * 1024 };
+// Vercel serverless functions cap the request body at ~4.5MB, so above that
+// the upload must go straight from the browser to Blob. Until that client
+// upload exists, big files are refused with a pointer to delivery links.
+const VERCEL_BODY_CAP = 4 * 1024 * 1024;
 
 const MIME_EXT: Record<string, string> = {
   "image/png": "png",
@@ -33,9 +38,10 @@ function safeName(original: string): { base: string; ext: string } {
 }
 
 /**
- * Local upload storage: files land in ./uploads (brand/ for the admin logo,
- * products/ for seller deliverables) and are served through /api/files/[seg],
- * which enforces access control for product files.
+ * Upload storage: files land in Vercel Blob (pathname brand/... or
+ * products/...) when BLOB_READ_WRITE_TOKEN is set, otherwise in ./uploads on
+ * local disk. Both are served through /api/files/[seg], which enforces access
+ * control for product files.
  */
 export async function POST(req: Request) {
   try {
@@ -79,23 +85,39 @@ export async function POST(req: Request) {
       );
     }
 
+    const useBlob = !!process.env.BLOB_READ_WRITE_TOKEN;
+    if (useBlob && kind === "product" && file.size > VERCEL_BODY_CAP) {
+      return NextResponse.json(
+        {
+          error:
+            "Uploads over 4MB are not accepted here. Use a delivery link for large files.",
+        },
+        { status: 413 }
+      );
+    }
+
     const id = crypto.randomBytes(8).toString("hex");
     const { base, ext } = safeName(file.name);
     const finalExt = ext || MIME_EXT[file.type] || "bin";
 
-    const dir = path.join(
-      process.cwd(),
-      "uploads",
-      kind === "logo" ? "brand" : "products"
-    );
-    await fs.mkdir(dir, { recursive: true });
-
+    const seg = kind === "logo" ? "brand" : "products";
     const name =
       kind === "logo" ? `${id}.${finalExt}` : `${id}__${base}.${finalExt}`;
     const buf = Buffer.from(await file.arrayBuffer());
-    await fs.writeFile(path.join(dir, name), buf, { flag: "wx" });
 
-    const url = `/api/files/${kind === "logo" ? "brand" : "products"}/${name}`;
+    if (useBlob) {
+      await put(`${seg}/${name}`, buf, {
+        access: "public",
+        contentType: file.type || undefined,
+        allowOverwrite: false,
+      });
+    } else {
+      const dir = path.join(process.cwd(), "uploads", seg);
+      await fs.mkdir(dir, { recursive: true });
+      await fs.writeFile(path.join(dir, name), buf, { flag: "wx" });
+    }
+
+    const url = `/api/files/${seg}/${name}`;
     return NextResponse.json({ url });
   } catch (error) {
     return NextResponse.json(
